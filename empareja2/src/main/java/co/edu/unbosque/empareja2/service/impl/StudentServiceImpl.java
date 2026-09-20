@@ -18,140 +18,128 @@ import co.edu.unbosque.empareja2.repository.StudentRepository;
 import co.edu.unbosque.empareja2.service.StudentService;
 
 /**
- * Implementa las reglas de negocio del catalogo de estudiantes, del
- * perfil propio y de la administracion de usuarios. Es la unica capa
- * que conoce el repositorio; los controladores nunca acceden a el
- * directamente.
+ * Implementa las reglas de negocio del catalogo de estudiantes, del perfil
+ * propio y de la administracion de usuarios. Es la unica capa que conoce el
+ * repositorio; los controladores nunca acceden a el directamente.
  */
 @Service
 @Transactional(readOnly = true)
 public class StudentServiceImpl implements StudentService {
 
-    private final StudentRepository studentRepository;
-    private final StudentMapper studentMapper;
-    private final PasswordEncoder passwordEncoder;
+	private final StudentRepository studentRepository;
+	private final StudentMapper studentMapper;
+	private final PasswordEncoder passwordEncoder;
 
-    public StudentServiceImpl(StudentRepository studentRepository, StudentMapper studentMapper,
-            PasswordEncoder passwordEncoder) {
-        this.studentRepository = studentRepository;
-        this.studentMapper = studentMapper;
-        this.passwordEncoder = passwordEncoder;
-    }
+	public StudentServiceImpl(StudentRepository studentRepository, StudentMapper studentMapper,
+			PasswordEncoder passwordEncoder) {
+		this.studentRepository = studentRepository;
+		this.studentMapper = studentMapper;
+		this.passwordEncoder = passwordEncoder;
+	}
 
-    // ---------- Catalogo publico ----------
+	@Override
+	public List<StudentPublicDTO> getAllPublicProfiles() {
+		return studentRepository.findAll().stream().map(studentMapper::toPublicDTO).toList();
+	}
 
-    @Override
-    public List<StudentPublicDTO> getAllPublicProfiles() {
-        return studentRepository.findAll().stream()
-                .map(studentMapper::toPublicDTO)
-                .toList();
-    }
+	@Override
+	public StudentPublicDTO getPublicProfileById(Long id) {
+		Student student = findByIdOrThrow(id);
+		return studentMapper.toPublicDTO(student);
+	}
 
-    @Override
-    public StudentPublicDTO getPublicProfileById(Long id) {
-        Student student = findByIdOrThrow(id);
-        return studentMapper.toPublicDTO(student);
-    }
+	@Override
+	public StudentProfileDTO getOwnProfile(String email) {
+		Student student = findByEmailOrThrow(email);
+		return studentMapper.toProfileDTO(student);
+	}
 
-    // ---------- Cuenta propia ----------
+	@Override
+	@Transactional
+	public StudentProfileDTO updateOwnProfile(String email, UpdateProfileRequestDTO request) {
+		Student student = findByEmailOrThrow(email);
 
-    @Override
-    public StudentProfileDTO getOwnProfile(String email) {
-        Student student = findByEmailOrThrow(email);
-        return studentMapper.toProfileDTO(student);
-    }
+		student.setFullName(request.getFullName());
+		student.setCareer(request.getCareer());
+		student.setSemester(request.getSemester());
+		student.setUniversity(request.getUniversity());
+		student.setAddress(request.getAddress());
+		student.setBirthDate(request.getBirthDate());
 
-    @Override
-    @Transactional
-    public StudentProfileDTO updateOwnProfile(String email, UpdateProfileRequestDTO request) {
-        Student student = findByEmailOrThrow(email);
+		Student updated = studentRepository.save(student);
+		return studentMapper.toProfileDTO(updated);
+	}
 
-        student.setFullName(request.getFullName());
-        student.setCareer(request.getCareer());
-        student.setSemester(request.getSemester());
-        student.setUniversity(request.getUniversity());
-        student.setAddress(request.getAddress());
-        student.setBirthDate(request.getBirthDate());
+	@Override
+	@Transactional
+	public void deleteOwnAccount(String email) {
+		Student student = findByEmailOrThrow(email);
+		studentRepository.delete(student);
+	}
 
-        Student updated = studentRepository.save(student);
-        return studentMapper.toProfileDTO(updated);
-    }
+	@Override
+	public List<StudentProfileDTO> getAllUsersForAdmin() {
+		return studentRepository.findAll().stream().map(studentMapper::toProfileDTO).toList();
+	}
 
-    @Override
-    @Transactional
-    public void deleteOwnAccount(String email) {
-        Student student = findByEmailOrThrow(email);
-        studentRepository.delete(student);
-    }
+	@Override
+	public StudentProfileDTO getUserByIdForAdmin(Long id) {
+		Student student = findByIdOrThrow(id);
+		return studentMapper.toProfileDTO(student);
+	}
 
-    // ---------- Administracion de usuarios (solo ADMIN) ----------
+	@Override
+	@Transactional
+	public StudentProfileDTO createUserByAdmin(AdminUserRequestDTO request) {
+		if (studentRepository.existsByEmail(request.getEmail())) {
+			throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
+		}
+		if (request.getPassword() == null || request.getPassword().isBlank()) {
+			throw new IllegalArgumentException("La contrasena es obligatoria al crear un usuario");
+		}
 
-    @Override
-    public List<StudentProfileDTO> getAllUsersForAdmin() {
-        return studentRepository.findAll().stream()
-                .map(studentMapper::toProfileDTO)
-                .toList();
-    }
+		String encodedPassword = passwordEncoder.encode(request.getPassword());
+		Student student = studentMapper.toEntity(request, encodedPassword);
+		Student saved = studentRepository.save(student);
+		return studentMapper.toProfileDTO(saved);
+	}
 
-    @Override
-    public StudentProfileDTO getUserByIdForAdmin(Long id) {
-        Student student = findByIdOrThrow(id);
-        return studentMapper.toProfileDTO(student);
-    }
+	@Override
+	@Transactional
+	public StudentProfileDTO updateUserByAdmin(Long id, AdminUserRequestDTO request) {
+		Student student = findByIdOrThrow(id);
 
-    @Override
-    @Transactional
-    public StudentProfileDTO createUserByAdmin(AdminUserRequestDTO request) {
-        if (studentRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
-        }
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new IllegalArgumentException("La contrasena es obligatoria al crear un usuario");
-        }
+		if (!student.getEmail().equals(request.getEmail()) && studentRepository.existsByEmail(request.getEmail())) {
+			throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
+		}
 
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        Student student = studentMapper.toEntity(request, encodedPassword);
-        Student saved = studentRepository.save(student);
-        return studentMapper.toProfileDTO(saved);
-    }
+		student.setEmail(request.getEmail());
+		studentMapper.applyAdminFields(student, request);
+		if (request.getRole() != null) {
+			student.setRole(request.getRole());
+		}
+		if (request.getPassword() != null && !request.getPassword().isBlank()) {
+			student.setPassword(passwordEncoder.encode(request.getPassword()));
+		}
 
-    @Override
-    @Transactional
-    public StudentProfileDTO updateUserByAdmin(Long id, AdminUserRequestDTO request) {
-        Student student = findByIdOrThrow(id);
+		Student updated = studentRepository.save(student);
+		return studentMapper.toProfileDTO(updated);
+	}
 
-        if (!student.getEmail().equals(request.getEmail())
-                && studentRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
-        }
+	@Override
+	@Transactional
+	public void deleteUserByAdmin(Long id) {
+		Student student = findByIdOrThrow(id);
+		studentRepository.delete(student);
+	}
 
-        student.setEmail(request.getEmail());
-        studentMapper.applyAdminFields(student, request);
-        if (request.getRole() != null) {
-            student.setRole(request.getRole());
-        }
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            student.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
+	private Student findByIdOrThrow(Long id) {
+		return studentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("No existe un usuario con id " + id));
+	}
 
-        Student updated = studentRepository.save(student);
-        return studentMapper.toProfileDTO(updated);
-    }
-
-    @Override
-    @Transactional
-    public void deleteUserByAdmin(Long id) {
-        Student student = findByIdOrThrow(id);
-        studentRepository.delete(student);
-    }
-
-    private Student findByIdOrThrow(Long id) {
-        return studentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe un usuario con id " + id));
-    }
-
-    private Student findByEmailOrThrow(String email) {
-        return studentRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe un usuario con correo " + email));
-    }
+	private Student findByEmailOrThrow(String email) {
+		return studentRepository.findByEmail(email)
+				.orElseThrow(() -> new ResourceNotFoundException("No existe un usuario con correo " + email));
+	}
 }

@@ -8,32 +8,29 @@ import co.edu.unbosque.empareja2.dto.response.StudentProfileDTO;
 import co.edu.unbosque.empareja2.dto.response.StudentPublicDTO;
 
 /**
- * Contrato para las operaciones del catalogo de estudiantes, del
- * perfil propio de un usuario, y de la administracion de usuarios
- * (exclusiva para el rol ADMIN).
+ * Contrato para las operaciones del catalogo de estudiantes, del perfil propio
+ * de un usuario, y de la administracion de usuarios (exclusiva para el rol
+ * ADMIN).
  */
 public interface StudentService {
 
-    // ---------- Catalogo publico ----------
-    List<StudentPublicDTO> getAllPublicProfiles();
+	List<StudentPublicDTO> getAllPublicProfiles();
 
-    StudentPublicDTO getPublicProfileById(Long id);
+	StudentPublicDTO getPublicProfileById(Long id);
 
-    // ---------- Cuenta propia (STUDENT o ADMIN autenticado) ----------
-    StudentProfileDTO getOwnProfile(String email);
+	StudentProfileDTO getOwnProfile(String email);
 
-    StudentProfileDTO updateOwnProfile(String email, UpdateProfileRequestDTO request);
+	StudentProfileDTO updateOwnProfile(String email, UpdateProfileRequestDTO request);
 
-    void deleteOwnAccount(String email);
+	void deleteOwnAccount(String email);
 
-    // ---------- Administracion de usuarios (solo ADMIN) ----------
-    List<StudentProfileDTO> getAllUsersForAdmin();
+	List<StudentProfileDTO> getAllUsersForAdmin();
 
-    StudentProfileDTO getUserByIdForAdmin(Long id);
+	StudentProfileDTO getUserByIdForAdmin(Long id);
 
-    StudentProfileDTO createUserByAdmin(AdminUserRequestDTO request);
+	StudentProfileDTO createUserByAdmin(AdminUserRequestDTO request);
 
-    StudentProfileDTO updateUserByAdmin(Long id, AdminUserRequestDTO request);
+	StudentProfileDTO updateUserByAdmin(Long id, AdminUserRequestDTO request);
 
-    void deleteUserByAdmin(Long id);
+	void deleteUserByAdmin(Long id);
 }
