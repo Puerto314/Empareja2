@@ -17,31 +17,31 @@ import jakarta.validation.Valid;
 
 /**
  * Expone los endpoints publicos de autenticacion: registro e inicio de sesion.
- * Ambos devuelven un token JWT que debe usarse en el header
- * "Authorization: Bearer {token}" para consumir el resto de la API.
+ * Ambos devuelven un token JWT que debe usarse en el header "Authorization:
+ * Bearer {token}" para consumir el resto de la API.
  */
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Autenticacion", description = "Registro e inicio de sesion de estudiantes")
 public class AuthController {
 
-    private final AuthService authService;
+	private final AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
+	public AuthController(AuthService authService) {
+		this.authService = authService;
+	}
 
-    @PostMapping("/register")
-    @Operation(summary = "Registra un nuevo estudiante en el catalogo")
-    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
-        AuthResponseDTO response = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+	@PostMapping("/register")
+	@Operation(summary = "Registra un nuevo estudiante en el catalogo")
+	public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
+		AuthResponseDTO response = authService.register(request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
 
-    @PostMapping("/login")
-    @Operation(summary = "Inicia sesion con correo y contrasena")
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
-        AuthResponseDTO response = authService.login(request);
-        return ResponseEntity.ok(response);
-    }
+	@PostMapping("/login")
+	@Operation(summary = "Inicia sesion con correo y contrasena")
+	public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
+		AuthResponseDTO response = authService.login(request);
+		return ResponseEntity.ok(response);
+	}
 }

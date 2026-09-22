@@ -14,12 +14,6 @@ import co.edu.unbosque.empareja2.repository.StudentRepository;
  * Crea, al arrancar la aplicacion, la cuenta de administrador semilla
  * si todavia no existe. Solo el usuario con rol ADMIN puede administrar
  * administradores y usuarios (ver SecurityConfig y AdminController).
- *
- * Usuario: Puerto314
- * Contrasena: Puerto314
- *
- * IMPORTANTE: cambia esta contrasena en un entorno real; aqui se deja
- * fija solo para efectos del proyecto academico.
  */
 @Component
 public class AdminSeeder implements CommandLineRunner {

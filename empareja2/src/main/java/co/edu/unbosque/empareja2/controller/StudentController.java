@@ -23,52 +23,52 @@ import jakarta.validation.Valid;
 
 /**
  * Expone el catalogo de estudiantes. Todos los endpoints requieren
- * autenticacion (ver SecurityConfig): solo un usuario logueado puede
- * ver la informacion no sensible de los demas.
+ * autenticacion (ver SecurityConfig): solo un usuario logueado puede ver la
+ * informacion no sensible de los demas.
  */
 @RestController
 @RequestMapping("/api/students")
 @Tag(name = "Estudiantes", description = "Catalogo de estudiantes y perfil propio")
 public class StudentController {
 
-    private final StudentService studentService;
+	private final StudentService studentService;
 
-    public StudentController(StudentService studentService) {
-        this.studentService = studentService;
-    }
+	public StudentController(StudentService studentService) {
+		this.studentService = studentService;
+	}
 
-    @GetMapping
-    @Operation(summary = "Lista la informacion publica de todos los estudiantes registrados")
-    public ResponseEntity<List<StudentPublicDTO>> getAll() {
-        return ResponseEntity.ok(studentService.getAllPublicProfiles());
-    }
+	@GetMapping
+	@Operation(summary = "Lista la informacion publica de todos los estudiantes registrados")
+	public ResponseEntity<List<StudentPublicDTO>> getAll() {
+		return ResponseEntity.ok(studentService.getAllPublicProfiles());
+	}
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtiene la informacion publica de un estudiante por id")
-    public ResponseEntity<StudentPublicDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(studentService.getPublicProfileById(id));
-    }
+	@GetMapping("/{id}")
+	@Operation(summary = "Obtiene la informacion publica de un estudiante por id")
+	public ResponseEntity<StudentPublicDTO> getById(@PathVariable Long id) {
+		return ResponseEntity.ok(studentService.getPublicProfileById(id));
+	}
 
-    @GetMapping("/me")
-    @Operation(summary = "Obtiene el perfil completo del usuario autenticado")
-    public ResponseEntity<StudentProfileDTO> getOwnProfile(Authentication authentication) {
-        String email = authentication.getName();
-        return ResponseEntity.ok(studentService.getOwnProfile(email));
-    }
+	@GetMapping("/me")
+	@Operation(summary = "Obtiene el perfil completo del usuario autenticado")
+	public ResponseEntity<StudentProfileDTO> getOwnProfile(Authentication authentication) {
+		String email = authentication.getName();
+		return ResponseEntity.ok(studentService.getOwnProfile(email));
+	}
 
-    @PutMapping("/me")
-    @Operation(summary = "Actualiza el perfil del usuario autenticado")
-    public ResponseEntity<StudentProfileDTO> updateOwnProfile(Authentication authentication,
-            @Valid @RequestBody UpdateProfileRequestDTO request) {
-        String email = authentication.getName();
-        return ResponseEntity.ok(studentService.updateOwnProfile(email, request));
-    }
+	@PutMapping("/me")
+	@Operation(summary = "Actualiza el perfil del usuario autenticado")
+	public ResponseEntity<StudentProfileDTO> updateOwnProfile(Authentication authentication,
+			@Valid @RequestBody UpdateProfileRequestDTO request) {
+		String email = authentication.getName();
+		return ResponseEntity.ok(studentService.updateOwnProfile(email, request));
+	}
 
-    @DeleteMapping("/me")
-    @Operation(summary = "Elimina la cuenta del usuario autenticado")
-    public ResponseEntity<Void> deleteOwnAccount(Authentication authentication) {
-        String email = authentication.getName();
-        studentService.deleteOwnAccount(email);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
+	@DeleteMapping("/me")
+	@Operation(summary = "Elimina la cuenta del usuario autenticado")
+	public ResponseEntity<Void> deleteOwnAccount(Authentication authentication) {
+		String email = authentication.getName();
+		studentService.deleteOwnAccount(email);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
 }

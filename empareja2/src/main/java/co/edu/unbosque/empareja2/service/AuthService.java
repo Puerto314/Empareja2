@@ -9,7 +9,7 @@ import co.edu.unbosque.empareja2.dto.response.AuthResponseDTO;
  */
 public interface AuthService {
 
-    AuthResponseDTO register(RegisterRequestDTO request);
+	AuthResponseDTO register(RegisterRequestDTO request);
 
-    AuthResponseDTO login(LoginRequestDTO request);
+	AuthResponseDTO login(LoginRequestDTO request);
 }

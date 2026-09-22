@@ -19,65 +19,65 @@ import co.edu.unbosque.empareja2.security.JwtService;
 import co.edu.unbosque.empareja2.service.AuthService;
 
 /**
- * Implementa el registro y el inicio de sesion, delegando la validacion
- * de credenciales al AuthenticationManager de Spring Security y la
- * generacion del token al JwtService.
+ * Implementa el registro y el inicio de sesion, delegando la validacion de
+ * credenciales al AuthenticationManager de Spring Security y la generacion del
+ * token al JwtService.
  */
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final StudentRepository studentRepository;
-    private final StudentMapper studentMapper;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
+	private final StudentRepository studentRepository;
+	private final StudentMapper studentMapper;
+	private final PasswordEncoder passwordEncoder;
+	private final JwtService jwtService;
+	private final AuthenticationManager authenticationManager;
+	private final CustomUserDetailsService userDetailsService;
 
-    public AuthServiceImpl(StudentRepository studentRepository, StudentMapper studentMapper,
-            PasswordEncoder passwordEncoder, JwtService jwtService,
-            AuthenticationManager authenticationManager, CustomUserDetailsService userDetailsService) {
-        this.studentRepository = studentRepository;
-        this.studentMapper = studentMapper;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
-    }
+	public AuthServiceImpl(StudentRepository studentRepository, StudentMapper studentMapper,
+			PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager,
+			CustomUserDetailsService userDetailsService) {
+		this.studentRepository = studentRepository;
+		this.studentMapper = studentMapper;
+		this.passwordEncoder = passwordEncoder;
+		this.jwtService = jwtService;
+		this.authenticationManager = authenticationManager;
+		this.userDetailsService = userDetailsService;
+	}
 
-    @Override
-    @Transactional
-    public AuthResponseDTO register(RegisterRequestDTO request) {
-        if (studentRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Ya existe un usuario registrado con ese correo");
-        }
+	@Override
+	@Transactional
+	public AuthResponseDTO register(RegisterRequestDTO request) {
+		if (studentRepository.existsByEmail(request.getEmail())) {
+			throw new DuplicateResourceException("Ya existe un usuario registrado con ese correo");
+		}
 
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        Student student = studentMapper.toEntity(request, encodedPassword);
-        Student saved = studentRepository.save(student);
+		String encodedPassword = passwordEncoder.encode(request.getPassword());
+		Student student = studentMapper.toEntity(request, encodedPassword);
+		Student saved = studentRepository.save(student);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(saved.getEmail());
-        String token = jwtService.generateToken(userDetails);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(saved.getEmail());
+		String token = jwtService.generateToken(userDetails);
 
-        return buildAuthResponse(token, saved);
-    }
+		return buildAuthResponse(token, saved);
+	}
 
-    @Override
-    public AuthResponseDTO login(LoginRequestDTO request) {
-        // Si las credenciales son invalidas, esto lanza BadCredentialsException,
-        // capturada de forma centralizada por el GlobalExceptionHandler.
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+	@Override
+	public AuthResponseDTO login(LoginRequestDTO request) {
+		// Si las credenciales son invalidas, esto lanza BadCredentialsException,
+		// capturada de forma centralizada por el GlobalExceptionHandler.
+		authenticationManager
+				.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        Student student = studentRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalStateException("Usuario autenticado pero no encontrado en base de datos"));
+		Student student = studentRepository.findByEmail(request.getEmail()).orElseThrow(
+				() -> new IllegalStateException("Usuario autenticado pero no encontrado en base de datos"));
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(student.getEmail());
-        String token = jwtService.generateToken(userDetails);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(student.getEmail());
+		String token = jwtService.generateToken(userDetails);
 
-        return buildAuthResponse(token, student);
-    }
+		return buildAuthResponse(token, student);
+	}
 
-    private AuthResponseDTO buildAuthResponse(String token, Student student) {
-        return new AuthResponseDTO(token, jwtService.getExpirationMs(), studentMapper.toProfileDTO(student));
-    }
+	private AuthResponseDTO buildAuthResponse(String token, Student student) {
+		return new AuthResponseDTO(token, jwtService.getExpirationMs(), studentMapper.toProfileDTO(student));
+	}
 }
