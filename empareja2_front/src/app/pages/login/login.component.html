@@ -1,0 +1,23 @@
+<main class="login">
+  <div class="bubbles"><span></span><span></span><span></span><span></span></div>
+  <section class="hero">
+    <h1 class="brand">empareja<b>2</b></h1>
+    <p class="lead">Conoce gente de tu universidad y de las de al lado.</p>
+    <ul class="steps">
+      <li>Elige una universidad</li>
+      <li>Mira quién estudia ahí</li>
+      <li>Entra a su perfil</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>Inicia sesión</h2>
+    <label>Correo universitario
+      <input type="email" [(ngModel)]="email" placeholder="nombre@unbosque.edu.co">
+    </label>
+    <label>Contraseña
+      <input type="password" [(ngModel)]="password" placeholder="Tu contraseña">
+    </label>
+    @if (error()) { <p class="error">{{ error() }}</p> }
+    <button class="btn" (click)="entrar()">Entrar</button>
+  </section>
+</main>

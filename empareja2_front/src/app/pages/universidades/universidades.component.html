@@ -1,0 +1,24 @@
+<main class="page">
+  <header class="intro">
+    <div>
+      <h1>¿Con quién quieres coincidir hoy?</h1>
+      <p class="muted">Elige una universidad y mira quién estudia ahí.</p>
+    </div>
+    <div class="stats">
+      <div><strong>{{ total }}</strong><span>estudiantes</span></div>
+      <div><strong>{{ tiles.length }}</strong><span>universidades</span></div>
+    </div>
+  </header>
+  <section class="mosaic">
+    @for (t of tiles; track t.name; let i = $index) {
+      <a class="tile" [class.big]="i === 0" [class.wide]="i >= 3" [routerLink]="['/universidades', t.name]" [style.background]="grad(t.hue)">
+        <span class="sigla">{{ t.sigla }}</span>
+        <span class="stack">
+          @for (s of t.preview; track s.id) { <span class="avatar mini" [style.background]="grad(hue(s.fullName))">{{ ini(s.fullName) }}</span> }
+        </span>
+        <span class="tile-name">{{ t.name }}</span>
+        <span class="tile-count">{{ t.count }} {{ t.count === 1 ? 'estudiante' : 'estudiantes' }}</span>
+      </a>
+    }
+  </section>
+</main>

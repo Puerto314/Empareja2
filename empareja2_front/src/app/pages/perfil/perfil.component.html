@@ -1,0 +1,59 @@
+@if (s(); as st) {
+  <div class="cover" [style.background]="grad(hue(st.fullName) + 40)">
+    <a [routerLink]="['/universidades', st.university]" class="link">Volver a {{ st.university }}</a>
+  </div>
+  <main class="wrap">
+    <header class="head">
+      <span class="avatar big" [style.background]="grad(hue(st.fullName))">{{ ini(st.fullName) }}</span>
+      <div>
+        <h1>{{ st.fullName }}</h1>
+        <p class="muted">{{ st.career }} · semestre {{ st.semester }}</p>
+      </div>
+    </header>
+    <div class="cols">
+      <div class="col">
+        <article class="box">
+          <h2>Sobre mí</h2>
+          @if (st.bio) { <p class="bio">{{ st.bio }}</p> } @else { <p class="ph">Aún no ha escrito su presentación.</p> }
+        </article>
+        <article class="box">
+          <h2>Gustos</h2>
+          @if (st.interests?.length) { <div class="chips">@for (i of st.interests; track i) { <em>{{ i }}</em> }</div> }
+          @else { <p class="ph">Aún no ha agregado sus gustos.</p> }
+        </article>
+        <article class="box">
+          <h2>Fotos</h2>
+          <div class="photos">
+            @if (st.photos?.length) {
+              @for (p of st.photos; track p) { <img class="photo" [src]="p" alt="Foto de {{ st.fullName }}"> }
+            } @else {
+              @for (v of vacias; track v) { <div class="photo empty" [style.background]="grad(hue(st.fullName) + v * 40)"></div> }
+            }
+          </div>
+          @if (!st.photos?.length) { <p class="ph">Aún no ha subido fotos.</p> }
+        </article>
+      </div>
+      <div class="col">
+        <article class="box">
+          <h2>Datos académicos</h2>
+          <dl>
+            <dt>Carrera</dt><dd>{{ st.career }}</dd>
+            <dt>Semestre</dt><dd>{{ st.semester }}</dd>
+            <dt>Universidad</dt><dd>{{ st.university }}</dd>
+          </dl>
+        </article>
+        <article class="box">
+          <h2>Más de {{ st.university }}</h2>
+          @for (o of otros(); track o.id) {
+            <a class="mini-row" [routerLink]="['/estudiantes', o.id]">
+              <span class="avatar" [style.background]="grad(hue(o.fullName))">{{ ini(o.fullName) }}</span>
+              <span><strong>{{ o.fullName }}</strong><small>{{ o.career }}</small></span>
+            </a>
+          } @empty { <p class="ph">Por ahora no hay más estudiantes de esta universidad.</p> }
+        </article>
+      </div>
+    </div>
+  </main>
+} @else {
+  <main class="wrap"><p class="ph">No encontramos este perfil.</p></main>
+}

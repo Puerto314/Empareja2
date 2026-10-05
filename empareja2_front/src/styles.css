@@ -1,0 +1,18 @@
+:root { --ink:#1d1a2f; --paper:#f5f2fa; --plum:#3b1f6b; --pink:#e8447a; --mint:#c6efdc; --muted:#6b6780; --line:#ddd7ea; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:'DM Sans',system-ui,sans-serif; line-height:1.5; }
+h1,h2 { font-family:'Bricolage Grotesque',sans-serif; margin:0; }
+a { color:inherit; text-decoration:none; }
+:focus-visible { outline:3px solid var(--pink); outline-offset:2px; }
+.link { color:inherit; font-weight:500; text-decoration:underline; text-underline-offset:3px; }
+.muted { color:var(--muted); margin:0; }
+input { font:inherit; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); }
+.btn { font:inherit; font-weight:700; padding:14px; border:0; border-radius:12px; background:var(--pink); color:#fff; cursor:pointer; }
+.btn:hover { background:#d1366a; }
+.avatar { width:52px; height:52px; border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:700; flex:none; }
+.avatar.mini { width:32px; height:32px; font-size:.75rem; border:2px solid #fff; margin-left:-10px; }
+.avatar.mini:first-child { margin-left:0; }
+.avatar.big { width:132px; height:132px; font-size:2.6rem; border:6px solid var(--paper); }
+.chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chips em { font-style:normal; font-size:.85rem; padding:4px 12px; border-radius:99px; background:var(--mint); color:#14452f; }
+@media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
