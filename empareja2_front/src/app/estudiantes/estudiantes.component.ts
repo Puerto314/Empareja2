@@ -1,18 +1,25 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { STUDENTS, gradient, hueOf, initials } from '../../mock-data';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { map, switchMap } from 'rxjs';
+import { EstudianteService } from '../services/estudiante.service';
+import { gradient, hueOf, initials, siglaDe } from '../utils/avatar.util';
 
 @Component({
+  standalone: false,
   selector: 'app-estudiantes',
-  standalone: true,
-  imports: [RouterLink],
   templateUrl: './estudiantes.component.html',
   styleUrls: ['./estudiantes.component.css']
 })
 export class EstudiantesComponent {
-  uni = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
-  sigla = this.uni.split(' ').filter(w => /^[A-ZÁÉÍÓÚ]/.test(w)).map(w => w[0]).join('');
-  all = STUDENTS.filter(s => s.university === this.uni);
+  private route = inject(ActivatedRoute);
+  private estudianteService = inject(EstudianteService);
+
+  private nombre$ = this.route.paramMap.pipe(map(p => p.get('id') ?? ''));
+  uni = toSignal(this.nombre$, { initialValue: '' });
+  todos = toSignal(this.nombre$.pipe(switchMap(n => this.estudianteService.listarPorUniversidad(n))), { initialValue: [] });
+  sigla = computed(() => siglaDe(this.uni()));
+
   q = signal('');
   rango = signal<'todos' | 'a' | 'b' | 'c'>('todos');
   filtros = [
@@ -23,7 +30,7 @@ export class EstudiantesComponent {
 
   list = computed(() => {
     const t = this.q().toLowerCase(), r = this.rango();
-    return this.all.filter(s =>
+    return this.todos().filter(s =>
       (s.fullName + ' ' + s.career).toLowerCase().includes(t) &&
       (r === 'todos' || (r === 'a' && s.semester <= 3) || (r === 'b' && s.semester >= 4 && s.semester <= 6) || (r === 'c' && s.semester >= 7)));
   });

@@ -1,18 +1,27 @@
-import { Component, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { AuthService } from './services/auth.service';
 
 @Component({
+  standalone: false,
   selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet, RouterLink],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  showBar = signal(false);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  mostrarBarra = false;
+
   constructor() {
-    inject(Router).events.subscribe(e => {
-      if (e instanceof NavigationEnd) this.showBar.set(!e.urlAfterRedirects.startsWith('/login'));
-    });
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: any) => this.mostrarBarra = !e.urlAfterRedirects.startsWith('/login'));
+  }
+
+  cerrarSesion(): void {
+    this.authService.cerrarSesion();
+    this.router.navigate(['/login']);
   }
 }
