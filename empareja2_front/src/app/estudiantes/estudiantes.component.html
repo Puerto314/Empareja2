@@ -1,9 +1,9 @@
 <main class="layout">
-  <aside class="side" [style.background]="grad(hue(uni))">
-    <span class="sigla">{{ sigla }}</span>
+  <aside class="side" [style.background]="grad(hue(uni()))">
+    <span class="sigla">{{ sigla() }}</span>
     <a routerLink="/universidades" class="link">Cambiar universidad</a>
-    <h1>{{ uni }}</h1>
-    <p>{{ all.length }} {{ all.length === 1 ? 'estudiante' : 'estudiantes' }}</p>
+    <h1>{{ uni() }}</h1>
+    <p>{{ todos().length }} {{ todos().length === 1 ? 'estudiante' : 'estudiantes' }}</p>
     <input class="search" placeholder="Buscar por nombre o carrera" (input)="q.set($any($event.target).value)">
     <div class="filters">
       @for (f of filtros; track f.id) {

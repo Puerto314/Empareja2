@@ -18,6 +18,6 @@
       <input type="password" [(ngModel)]="password" placeholder="Tu contraseña">
     </label>
     @if (error()) { <p class="error">{{ error() }}</p> }
-    <button class="btn" (click)="entrar()">Entrar</button>
+    <button class="btn" (click)="entrar()" [disabled]="cargando()">Entrar</button>
   </section>
 </main>

@@ -1,0 +1,24 @@
+<main class="page">
+  <header class="intro">
+    <div>
+      <h1>¿Con quién quieres coincidir hoy?</h1>
+      <p class="muted">Elige una universidad y mira quién estudia ahí.</p>
+    </div>
+    <div class="stats">
+      <div><strong>{{ total() }}</strong><span>estudiantes</span></div>
+      <div><strong>{{ unis().length }}</strong><span>universidades</span></div>
+    </div>
+  </header>
+  <section class="mosaic">
+    @for (u of unis(); track u.nombre; let i = $index) {
+      <a class="tile" [class.big]="i === 0" [class.wide]="i >= 3" [routerLink]="['/universidades', u.nombre]" [style.background]="grad(hue(u.nombre))">
+        <span class="sigla">{{ u.sigla }}</span>
+        <span class="stack">
+          @for (s of u.vistaPrevia; track s.id) { <span class="avatar mini" [style.background]="grad(hue(s.fullName))">{{ ini(s.fullName) }}</span> }
+        </span>
+        <span class="tile-name">{{ u.nombre }}</span>
+        <span class="tile-count">{{ u.cantidad }} {{ u.cantidad === 1 ? 'estudiante' : 'estudiantes' }}</span>
+      </a>
+    }
+  </section>
+</main>
