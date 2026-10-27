@@ -6,28 +6,28 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import co.edu.unbosque.empareja2.entity.Student;
-import co.edu.unbosque.empareja2.repository.StudentRepository;
+import co.edu.unbosque.empareja2.entity.Usuario;
+import co.edu.unbosque.empareja2.repository.UsuarioRepository;
 
 /**
- * Puente entre Spring Security y nuestra entidad Student. El "username" del
- * sistema es el email del estudiante.
+ * Puente entre Spring Security y la entidad Usuario. El "username" del sistema
+ * es el correo.
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-	private final StudentRepository studentRepository;
+    private final UsuarioRepository usuarioRepository;
 
-	public CustomUserDetailsService(StudentRepository studentRepository) {
-		this.studentRepository = studentRepository;
-	}
+    public CustomUserDetailsService(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
 
-	@Override
-	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-		Student student = studentRepository.findByEmail(email)
-				.orElseThrow(() -> new UsernameNotFoundException("No existe un usuario con el correo: " + email));
+    @Override
+    public UserDetails loadUserByUsername(String correo) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new UsernameNotFoundException("No existe un usuario con el correo: " + correo));
 
-		return User.builder().username(student.getEmail()).password(student.getPassword())
-				.authorities("ROLE_" + student.getRole().name()).build();
-	}
+        return User.builder().username(usuario.getCorreo()).password(usuario.getContrasenaHash())
+                .authorities("ROLE_" + usuario.getRol().name()).build();
+    }
 }

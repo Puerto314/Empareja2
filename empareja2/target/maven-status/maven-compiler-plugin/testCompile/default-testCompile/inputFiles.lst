@@ -1,0 +1,17 @@
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/Empareja2ApplicationTests.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/TestData.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/AuthControllerTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/ControllerTestSupport.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/InteraccionControllersTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/UsuarioControllerTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/entity/UsuarioTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/mapper/UsuarioMapperTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/security/JwtAuthenticationFilterTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/security/JwtServiceTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/AuthServiceImplTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/CatalogoServiceImplTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/ComentarioServiceImplTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/PerfilAssemblerTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/ReaccionServiceImplTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/ReporteServiceImplTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/service/impl/UsuarioServiceImplTest.java

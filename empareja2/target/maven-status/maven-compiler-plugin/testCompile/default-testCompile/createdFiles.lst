@@ -1,0 +1,17 @@
+co/edu/unbosque/empareja2/service/impl/ReporteServiceImplTest.class
+co/edu/unbosque/empareja2/service/impl/ReaccionServiceImplTest.class
+co/edu/unbosque/empareja2/security/JwtServiceTest.class
+co/edu/unbosque/empareja2/Empareja2ApplicationTests.class
+co/edu/unbosque/empareja2/controller/InteraccionControllersTest.class
+co/edu/unbosque/empareja2/security/JwtAuthenticationFilterTest.class
+co/edu/unbosque/empareja2/service/impl/AuthServiceImplTest.class
+co/edu/unbosque/empareja2/entity/UsuarioTest.class
+co/edu/unbosque/empareja2/service/impl/PerfilAssemblerTest.class
+co/edu/unbosque/empareja2/mapper/UsuarioMapperTest.class
+co/edu/unbosque/empareja2/service/impl/UsuarioServiceImplTest.class
+co/edu/unbosque/empareja2/TestData.class
+co/edu/unbosque/empareja2/controller/ControllerTestSupport.class
+co/edu/unbosque/empareja2/controller/UsuarioControllerTest.class
+co/edu/unbosque/empareja2/service/impl/ComentarioServiceImplTest.class
+co/edu/unbosque/empareja2/service/impl/CatalogoServiceImplTest.class
+co/edu/unbosque/empareja2/controller/AuthControllerTest.class

@@ -10,8 +10,8 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
 /**
- * Habilita el boton "Authorize" en Swagger UI para poder probar
- * los endpoints protegidos pegando el token JWT obtenido en /api/auth/login.
+ * Habilita el boton "Authorize" en Swagger UI para probar los endpoints
+ * protegidos pegando el token JWT obtenido en /api/auth/login.
  */
 @Configuration
 public class OpenApiConfig {
@@ -21,16 +21,12 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .info(new Info()
-                        .title("Catalogo de Estudiantes Universitarios - API")
-                        .description("API REST para registro, autenticacion y consulta del catalogo de estudiantes")
-                        .version("1.0.0"))
+                .info(new Info().title("Empareja2 - API")
+                        .description("API REST del catalogo de estudiantes universitarios: registro, catalogo "
+                                + "publico, me gusta, comentarios privados y reportes")
+                        .version("2.0.0"))
                 .addSecurityItem(new SecurityRequirement().addList(SCHEME_NAME))
-                .components(new Components()
-                        .addSecuritySchemes(SCHEME_NAME, new SecurityScheme()
-                                .name(SCHEME_NAME)
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")));
+                .components(new Components().addSecuritySchemes(SCHEME_NAME, new SecurityScheme().name(SCHEME_NAME)
+                        .type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
     }
 }
