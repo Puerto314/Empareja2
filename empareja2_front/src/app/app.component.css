@@ -4,3 +4,4 @@
 nav { display:flex; gap:20px; align-items:center; font-weight:500; }
 .exit { padding:6px 14px; border-radius:99px; background:var(--plum); color:#fff; }
 button.exit { font:inherit; border:0; cursor:pointer; }
+.hola { color:var(--muted); }

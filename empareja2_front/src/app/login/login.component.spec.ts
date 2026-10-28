@@ -12,22 +12,33 @@ describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let rutaDestino: string[] = [];
+<<<<<<< HEAD
   let tokenGuardado = '';
   let credenciales: string[] = [];
 
   const authServiceMock: any = {
     guardarToken: (token: string) => { tokenGuardado = token; }
   };
+=======
+  let datosEnviados: any;
+
+  const authServiceMock: any = {};
+>>>>>>> main
   const routerMock = { navigate: (ruta: string[]) => { rutaDestino = ruta; } };
 
   beforeEach(async () => {
     rutaDestino = [];
+<<<<<<< HEAD
     tokenGuardado = '';
     credenciales = [];
     authServiceMock.iniciarSesion = (correo: string, contrasena: string) => {
       credenciales = [correo, contrasena];
       return of({ token: 'token-falso', tokenType: 'Bearer', expiresInMs: 1, usuario: {} });
     };
+=======
+    datosEnviados = undefined;
+    authServiceMock.iniciarSesion = (datos: any) => { datosEnviados = datos; return of({}); };
+>>>>>>> main
 
     await TestBed.configureTestingModule({
       declarations: [LoginComponent],
@@ -51,8 +62,10 @@ describe('LoginComponent', () => {
   it('debe pedir los datos si el formulario está vacío', () => {
     component.entrar();
     expect(component.error()).toBe('Escribe tu correo y tu contraseña para entrar.');
+    expect(datosEnviados).toBeUndefined();
   });
 
+<<<<<<< HEAD
   it('debe iniciar sesión, guardar el token del backend y navegar a universidades', () => {
     component.email = '  ana@unbosque.edu.co ';
     component.password = '12345678';
@@ -92,5 +105,30 @@ describe('LoginComponent', () => {
     component.password = '12345678';
     component.entrar();
     expect(component.error()).toContain('No se pudo conectar con el servidor');
+=======
+  it('debe enviar correo y contraseña y navegar a universidades', () => {
+    component.correo = ' ana@unbosque.edu.co ';
+    component.contrasena = '12345678';
+    component.entrar();
+    expect(datosEnviados).toEqual({ correo: 'ana@unbosque.edu.co', contrasena: '12345678' });
+    expect(rutaDestino).toEqual(['/universidades']);
+  });
+
+  it('debe mostrar error si las credenciales son incorrectas', () => {
+    authServiceMock.iniciarSesion = () => throwError(() => ({ status: 401 }));
+    component.correo = 'ana@unbosque.edu.co';
+    component.contrasena = 'mala';
+    component.entrar();
+    expect(component.error()).toBe('Correo o contraseña incorrectos.');
+    expect(component.cargando()).toBe(false);
+  });
+
+  it('debe avisar si no hay conexión con el servidor', () => {
+    authServiceMock.iniciarSesion = () => throwError(() => ({ status: 0 }));
+    component.correo = 'ana@unbosque.edu.co';
+    component.contrasena = '12345678';
+    component.entrar();
+    expect(component.error()).toContain('servidor');
+>>>>>>> main
   });
 });

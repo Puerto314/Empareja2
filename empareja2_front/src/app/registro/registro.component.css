@@ -1,0 +1,10 @@
+.registro { min-height:100vh; background:linear-gradient(180deg,var(--plum) 0,var(--plum) 230px,var(--paper) 230px); padding-bottom:48px; }
+.band { display:flex; justify-content:space-between; align-items:center; padding:20px 6vw; color:#fff; }
+.logo { font-family:'Bricolage Grotesque',sans-serif; font-size:1.5rem; font-weight:800; }
+.logo b { color:var(--pink); }
+.card { max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:14px; padding:32px; background:#fff; border:1px solid var(--line); border-radius:28px; box-shadow:0 24px 50px rgba(59,31,107,.18); }
+.card h1 { font-size:2.2rem; font-weight:800; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; margin:6px 0; }
+.full { grid-column:1/-1; }
+label { display:flex; flex-direction:column; gap:6px; font-weight:500; }
+@media (max-width:640px) { .grid { grid-template-columns:1fr; } .card { margin:0 4vw; padding:22px; } }

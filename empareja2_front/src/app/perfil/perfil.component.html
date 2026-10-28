@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @if (cargando()) {
   <main class="wrap"><p class="ph">Cargando perfil…</p></main>
 } @else if (error()) {
@@ -18,8 +19,31 @@
         @if (st.estudios[0]; as e) {
           <p class="muted">{{ e.carrera }} · semestre {{ e.semestre }}</p>
         }
+=======
+@if (error()) {
+  <main class="wrap"><p class="ph error">{{ error() }}</p></main>
+} @else if (u(); as st) {
+  <div class="cover" [style.background]="grad(hue(st.nombreCompleto) + 40)">
+    <a [routerLink]="volver()" class="link">Volver</a>
+  </div>
+  <main class="wrap">
+    <header class="head">
+      <span class="avatar big" [style.background]="fondo(st)">{{ ini(st) }}</span>
+      <div class="who">
+        <h1>{{ st.nombreCompleto }}</h1>
+        <p class="muted">{{ st.edad !== null ? st.edad + ' años' : '' }}</p>
+>>>>>>> main
       </div>
+      <!-- PRUEBA A (me gusta): borra esta línea y la de cierre para mostrar el botón
+      <button type="button" class="like" [class.on]="st.meGustaDelUsuarioActual" (click)="alternarMeGusta()" [disabled]="enviando()"
+        [attr.aria-pressed]="st.meGustaDelUsuarioActual" aria-label="Me gusta">
+        <span aria-hidden="true">♥</span> {{ st.totalMeGusta }}
+      </button>
+      fin PRUEBA A -->
     </header>
+    <!-- PRUEBA A (mensaje de error del me gusta): borra esta línea y la de cierre
+    @if (aviso()) { <p class="error">{{ aviso() }}</p> }
+    fin PRUEBA A -->
     <div class="cols">
       <div class="col">
         <article class="box">
@@ -29,15 +53,26 @@
         </article>
         <article class="box">
           <h2>Redes sociales</h2>
+<<<<<<< HEAD
           @for (r of st.redes; track r.idRedSocial) {
             <a class="mini-row red" [href]="r.urlPerfil" target="_blank" rel="noopener noreferrer">
               <span><strong>{{ r.redSocial }}</strong><small>{{ r.alias || r.urlPerfil }}</small></span>
             </a>
           } @empty { <p class="ph">Aún no ha agregado sus redes sociales.</p> }
+=======
+          @if (st.redes.length) {
+            <div class="redes">
+              @for (r of st.redes; track r.idRedSocial) {
+                <a [href]="r.urlPerfil" target="_blank" rel="noopener noreferrer">{{ r.redSocial }}{{ r.alias ? ' · ' + r.alias : '' }}</a>
+              }
+            </div>
+          } @else { <p class="ph">Aún no ha agregado sus redes.</p> }
+>>>>>>> main
         </article>
       </div>
       <div class="col">
         <article class="box">
+<<<<<<< HEAD
           <h2>Datos personales</h2>
           <dl>
             @if (st.edad !== null) { <dt>Edad</dt><dd>{{ st.edad }} años</dd> }
@@ -66,9 +101,36 @@
             } @empty { <p class="ph">Por ahora no hay más estudiantes de esta universidad.</p> }
           </article>
         }
+=======
+          <h2>Estudios</h2>
+          @for (e of st.estudios; track e.idUniversidad + '-' + e.idCarrera) {
+            <div class="estudio">
+              <strong>{{ e.carrera }}</strong>
+              <span>{{ e.universidad }} · semestre {{ e.semestre }}</span>
+            </div>
+          }
+        </article>
+        <!-- PRUEBA B (compañeros de la universidad): borra esta línea y la de cierre para mostrar el bloque
+        @if (otros().length) {
+          <article class="box">
+            <h2>Más de {{ universidadPrincipal()?.universidad }}</h2>
+            @for (o of otros(); track o.id) {
+              <a class="mini-row" [routerLink]="['/estudiantes', o.id]">
+                <span class="avatar" [style.background]="fondo(o)">{{ ini(o) }}</span>
+                <span><strong>{{ o.nombreCompleto }}</strong><small>{{ o.estudios[0]?.carrera }}</small></span>
+              </a>
+            }
+          </article>
+        }
+        fin PRUEBA B -->
+>>>>>>> main
       </div>
     </div>
   </main>
 } @else {
+<<<<<<< HEAD
   <main class="wrap"><p class="ph">No encontramos este perfil. <a routerLink="/universidades" class="link">Volver a universidades</a></p></main>
+=======
+  <main class="wrap"><p class="ph">Cargando perfil…</p></main>
+>>>>>>> main
 }

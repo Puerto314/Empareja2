@@ -10,6 +10,7 @@
     </div>
   </header>
   @if (cargando()) {
+<<<<<<< HEAD
     <p class="muted">Cargando universidades…</p>
   } @else if (error()) {
     <p class="error" role="alert">{{ error() }}</p>
@@ -28,6 +29,24 @@
         </a>
       } @empty {
         <p class="muted">Todavía no hay universidades registradas.</p>
+=======
+    <p class="estado">Cargando universidades…</p>
+  } @else if (error()) {
+    <p class="estado error">{{ error() }}</p>
+  } @else if (!unis().length) {
+    <p class="estado">Aún no hay universidades registradas.</p>
+  } @else {
+    <section class="mosaic">
+      @for (r of unis(); track r.universidad.idUniversidad; let i = $index) {
+        <a class="tile" [class.big]="i === 0" [class.wide]="i >= 3" [routerLink]="['/universidades', r.universidad.idUniversidad]" [style.background]="grad(hue(r.universidad.nombre))">
+          <span class="sigla">{{ r.universidad.sigla }}</span>
+          <span class="stack">
+            @for (s of r.vistaPrevia; track s.id) { <span class="avatar mini" [style.background]="fondo(s)">{{ ini(s) }}</span> }
+          </span>
+          <span class="tile-name">{{ r.universidad.nombre }}</span>
+          <span class="tile-count">{{ r.cantidad }} {{ r.cantidad === 1 ? 'estudiante' : 'estudiantes' }}</span>
+        </a>
+>>>>>>> main
       }
     </section>
   }
