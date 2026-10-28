@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
+import co.edu.unbosque.empareja2.dto.response.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
@@ -74,5 +75,19 @@ public class ReaccionServiceImpl implements ReaccionService {
         Usuario destinatario = usuarioFinder.estudianteVisible(idPerfil);
         return reaccionRepository.listarPorDestinatario(destinatario.getId(), TipoReaccion.ME_GUSTA).stream()
                 .map(interaccionMapper::toReaccionDTO).toList();
+    }
+
+    @Override
+    public List<ReaccionAdminDTO> listarTodasParaAdmin() {
+        return reaccionRepository.listarTodas().stream().map(interaccionMapper::toReaccionAdminDTO).toList();
+    }
+
+    @Override
+    @Transactional
+    public void eliminarPorAdmin(Long idAutor, Integer numeroReaccion) {
+        if (reaccionRepository.eliminar(idAutor, numeroReaccion) == 0) {
+            throw new ResourceNotFoundException(
+                    "No existe la reaccion " + numeroReaccion + " del usuario " + idAutor);
+        }
     }
 }

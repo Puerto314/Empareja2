@@ -35,6 +35,7 @@ import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
+import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.mapper.UsuarioMapper;
 import co.edu.unbosque.empareja2.repository.ConteoReacciones;
@@ -258,7 +259,7 @@ class UsuarioServiceImplTest {
     @Test
     void adminNoPuedeCambiarElCorreoPorUnoYaUsado() {
         when(usuarioFinder.porId(2L)).thenReturn(luis);
-        when(usuarioRepository.existsByCorreo("ana@mail.com")).thenReturn(true);
+        when(usuarioRepository.existsByCorreoAndIdNot("ana@mail.com", 2L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.actualizarPorAdmin(2L, adminRequest("ana@mail.com", null, null)))
                 .isInstanceOf(DuplicateResourceException.class);
@@ -268,7 +269,8 @@ class UsuarioServiceImplTest {
     @Test
     void adminNoPuedeCambiarElDocumentoPorUnoYaUsado() {
         when(usuarioFinder.porId(2L)).thenReturn(luis);
-        when(usuarioRepository.existsByTipoDocumentoAndDocumento(TipoDocumento.CC, "999")).thenReturn(true);
+        when(usuarioRepository.existsByTipoDocumentoAndDocumentoAndIdNot(TipoDocumento.CC, "999", 2L))
+                .thenReturn(true);
 
         assertThatThrownBy(() -> service.actualizarPorAdmin(2L, adminRequest("luis@mail.com", null, null)))
                 .isInstanceOf(DuplicateResourceException.class).hasMessageContaining("documento");
@@ -297,5 +299,71 @@ class UsuarioServiceImplTest {
 
         assertThat(service.listarParaAdmin()).extracting(UsuarioPerfilDTO::correo).containsExactly("ana@mail.com",
                 "luis@mail.com");
+    }
+
+    @Test
+    void adminCreaEstudianteValidandoLasMismasReglasQueElRegistro() {
+        service.crearPorAdmin(adminRequest("nuevo@mail.com", "secreto123", null));
+
+        verify(perfilAssembler).validarCorreo("nuevo@mail.com");
+        verify(perfilAssembler).validarDocumento(TipoDocumento.CC, "999");
+        verify(perfilAssembler).exigirDatosDeEstudiante(null, null);
+        verify(perfilAssembler).sincronizarEstudios(any(Usuario.class), any());
+    }
+
+    @Test
+    void adminCreaAdministradorSinColeccionesDeCatalogo() {
+        service.crearPorAdmin(adminRequest("root", "secreto123", Rol.ADMIN));
+
+        verify(perfilAssembler, never()).validarCorreo(any());
+        verify(perfilAssembler, never()).sincronizarEstudios(any(), any());
+        verify(perfilAssembler).validarEdadMinima(null);
+    }
+
+    @Test
+    void noSePuedeEliminarAlUltimoAdministrador() {
+        Usuario admin = TestData.usuario(9L, "root", "Root", "Admin");
+        admin.setRol(Rol.ADMIN);
+        when(usuarioFinder.porId(9L)).thenReturn(admin);
+        when(usuarioRepository.contarPorRol(Rol.ADMIN)).thenReturn(1L);
+
+        assertThatThrownBy(() -> service.eliminarPorAdmin(9L)).isInstanceOf(OperationNotAllowedException.class);
+        verify(usuarioRepository, never()).delete(any());
+    }
+
+    @Test
+    void sePuedeEliminarUnAdministradorSiQuedaOtro() {
+        Usuario admin = TestData.usuario(9L, "root", "Root", "Admin");
+        admin.setRol(Rol.ADMIN);
+        when(usuarioFinder.porId(9L)).thenReturn(admin);
+        when(usuarioRepository.contarPorRol(Rol.ADMIN)).thenReturn(2L);
+
+        service.eliminarPorAdmin(9L);
+
+        verify(usuarioRepository).delete(admin);
+    }
+
+    @Test
+    void noSePuedeQuitarElRolAlUltimoAdministrador() {
+        Usuario admin = TestData.usuario(9L, "root", "Root", "Admin");
+        admin.setRol(Rol.ADMIN);
+        when(usuarioFinder.porId(9L)).thenReturn(admin);
+        when(usuarioRepository.contarPorRol(Rol.ADMIN)).thenReturn(1L);
+
+        assertThatThrownBy(() -> service.actualizarPorAdmin(9L, adminRequest("root", null, Rol.ESTUDIANTE)))
+                .isInstanceOf(OperationNotAllowedException.class);
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void alConvertirEnAdministradorSeLimpianSusColecciones() {
+        luis.getIntereses().add("cine");
+        when(usuarioFinder.porId(2L)).thenReturn(luis);
+
+        service.actualizarPorAdmin(2L, adminRequest("luis@mail.com", null, Rol.ADMIN));
+
+        assertThat(luis.getIntereses()).isEmpty();
+        assertThat(luis.getEstudios()).isEmpty();
+        verify(perfilAssembler, never()).sincronizarEstudios(any(), any());
     }
 }

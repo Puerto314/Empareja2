@@ -128,4 +128,21 @@ class ComentarioServiceImplTest {
         assertThat(service.listarEnviados("ana@mail.com")).hasSize(1);
         verify(comentarioRepository).listarEnviados(1L);
     }
+
+    @Test
+    void adminListaTodosLosComentarios() {
+        when(comentarioRepository.listarTodos())
+                .thenReturn(List.of(new Comentario(ana, luis, 1, "hola"), new Comentario(luis, ana, 1, "chao")));
+
+        assertThat(service.listarTodosParaAdmin()).hasSize(2);
+    }
+
+    @Test
+    void adminEliminaUnComentarioYSiNoExisteDa404() {
+        when(comentarioRepository.eliminar(1L, 1)).thenReturn(1);
+        when(comentarioRepository.eliminar(1L, 9)).thenReturn(0);
+
+        service.eliminarPorAdmin(1L, 1);
+        assertThatThrownBy(() -> service.eliminarPorAdmin(1L, 9)).isInstanceOf(ResourceNotFoundException.class);
+    }
 }

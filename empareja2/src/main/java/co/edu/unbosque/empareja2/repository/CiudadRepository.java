@@ -53,4 +53,19 @@ public class CiudadRepository {
         ciudad.setIdCiudad(id.longValue());
         return ciudad;
     }
+
+    public boolean existsByNombreAndDepartamentoAndIdNot(String nombre, String departamento, Long id) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) "
+                + "AND LOWER(departamento) = LOWER(?) AND id_ciudad <> ?", Integer.class, nombre, departamento, id);
+        return n != null && n > 0;
+    }
+
+    public void update(Ciudad ciudad) {
+        jdbc.update("UPDATE ciudad SET nombre = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
+                ciudad.getDepartamento(), ciudad.getIdCiudad());
+    }
+
+    public void deleteById(Long id) {
+        jdbc.update("DELETE FROM ciudad WHERE id_ciudad = ?", id);
+    }
 }

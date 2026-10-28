@@ -1,16 +1,21 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/Empareja2Application.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/config/AdminSeeder.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/config/CatalogoSeeder.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/config/EsquemaMigrador.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/config/OpenApiConfig.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/config/SecurityConfig.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/AdminCatalogoController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/AdminController.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/AdminModeracionController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/AuthController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/CatalogoController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/ComentarioController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/ReaccionController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/ReporteController.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/controller/UsuarioController.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/ActualizarOfertaRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/ActualizarPerfilRequestDTO.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/ActualizarReporteRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/AdminUsuarioRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/CarreraRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/CiudadRequestDTO.java
@@ -31,6 +36,7 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/EstudioDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/MeGustaDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/OfreceDTO.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/ReaccionAdminDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/ReaccionDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/RedPerfilDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/response/RedSocialDTO.java
@@ -42,6 +48,7 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Ciudad.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Comentario.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Direccion.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/EstadoReporte.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Estudio.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Genero.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Ofrece.java
@@ -57,6 +64,7 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Usuario.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/DuplicateResourceException.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/GlobalExceptionHandler.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/OperationNotAllowedException.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/ResourceNotFoundException.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/mapper/CatalogoMapper.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/mapper/InteraccionMapper.java

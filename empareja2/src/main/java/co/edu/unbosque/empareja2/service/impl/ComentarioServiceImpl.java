@@ -9,6 +9,7 @@ import co.edu.unbosque.empareja2.dto.request.ComentarioRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.ComentarioDTO;
 import co.edu.unbosque.empareja2.entity.Comentario;
 import co.edu.unbosque.empareja2.entity.Usuario;
+import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
 import co.edu.unbosque.empareja2.repository.ComentarioRepository;
 import co.edu.unbosque.empareja2.service.ComentarioService;
@@ -61,5 +62,19 @@ public class ComentarioServiceImpl implements ComentarioService {
         Usuario actual = usuarioFinder.porCorreo(correoActual);
         return comentarioRepository.listarEnviados(actual.getId()).stream().map(interaccionMapper::toComentarioDTO)
                 .toList();
+    }
+
+    @Override
+    public List<ComentarioDTO> listarTodosParaAdmin() {
+        return comentarioRepository.listarTodos().stream().map(interaccionMapper::toComentarioDTO).toList();
+    }
+
+    @Override
+    @Transactional
+    public void eliminarPorAdmin(Long idAutor, Integer numeroComentario) {
+        if (comentarioRepository.eliminar(idAutor, numeroComentario) == 0) {
+            throw new ResourceNotFoundException(
+                    "No existe el comentario " + numeroComentario + " del usuario " + idAutor);
+        }
     }
 }

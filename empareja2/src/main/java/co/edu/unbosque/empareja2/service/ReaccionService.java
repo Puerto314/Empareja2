@@ -3,6 +3,7 @@ package co.edu.unbosque.empareja2.service;
 import java.util.List;
 
 import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
+import co.edu.unbosque.empareja2.dto.response.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
 
 /**
@@ -16,4 +17,10 @@ public interface ReaccionService {
 
     /** Lista publica de quienes dieron me gusta a un perfil. */
     List<ReaccionDTO> listarMeGusta(Long idPerfil);
+
+    /** Moderacion (solo ADMIN): todas las reacciones del sistema. */
+    List<ReaccionAdminDTO> listarTodasParaAdmin();
+
+    /** Moderacion (solo ADMIN): elimina una reaccion por su llave (autor + numero). */
+    void eliminarPorAdmin(Long idAutor, Integer numeroReaccion);
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -60,5 +61,29 @@ public class CatalogoController {
     @Operation(summary = "Lista que carreras ofrece cada universidad; con ?universidadId=N filtra por universidad")
     public ResponseEntity<List<OfreceDTO>> oferta(@RequestParam(required = false) Long universidadId) {
         return ResponseEntity.ok(catalogoService.listarOferta(universidadId));
+    }
+
+    @GetMapping("/ciudades/{id}")
+    @Operation(summary = "Obtiene una ciudad por id")
+    public ResponseEntity<CiudadDTO> ciudad(@PathVariable Long id) {
+        return ResponseEntity.ok(catalogoService.obtenerCiudad(id));
+    }
+
+    @GetMapping("/universidades/{id}")
+    @Operation(summary = "Obtiene una universidad por id")
+    public ResponseEntity<UniversidadDTO> universidad(@PathVariable Long id) {
+        return ResponseEntity.ok(catalogoService.obtenerUniversidad(id));
+    }
+
+    @GetMapping("/carreras/{id}")
+    @Operation(summary = "Obtiene una carrera por id")
+    public ResponseEntity<CarreraDTO> carrera(@PathVariable Long id) {
+        return ResponseEntity.ok(catalogoService.obtenerCarrera(id));
+    }
+
+    @GetMapping("/redes-sociales/{id}")
+    @Operation(summary = "Obtiene una red social por id")
+    public ResponseEntity<RedSocialDTO> redSocial(@PathVariable Long id) {
+        return ResponseEntity.ok(catalogoService.obtenerRedSocial(id));
     }
 }

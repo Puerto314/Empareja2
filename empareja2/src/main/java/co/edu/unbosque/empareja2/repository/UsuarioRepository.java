@@ -97,6 +97,20 @@ public class UsuarioRepository {
 				documento) > 0;
 	}
 
+	/** Igual que existsByCorreo pero ignorando al propio usuario (para editar sin falso duplicado). */
+	public boolean existsByCorreoAndIdNot(String correo, Long id) {
+		return contar("SELECT COUNT(*) FROM usuario WHERE correo = ? AND id_usuario <> ?", correo, id) > 0;
+	}
+
+	public boolean existsByTipoDocumentoAndDocumentoAndIdNot(TipoDocumento tipoDocumento, String documento, Long id) {
+		return contar("SELECT COUNT(*) FROM usuario WHERE tipo_documento = ? AND documento = ? AND id_usuario <> ?",
+				tipoDocumento.name(), documento, id) > 0;
+	}
+
+	public long contarPorRol(Rol rol) {
+		return contar("SELECT COUNT(*) FROM usuario WHERE rol = ?", rol.name());
+	}
+
 	/** Catalogo completo: todos los usuarios con ese rol, excepto el indicado. */
 	public List<Usuario> findByRolAndIdNotOrderByNombreAscApellidoAsc(Rol rol, Long idExcluido) {
 		return conColecciones(

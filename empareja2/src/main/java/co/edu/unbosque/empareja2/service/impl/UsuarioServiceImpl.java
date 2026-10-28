@@ -18,6 +18,7 @@ import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
+import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.mapper.UsuarioMapper;
 import co.edu.unbosque.empareja2.repository.ReaccionRepository;
@@ -153,12 +154,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (request.contrasena() == null || request.contrasena().isBlank()) {
             throw new IllegalArgumentException("La contrasena es obligatoria al crear un usuario");
         }
+        Rol rol = request.rol() != null ? request.rol() : Rol.ESTUDIANTE;
+        validarSegunRol(rol, request);
 
         Usuario usuario = usuarioMapper.toEntity(request, passwordEncoder.encode(request.contrasena()));
-        perfilAssembler.aplicarIntereses(usuario, request.intereses());
-        perfilAssembler.sincronizarEstudios(usuario, request.estudios());
-        perfilAssembler.sincronizarRedes(usuario, request.redes());
-
+        if (rol == Rol.ESTUDIANTE) {
+            aplicarColecciones(usuario, request);
+        }
         return usuarioMapper.toPerfilDTO(usuarioRepository.save(usuario));
     }
 
@@ -167,29 +169,57 @@ public class UsuarioServiceImpl implements UsuarioService {
     public UsuarioPerfilDTO actualizarPorAdmin(Long id, AdminUsuarioRequestDTO request) {
         Usuario usuario = usuarioFinder.porId(id);
 
-        if (!usuario.getCorreo().equals(request.correo()) && usuarioRepository.existsByCorreo(request.correo())) {
+        if (usuarioRepository.existsByCorreoAndIdNot(request.correo(), id)) {
             throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
         }
-        boolean cambiaDocumento = usuario.getTipoDocumento() != request.tipoDocumento()
-                || !usuario.getDocumento().equals(request.documento());
-        if (cambiaDocumento
-                && usuarioRepository.existsByTipoDocumentoAndDocumento(request.tipoDocumento(), request.documento())) {
+        if (usuarioRepository.existsByTipoDocumentoAndDocumentoAndIdNot(request.tipoDocumento(), request.documento(),
+                id)) {
             throw new DuplicateResourceException("Ya existe un usuario con ese documento");
         }
+        Rol rolFinal = request.rol() != null ? request.rol() : usuario.getRol();
+        if (usuario.getRol() == Rol.ADMIN && rolFinal != Rol.ADMIN) {
+            exigirOtroAdministrador("No se puede quitar el rol al ultimo administrador");
+        }
+        validarSegunRol(rolFinal, request);
 
         usuario.setCorreo(request.correo());
         usuarioMapper.aplicarCamposAdmin(usuario, request);
-        if (request.rol() != null) {
-            usuario.setRol(request.rol());
-        }
+        usuario.setRol(rolFinal);
         if (request.contrasena() != null && !request.contrasena().isBlank()) {
             usuario.setContrasenaHash(passwordEncoder.encode(request.contrasena()));
         }
+        if (rolFinal == Rol.ESTUDIANTE) {
+            aplicarColecciones(usuario, request);
+        } else {
+            // Un administrador no es un perfil del catalogo: no tiene intereses, estudios ni redes.
+            usuario.getIntereses().clear();
+            usuario.getEstudios().clear();
+            usuario.getRedes().clear();
+        }
+
+        return usuarioMapper.toPerfilDTO(usuarioRepository.save(usuario));
+    }
+
+    /** Un estudiante debe cumplir las mismas reglas que al registrarse; un administrador solo la edad si la indica. */
+    private void validarSegunRol(Rol rol, AdminUsuarioRequestDTO request) {
+        if (rol == Rol.ESTUDIANTE) {
+            perfilAssembler.validarCorreo(request.correo());
+            perfilAssembler.validarDocumento(request.tipoDocumento(), request.documento());
+            perfilAssembler.exigirDatosDeEstudiante(request.fechaNacimiento(), request.estudios());
+        }
+        perfilAssembler.validarEdadMinima(request.fechaNacimiento());
+    }
+
+    private void aplicarColecciones(Usuario usuario, AdminUsuarioRequestDTO request) {
         perfilAssembler.aplicarIntereses(usuario, request.intereses());
         perfilAssembler.sincronizarEstudios(usuario, request.estudios());
         perfilAssembler.sincronizarRedes(usuario, request.redes());
+    }
 
-        return usuarioMapper.toPerfilDTO(usuarioRepository.save(usuario));
+    private void exigirOtroAdministrador(String mensaje) {
+        if (usuarioRepository.contarPorRol(Rol.ADMIN) <= 1) {
+            throw new OperationNotAllowedException(mensaje);
+        }
     }
 
     @Override
@@ -204,6 +234,9 @@ public class UsuarioServiceImpl implements UsuarioService {
      * de datos son ON DELETE CASCADE (ver database/empareja2.sql).
      */
     private void eliminarUsuario(Usuario usuario) {
+        if (usuario.getRol() == Rol.ADMIN) {
+            exigirOtroAdministrador("No se puede eliminar al ultimo administrador");
+        }
         usuarioRepository.delete(usuario);
     }
 }

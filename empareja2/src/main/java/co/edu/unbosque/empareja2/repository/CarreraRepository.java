@@ -60,4 +60,24 @@ public class CarreraRepository {
         }
         return guardadas;
     }
+
+    public boolean existsByNombreAndIdNot(String nombre, Long id) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM carrera WHERE LOWER(nombre) = LOWER(?) AND id_carrera <> ?",
+                Integer.class, nombre, id);
+        return n != null && n > 0;
+    }
+
+    /** Cuantos usuarios estudian esta carrera (en cualquier universidad). */
+    public long contarEstudiantes(Long idCarrera) {
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudio WHERE id_carrera = ?", Long.class, idCarrera);
+        return n == null ? 0 : n;
+    }
+
+    public void update(Carrera carrera) {
+        jdbc.update("UPDATE carrera SET nombre = ? WHERE id_carrera = ?", carrera.getNombre(), carrera.getIdCarrera());
+    }
+
+    public void deleteById(Long id) {
+        jdbc.update("DELETE FROM carrera WHERE id_carrera = ?", id);
+    }
 }

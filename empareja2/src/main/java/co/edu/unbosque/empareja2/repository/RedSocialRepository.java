@@ -63,4 +63,25 @@ public class RedSocialRepository {
         }
         return guardadas;
     }
+
+    public boolean existsByNombreRedSocialAndIdNot(String nombre, Long id) {
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM red_social WHERE LOWER(nombre_red_social) = LOWER(?) "
+                + "AND id_red_social <> ?", Integer.class, nombre, id);
+        return n != null && n > 0;
+    }
+
+    /** Cuantos usuarios tienen un perfil registrado en esta red social. */
+    public long contarUsos(Long idRedSocial) {
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM tiene WHERE id_red_social = ?", Long.class, idRedSocial);
+        return n == null ? 0 : n;
+    }
+
+    public void update(RedSocial red) {
+        jdbc.update("UPDATE red_social SET nombre_red_social = ?, url = ? WHERE id_red_social = ?",
+                red.getNombreRedSocial(), red.getUrl(), red.getIdRedSocial());
+    }
+
+    public void deleteById(Long id) {
+        jdbc.update("DELETE FROM red_social WHERE id_red_social = ?", id);
+    }
 }

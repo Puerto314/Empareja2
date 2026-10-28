@@ -18,6 +18,7 @@ import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Tiene;
+import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
@@ -57,6 +58,45 @@ public class PerfilAssembler {
         Integer edad = Usuario.calcularEdad(fechaNacimiento, LocalDate.now());
         if (edad < Usuario.EDAD_MINIMA) {
             throw new IllegalArgumentException("Debes tener al menos " + Usuario.EDAD_MINIMA + " anos para registrarte");
+        }
+    }
+
+    /**
+     * Un ESTUDIANTE aparece en el catalogo, asi que (como en el registro propio) debe
+     * tener fecha de nacimiento valida y al menos una carrera con su universidad.
+     */
+    public void exigirDatosDeEstudiante(LocalDate fechaNacimiento, List<EstudioRequestDTO> estudios) {
+        if (fechaNacimiento == null) {
+            throw new IllegalArgumentException("La fecha de nacimiento es obligatoria para un estudiante");
+        }
+        if (estudios == null || estudios.isEmpty()) {
+            throw new IllegalArgumentException("Debes indicar al menos una carrera y universidad");
+        }
+    }
+
+    /** El nombre de usuario de un estudiante es su correo, asi que debe tener formato de correo. */
+    public void validarCorreo(String correo) {
+        if (correo == null || !correo.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            throw new IllegalArgumentException("El correo no tiene un formato valido");
+        }
+    }
+
+    /**
+     * CC y CE son numericos; el pasaporte es alfanumerico. La tarjeta de identidad
+     * (TI) es de menores de edad y el catalogo exige ser mayor de 18 anos.
+     */
+    public void validarDocumento(TipoDocumento tipo, String documento) {
+        if (tipo == TipoDocumento.TI) {
+            throw new IllegalArgumentException(
+                    "La tarjeta de identidad (TI) es para menores de edad; usa CC, CE o PASAPORTE");
+        }
+        String valor = documento == null ? "" : documento;
+        boolean valido = tipo == TipoDocumento.PASAPORTE ? valor.matches("^[A-Za-z0-9]{6,15}$")
+                : valor.matches("^\\d{5,15}$");
+        if (!valido) {
+            throw new IllegalArgumentException(tipo == TipoDocumento.PASAPORTE
+                    ? "El pasaporte debe tener entre 6 y 15 letras o numeros"
+                    : "El documento debe tener entre 5 y 15 digitos");
         }
     }
 

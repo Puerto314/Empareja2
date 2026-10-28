@@ -9,6 +9,7 @@ import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
@@ -34,7 +35,8 @@ public record AdminUsuarioRequestDTO(
         @NotBlank(message = "El apellido es obligatorio")
         @Size(max = 100, message = "El apellido es demasiado largo") String apellido,
         @Past(message = "La fecha de nacimiento debe ser en el pasado") LocalDate fechaNacimiento,
-        @Size(max = 500, message = "La foto de perfil es demasiado larga") String fotoPerfil,
+        @Size(max = 500, message = "La foto de perfil es demasiado larga")
+        @Pattern(regexp = "^(https?://\\S+)?$", message = "La foto de perfil debe ser una url http:// o https://") String fotoPerfil,
         Set<@NotBlank(message = "Un interes no puede estar vacio")
         @Size(max = 60, message = "Un interes es demasiado largo") String> intereses,
         List<@Valid EstudioRequestDTO> estudios,

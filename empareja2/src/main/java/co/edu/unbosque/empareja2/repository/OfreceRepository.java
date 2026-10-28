@@ -2,6 +2,7 @@ package co.edu.unbosque.empareja2.repository;
 
 import java.util.List;
 
+import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -56,5 +57,36 @@ public class OfreceRepository {
                 ofrece.getCarrera().getIdCarrera(), ofrece.getUniversidad().getIdUniversidad(),
                 ofrece.getFacultad());
         return ofrece;
+    }
+
+    public Optional<Ofrece> findByIds(Long idCarrera, Long idUniversidad) {
+        return jdbc.query(SELECT + "WHERE o.id_carrera = ? AND o.id_universidad = ?", MAPPER, idCarrera, idUniversidad)
+                .stream().findFirst();
+    }
+
+    /** Cuantos usuarios estudian esa carrera en esa universidad (dependen de que la oferta exista). */
+    public long contarEstudiantes(Long idCarrera, Long idUniversidad) {
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudio WHERE id_carrera = ? AND id_universidad = ?",
+                Long.class, idCarrera, idUniversidad);
+        return n == null ? 0 : n;
+    }
+
+    public void update(Ofrece ofrece) {
+        jdbc.update("UPDATE ofrece SET facultad = ? WHERE id_carrera = ? AND id_universidad = ?", ofrece.getFacultad(),
+                ofrece.getCarrera().getIdCarrera(), ofrece.getUniversidad().getIdUniversidad());
+    }
+
+    public void delete(Long idCarrera, Long idUniversidad) {
+        jdbc.update("DELETE FROM ofrece WHERE id_carrera = ? AND id_universidad = ?", idCarrera, idUniversidad);
+    }
+
+    /** Se usa al eliminar una universidad: sus ofertas se van con ella. */
+    public void eliminarPorUniversidad(Long idUniversidad) {
+        jdbc.update("DELETE FROM ofrece WHERE id_universidad = ?", idUniversidad);
+    }
+
+    /** Se usa al eliminar una carrera: sus ofertas se van con ella. */
+    public void eliminarPorCarrera(Long idCarrera) {
+        jdbc.update("DELETE FROM ofrece WHERE id_carrera = ?", idCarrera);
     }
 }
