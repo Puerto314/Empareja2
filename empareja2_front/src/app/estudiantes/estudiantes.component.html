@@ -1,27 +1,36 @@
-<main class="layout">
-  <aside class="side" [style.background]="grad(hue(uni()))">
-    <span class="sigla">{{ sigla() }}</span>
-    <a routerLink="/universidades" class="link">Cambiar universidad</a>
-    <h1>{{ uni() }}</h1>
-    <p>{{ todos().length }} {{ todos().length === 1 ? 'estudiante' : 'estudiantes' }}</p>
-    <input class="search" placeholder="Buscar por nombre o carrera" (input)="q.set($any($event.target).value)">
-    <div class="filters">
-      @for (f of filtros; track f.id) {
-        <button type="button" [class.on]="rango() === f.id" (click)="rango.set(f.id)">{{ f.label }}</button>
+@if (cargando()) {
+  <main class="layout"><p class="muted">Cargando estudiantes…</p></main>
+} @else if (error()) {
+  <main class="layout"><p class="empty" role="alert">{{ error() }} <a routerLink="/universidades" class="link">Volver a universidades</a></p></main>
+} @else if (!universidad()) {
+  <main class="layout"><p class="empty">No encontramos esta universidad. <a routerLink="/universidades" class="link">Volver a universidades</a></p></main>
+} @else {
+  <main class="layout">
+    <aside class="side" [style.background]="grad(hue(uni()))">
+      <span class="sigla">{{ sigla() }}</span>
+      <a routerLink="/universidades" class="link">Cambiar universidad</a>
+      <h1>{{ uni() }}</h1>
+      <p>{{ todos().length }} {{ todos().length === 1 ? 'estudiante' : 'estudiantes' }}</p>
+      <input class="search" placeholder="Buscar por nombre o carrera" aria-label="Buscar por nombre o carrera" (input)="q.set($any($event.target).value)">
+      <div class="filters">
+        @for (f of filtros; track f.id) {
+          <button type="button" [class.on]="rango() === f.id" (click)="rango.set(f.id)">{{ f.label }}</button>
+        }
+      </div>
+    </aside>
+    <section class="cards">
+      @for (s of list(); track s.id) {
+        @let e = estudioEn(s);
+        <a class="card" [routerLink]="['/estudiantes', s.id]">
+          <span class="cover" [style.background]="grad(hue(s.nombreCompleto) + 40)"></span>
+          <span class="avatar big-ish" [style.background]="grad(hue(s.nombreCompleto))">{{ ini(s.nombreCompleto) }}@if (s.fotoPerfil) {<img [src]="s.fotoPerfil" alt="" (error)="$any($event.target).hidden = true">}</span>
+          <strong>{{ s.nombreCompleto }}</strong>
+          <small>{{ e?.carrera }}</small>
+          <span class="chips"><em>Semestre {{ e?.semestre }}</em></span>
+        </a>
+      } @empty {
+        <p class="empty">No encontramos a nadie con esos filtros. Prueba con otro nombre, carrera o semestre.</p>
       }
-    </div>
-  </aside>
-  <section class="cards">
-    @for (s of list(); track s.id) {
-      <a class="card" [routerLink]="['/estudiantes', s.id]">
-        <span class="cover" [style.background]="grad(hue(s.fullName) + 40)"></span>
-        <span class="avatar big-ish" [style.background]="grad(hue(s.fullName))">{{ ini(s.fullName) }}</span>
-        <strong>{{ s.fullName }}</strong>
-        <small>{{ s.career }}</small>
-        <span class="chips"><em>Semestre {{ s.semester }}</em></span>
-      </a>
-    } @empty {
-      <p class="empty">No encontramos a nadie con esos filtros. Prueba con otro nombre, carrera o semestre.</p>
-    }
-  </section>
-</main>
+    </section>
+  </main>
+}

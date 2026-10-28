@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 
 import { authGuard } from './auth.guard';
@@ -10,7 +12,11 @@ describe('authGuard', () => {
     rutaDestino = [];
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [{ provide: Router, useValue: { navigate: (ruta: string[]) => { rutaDestino = ruta; } } }]
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: Router, useValue: { navigate: (ruta: string[]) => { rutaDestino = ruta; } } }
+      ]
     });
   });
 

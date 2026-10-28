@@ -1,15 +1,25 @@
+import { EstudioModel } from './estudio.model';
+import { GeneroEnum } from './genero.enum';
+import { RedPerfilModel } from './red-perfil.model';
 import { RolEnum } from './rol.enum';
+import { TipoDocumentoEnum } from './tipo-documento.enum';
 
-// Refleja StudentProfileDTO (perfil completo, solo del dueño o un admin).
+// Refleja UsuarioPerfilDTO (perfil completo, solo del dueño o un administrador).
 export interface PerfilModel {
   id: number;
-  email: string;
-  role: RolEnum;
-  fullName: string;
-  career: string;
-  semester: number;
-  university: string;
-  address?: string;
-  birthDate?: string;
-  createdAt?: string;
+  tipoDocumento: TipoDocumentoEnum | null;
+  documento: string | null;
+  correo: string;
+  rol: RolEnum;
+  genero: GeneroEnum | null;
+  nombre: string;
+  apellido: string;
+  nombreCompleto: string;
+  edad: number | null;
+  fechaNacimiento: string | null;
+  fotoPerfil: string | null;
+  intereses: string[];
+  estudios: EstudioModel[];
+  redes: RedPerfilModel[];
+  fechaCreacion: string;
 }

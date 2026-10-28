@@ -9,15 +9,15 @@
       <li>Entra a su perfil</li>
     </ul>
   </section>
-  <section class="card">
+  <form class="card" (ngSubmit)="entrar()" novalidate>
     <h2>Inicia sesión</h2>
     <label>Correo universitario
-      <input type="email" [(ngModel)]="email" placeholder="nombre@unbosque.edu.co">
+      <input type="text" name="email" autocomplete="username" [(ngModel)]="email" placeholder="nombre@unbosque.edu.co">
     </label>
     <label>Contraseña
-      <input type="password" [(ngModel)]="password" placeholder="Tu contraseña">
+      <input type="password" name="password" autocomplete="current-password" [(ngModel)]="password" placeholder="Tu contraseña">
     </label>
-    @if (error()) { <p class="error">{{ error() }}</p> }
-    <button class="btn" (click)="entrar()" [disabled]="cargando()">Entrar</button>
-  </section>
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+    <button type="submit" class="btn" [disabled]="cargando()">{{ cargando() ? 'Entrando…' : 'Entrar' }}</button>
+  </form>
 </main>

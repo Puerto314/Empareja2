@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -18,22 +19,32 @@ export class LoginComponent {
   cargando = signal(false);
 
   entrar(): void {
-    if (!this.email.includes('@') || !this.password) {
+    const correo = this.email.trim();
+    // No se exige "@": el backend también acepta un usuario simple (ej. el administrador).
+    if (!correo || !this.password) {
       this.error.set('Escribe tu correo y tu contraseña para entrar.');
       return;
     }
     this.error.set('');
     this.cargando.set(true);
-    this.authService.iniciarSesion(this.email, this.password).subscribe({
-      next: token => {
-        this.authService.guardarToken(token);
+    this.authService.iniciarSesion(correo, this.password).subscribe({
+      next: respuesta => {
+        this.authService.guardarToken(respuesta.token);
         this.cargando.set(false);
         this.router.navigate(['/universidades']);
       },
-      error: () => {
-        this.error.set('Correo o contraseña incorrectos.');
+      error: (err: unknown) => {
+        this.error.set(this.mensajeDeError(err));
         this.cargando.set(false);
       }
     });
+  }
+
+  private mensajeDeError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 401) { return 'Correo o contraseña incorrectos.'; }
+      if (err.status === 0) { return 'No se pudo conectar con el servidor. Intenta de nuevo en un momento.'; }
+    }
+    return 'No pudimos iniciar sesión. Intenta de nuevo.';
   }
 }

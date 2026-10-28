@@ -17,7 +17,7 @@ export class AppComponent {
   constructor() {
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe((e: any) => this.mostrarBarra = !e.urlAfterRedirects.startsWith('/login'));
+      .subscribe(e => this.mostrarBarra = !(e as NavigationEnd).urlAfterRedirects.startsWith('/login'));
   }
 
   cerrarSesion(): void {

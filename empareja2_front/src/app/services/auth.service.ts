@@ -1,12 +1,24 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { API_URL } from '../config/api.config';
+import { AuthResponseModel } from '../models/auth-response.model';
+import { LoginRequestModel } from '../models/login-request.model';
+import { RegistroRequestModel } from '../models/registro-request.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private http = inject(HttpClient);
 
-  // Sin conexión aún. Después: POST /api/auth/login con { email, password } y devolver el token JWT.
-  iniciarSesion(email: string, password: string): Observable<string> {
-    return of('token-demo');
+  // POST /api/auth/login -> { token, tokenType, expiresInMs, usuario }
+  iniciarSesion(correo: string, contrasena: string): Observable<AuthResponseModel> {
+    const cuerpo: LoginRequestModel = { correo, contrasena };
+    return this.http.post<AuthResponseModel>(`${API_URL}/auth/login`, cuerpo);
+  }
+
+  // POST /api/auth/registro (el backend responde 201 con el mismo formato del login)
+  registrar(datos: RegistroRequestModel): Observable<AuthResponseModel> {
+    return this.http.post<AuthResponseModel>(`${API_URL}/auth/registro`, datos);
   }
 
   guardarToken(token: string): void {

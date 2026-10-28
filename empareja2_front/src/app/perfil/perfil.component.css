@@ -50,12 +50,6 @@
   margin-bottom: 12px;
 }
 
-.bio {
-  margin: 0;
-  font-size: 1.05rem;
-  max-width: 60ch;
-}
-
 .ph {
   margin: 0;
   color: var(--muted);
@@ -64,29 +58,21 @@
   border-radius: 12px;
 }
 
-.photos {
-  display: grid;
-  grid-template-columns:repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.photo {
-  aspect-ratio: 3/4;
-  border-radius: 14px;
-  width: 100%;
-  object-fit: cover;
-}
-
-.photo.empty {
-  opacity: .35;
-}
-
 dl {
   display: grid;
   grid-template-columns:max-content 1fr;
   gap: 8px 20px;
   margin: 0;
+}
+
+dl.estudio + dl.estudio {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.red small {
+  overflow-wrap: anywhere;
 }
 
 dt {
