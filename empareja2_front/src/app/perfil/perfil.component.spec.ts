@@ -1,71 +1,45 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 
 import { PerfilComponent } from './perfil.component';
-import { UsuarioService } from '../services/usuario.service';
-import { OTRO_USUARIO_EJEMPLO, USUARIO_EJEMPLO } from '../testing/fixtures';
+import { EstudianteService } from '../services/estudiante.service';
 
 describe('PerfilComponent', () => {
   let fixture: ComponentFixture<PerfilComponent>;
-  let component: PerfilComponent;
-  const serviceMock: any = {};
 
-  const crear = async () => {
+  const serviceMock = {
+    obtenerPorId: () => of({ id: 1, fullName: 'Ana Prueba', career: 'Medicina', semester: 2, university: 'Universidad Uno' }),
+    listarCompaneros: () => of([
+      { id: 2, fullName: 'Luis Prueba', career: 'Derecho', semester: 8, university: 'Universidad Uno' }
+    ])
+  };
+  const routeMock = { paramMap: of(convertToParamMap({ id: '1' })) };
+
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [PerfilComponent],
       providers: [
-        { provide: UsuarioService, useValue: serviceMock },
-        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '1' })) } }
+        { provide: EstudianteService, useValue: serviceMock },
+        { provide: ActivatedRoute, useValue: routeMock }
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-    fixture = TestBed.createComponent(PerfilComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  };
 
-  beforeEach(() => {
-    serviceMock.obtenerPublico = () => of(USUARIO_EJEMPLO);
-    serviceMock.listarCatalogo = () => of([USUARIO_EJEMPLO, OTRO_USUARIO_EJEMPLO]);
-    serviceMock.darMeGusta = () => of({ idUsuario: 1, totalMeGusta: 4, meGusta: true });
-    serviceMock.quitarMeGusta = () => of({ idUsuario: 1, totalMeGusta: 2, meGusta: false });
+    fixture = TestBed.createComponent(PerfilComponent);
+    fixture.detectChanges();
   });
 
-  it('debe crearse y mostrar el nombre', async () => {
-    await crear();
-    expect(component).toBeTruthy();
+  it('debe crearse', () => {
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('debe mostrar el nombre del estudiante', () => {
     expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Ana Prueba');
   });
 
-  /* PRUEBAS A y B: descomenta estos tests cuando actives el me gusta y los compañeros
-  it('debe listar compañeros sin incluir al propio perfil', async () => {
-    await crear();
-    expect(component.otros().map(o => o.id)).toEqual([2]);
+  it('debe listar compañeros de la misma universidad', () => {
     expect(fixture.nativeElement.querySelectorAll('.mini-row').length).toBe(1);
-  });
-
-  it('debe dar me gusta y actualizar el contador', async () => {
-    await crear();
-    component.alternarMeGusta();
-    expect(component.u()?.totalMeGusta).toBe(4);
-    expect(component.u()?.meGustaDelUsuarioActual).toBe(true);
-  });
-
-  it('debe quitar el me gusta si ya estaba dado', async () => {
-    serviceMock.obtenerPublico = () => of({ ...USUARIO_EJEMPLO, totalMeGusta: 3, meGustaDelUsuarioActual: true });
-    await crear();
-    component.alternarMeGusta();
-    expect(component.u()?.totalMeGusta).toBe(2);
-    expect(component.u()?.meGustaDelUsuarioActual).toBe(false);
-  });
-
-  fin PRUEBAS A y B */
-
-  it('debe mostrar el error si el perfil no existe', async () => {
-    serviceMock.obtenerPublico = () => throwError(() => ({ status: 404, error: { message: 'No existe el usuario' } }));
-    await crear();
-    expect(component.error()).toBe('No existe el usuario');
   });
 });

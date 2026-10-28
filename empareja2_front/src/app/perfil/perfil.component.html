@@ -1,70 +1,59 @@
-@if (error()) {
-  <main class="wrap"><p class="ph error">{{ error() }}</p></main>
-} @else if (u(); as st) {
-  <div class="cover" [style.background]="grad(hue(st.nombreCompleto) + 40)">
-    <a [routerLink]="volver()" class="link">Volver</a>
+@if (s(); as st) {
+  <div class="cover" [style.background]="grad(hue(st.fullName) + 40)">
+    <a [routerLink]="['/universidades', st.university]" class="link">Volver a {{ st.university }}</a>
   </div>
   <main class="wrap">
     <header class="head">
-      <span class="avatar big" [style.background]="fondo(st)">{{ ini(st) }}</span>
-      <div class="who">
-        <h1>{{ st.nombreCompleto }}</h1>
-        <p class="muted">{{ st.edad !== null ? st.edad + ' años' : '' }}</p>
+      <span class="avatar big" [style.background]="grad(hue(st.fullName))">{{ ini(st.fullName) }}</span>
+      <div>
+        <h1>{{ st.fullName }}</h1>
+        <p class="muted">{{ st.career }} · semestre {{ st.semester }}</p>
       </div>
-      <!-- PRUEBA A (me gusta): borra esta línea y la de cierre para mostrar el botón
-      <button type="button" class="like" [class.on]="st.meGustaDelUsuarioActual" (click)="alternarMeGusta()" [disabled]="enviando()"
-        [attr.aria-pressed]="st.meGustaDelUsuarioActual" aria-label="Me gusta">
-        <span aria-hidden="true">♥</span> {{ st.totalMeGusta }}
-      </button>
-      fin PRUEBA A -->
     </header>
-    <!-- PRUEBA A (mensaje de error del me gusta): borra esta línea y la de cierre
-    @if (aviso()) { <p class="error">{{ aviso() }}</p> }
-    fin PRUEBA A -->
     <div class="cols">
       <div class="col">
         <article class="box">
+          <h2>Sobre mí</h2>
+          @if (st.bio) { <p class="bio">{{ st.bio }}</p> } @else { <p class="ph">Aún no ha escrito su presentación.</p> }
+        </article>
+        <article class="box">
           <h2>Gustos</h2>
-          @if (st.intereses.length) { <div class="chips">@for (i of st.intereses; track i) { <em>{{ i }}</em> }</div> }
+          @if (st.interests?.length) { <div class="chips">@for (i of st.interests; track i) { <em>{{ i }}</em> }</div> }
           @else { <p class="ph">Aún no ha agregado sus gustos.</p> }
         </article>
         <article class="box">
-          <h2>Redes sociales</h2>
-          @if (st.redes.length) {
-            <div class="redes">
-              @for (r of st.redes; track r.idRedSocial) {
-                <a [href]="r.urlPerfil" target="_blank" rel="noopener noreferrer">{{ r.redSocial }}{{ r.alias ? ' · ' + r.alias : '' }}</a>
-              }
-            </div>
-          } @else { <p class="ph">Aún no ha agregado sus redes.</p> }
+          <h2>Fotos</h2>
+          <div class="photos">
+            @if (st.photos?.length) {
+              @for (p of st.photos; track p) { <img class="photo" [src]="p" alt="Foto de {{ st.fullName }}"> }
+            } @else {
+              @for (v of vacias; track v) { <div class="photo empty" [style.background]="grad(hue(st.fullName) + v * 40)"></div> }
+            }
+          </div>
+          @if (!st.photos?.length) { <p class="ph">Aún no ha subido fotos.</p> }
         </article>
       </div>
       <div class="col">
         <article class="box">
-          <h2>Estudios</h2>
-          @for (e of st.estudios; track e.idUniversidad + '-' + e.idCarrera) {
-            <div class="estudio">
-              <strong>{{ e.carrera }}</strong>
-              <span>{{ e.universidad }} · semestre {{ e.semestre }}</span>
-            </div>
-          }
+          <h2>Datos académicos</h2>
+          <dl>
+            <dt>Carrera</dt><dd>{{ st.career }}</dd>
+            <dt>Semestre</dt><dd>{{ st.semester }}</dd>
+            <dt>Universidad</dt><dd>{{ st.university }}</dd>
+          </dl>
         </article>
-        <!-- PRUEBA B (compañeros de la universidad): borra esta línea y la de cierre para mostrar el bloque
-        @if (otros().length) {
-          <article class="box">
-            <h2>Más de {{ universidadPrincipal()?.universidad }}</h2>
-            @for (o of otros(); track o.id) {
-              <a class="mini-row" [routerLink]="['/estudiantes', o.id]">
-                <span class="avatar" [style.background]="fondo(o)">{{ ini(o) }}</span>
-                <span><strong>{{ o.nombreCompleto }}</strong><small>{{ o.estudios[0]?.carrera }}</small></span>
-              </a>
-            }
-          </article>
-        }
-        fin PRUEBA B -->
+        <article class="box">
+          <h2>Más de {{ st.university }}</h2>
+          @for (o of otros(); track o.id) {
+            <a class="mini-row" [routerLink]="['/estudiantes', o.id]">
+              <span class="avatar" [style.background]="grad(hue(o.fullName))">{{ ini(o.fullName) }}</span>
+              <span><strong>{{ o.fullName }}</strong><small>{{ o.career }}</small></span>
+            </a>
+          } @empty { <p class="ph">Por ahora no hay más estudiantes de esta universidad.</p> }
+        </article>
       </div>
     </div>
   </main>
 } @else {
-  <main class="wrap"><p class="ph">Cargando perfil…</p></main>
+  <main class="wrap"><p class="ph">No encontramos este perfil.</p></main>
 }
