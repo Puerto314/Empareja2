@@ -1,0 +1,50 @@
+<main class="registro">
+  <header class="band">
+    <a routerLink="/login" class="logo">empareja<b>2</b></a>
+    <a routerLink="/login" class="link">Ya tengo cuenta</a>
+  </header>
+  <section class="card">
+    <h1>Crea tu perfil</h1>
+    <p class="muted">Cuéntanos quién eres y dónde estudias.</p>
+
+    <div class="grid">
+      <label>Nombre<input [(ngModel)]="f.nombre" autocomplete="given-name"></label>
+      <label>Apellido<input [(ngModel)]="f.apellido" autocomplete="family-name"></label>
+      <label class="full">Correo<input type="email" [(ngModel)]="f.correo" placeholder="nombre@unbosque.edu.co" autocomplete="email"></label>
+      <label class="full">Contraseña (mínimo 8 caracteres)<input type="password" [(ngModel)]="f.contrasena" autocomplete="new-password"></label>
+
+      <label>Tipo de documento
+        <select [(ngModel)]="f.tipoDocumento">
+          @for (t of tiposDocumento; track t) { <option [ngValue]="t">{{ t }}</option> }
+        </select>
+      </label>
+      <label>Documento<input [(ngModel)]="f.documento"></label>
+      <label>Fecha de nacimiento<input type="date" [(ngModel)]="f.fechaNacimiento"></label>
+      <label>Género
+        <select [(ngModel)]="f.genero">
+          @for (g of generos; track g.valor) { <option [ngValue]="g.valor">{{ g.texto }}</option> }
+        </select>
+      </label>
+
+      <label class="full">Universidad
+        <select [(ngModel)]="f.idUniversidad">
+          <option [ngValue]="null" disabled>Selecciona tu universidad</option>
+          @for (u of universidades(); track u.idUniversidad) { <option [ngValue]="u.idUniversidad">{{ u.nombre }}</option> }
+        </select>
+      </label>
+      <label>Carrera
+        <select [(ngModel)]="f.idCarrera">
+          <option [ngValue]="null" disabled>Selecciona tu carrera</option>
+          @for (c of carreras(); track c.idCarrera) { <option [ngValue]="c.idCarrera">{{ c.nombre }}</option> }
+        </select>
+      </label>
+      <label>Semestre<input type="number" min="1" max="20" [(ngModel)]="f.semestre"></label>
+
+      <label class="full">Foto de perfil (enlace, opcional)<input [(ngModel)]="f.fotoPerfil" placeholder="https://…"></label>
+      <label class="full">Gustos (separados por comas, opcional)<input [(ngModel)]="f.intereses" placeholder="Café, Senderismo, Indie"></label>
+    </div>
+
+    @if (error()) { <p class="error">{{ error() }}</p> }
+    <button class="btn" (click)="registrar()" [disabled]="cargando()">{{ cargando() ? 'Creando cuenta…' : 'Crear cuenta' }}</button>
+  </section>
+</main>

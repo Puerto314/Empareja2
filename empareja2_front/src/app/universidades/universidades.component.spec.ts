@@ -1,40 +1,46 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { UniversidadesComponent } from './universidades.component';
-import { EstudianteService } from '../services/estudiante.service';
+import { CatalogoService } from '../services/catalogo.service';
+import { UsuarioService } from '../services/usuario.service';
+import { OTRO_USUARIO_EJEMPLO, UNIVERSIDAD_EJEMPLO, UNIVERSIDAD_VACIA_EJEMPLO, USUARIO_EJEMPLO } from '../testing/fixtures';
 
 describe('UniversidadesComponent', () => {
-  let fixture: ComponentFixture<UniversidadesComponent>;
-
-  const serviceMock = {
-    listarUniversidades: () => of([
-      { nombre: 'Universidad Uno', sigla: 'UU', cantidad: 2, vistaPrevia: [] },
-      { nombre: 'Universidad Dos', sigla: 'UD', cantidad: 1, vistaPrevia: [] }
-    ])
-  };
-
-  beforeEach(async () => {
+  const crear = async (usuarios$: any = of([USUARIO_EJEMPLO, OTRO_USUARIO_EJEMPLO])) => {
     await TestBed.configureTestingModule({
       declarations: [UniversidadesComponent],
-      providers: [{ provide: EstudianteService, useValue: serviceMock }],
+      providers: [
+        { provide: CatalogoService, useValue: { universidades: () => of([UNIVERSIDAD_VACIA_EJEMPLO, UNIVERSIDAD_EJEMPLO]) } },
+        { provide: UsuarioService, useValue: { listarCatalogo: () => usuarios$ } }
+      ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-
-    fixture = TestBed.createComponent(UniversidadesComponent);
+    const fixture: ComponentFixture<UniversidadesComponent> = TestBed.createComponent(UniversidadesComponent);
     fixture.detectChanges();
+    return fixture;
+  };
+
+  it('debe crearse', async () => {
+    expect((await crear()).componentInstance).toBeTruthy();
   });
 
-  it('debe crearse', () => {
-    expect(fixture.componentInstance).toBeTruthy();
+  it('debe contar estudiantes por universidad y poner primero la que más tiene', async () => {
+    const c = (await crear()).componentInstance;
+    expect(c.total()).toBe(2);
+    expect(c.unis().map(r => r.universidad.nombre)).toEqual(['Universidad Uno', 'Universidad Dos']);
+    expect(c.unis().map(r => r.cantidad)).toEqual([2, 0]);
   });
 
-  it('debe calcular el total de estudiantes', () => {
-    expect(fixture.componentInstance.total()).toBe(3);
-  });
-
-  it('debe mostrar una tarjeta por universidad', () => {
+  it('debe mostrar una tarjeta por universidad', async () => {
+    const fixture = await crear();
     expect(fixture.nativeElement.querySelectorAll('.tile').length).toBe(2);
+  });
+
+  it('debe mostrar el error si el backend falla', async () => {
+    const fixture = await crear(throwError(() => ({ status: 500, error: { message: 'Fallo del servidor' } })));
+    expect(fixture.componentInstance.error()).toBe('Fallo del servidor');
+    expect(fixture.componentInstance.cargando()).toBe(false);
   });
 });
