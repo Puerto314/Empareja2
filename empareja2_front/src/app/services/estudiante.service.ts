@@ -1,40 +1,40 @@
-import { Injectable } from '@angular/core';
-import { Observable, map, of, switchMap } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
+import { API_URL } from '../config/api.config';
 import { EstudianteModel } from '../models/estudiante.model';
-import { UniversidadModel } from '../models/universidad.model';
-import { ESTUDIANTES_MOCK } from '../mocks/estudiantes.mock';
-import { siglaDe } from '../utils/avatar.util';
 
 @Injectable({ providedIn: 'root' })
 export class EstudianteService {
+  private http = inject(HttpClient);
 
-  // Sin conexión aún. Después: GET /api/students
+  // GET /api/usuarios -> todos los estudiantes menos el usuario autenticado (solo info pública)
   listarTodos(): Observable<EstudianteModel[]> {
-    return of(ESTUDIANTES_MOCK);
+    return this.http.get<EstudianteModel[]>(`${API_URL}/usuarios`);
   }
 
-  // Sin conexión aún. Después: GET /api/students/{id}
+  // GET /api/usuarios?universidadId={id}
+  listarPorUniversidad(idUniversidad: number): Observable<EstudianteModel[]> {
+    return this.http.get<EstudianteModel[]>(`${API_URL}/usuarios`, { params: { universidadId: idUniversidad } });
+  }
+
+  // GET /api/usuarios/{id}. Devuelve undefined si no existe (404) o el id no es válido (400).
   obtenerPorId(id: number): Observable<EstudianteModel | undefined> {
-    return of(ESTUDIANTES_MOCK.find(e => e.id === id));
+    return this.http.get<EstudianteModel>(`${API_URL}/usuarios/${id}`).pipe(
+      catchError((err: unknown) =>
+        err instanceof HttpErrorResponse && (err.status === 404 || err.status === 400)
+          ? of(undefined)
+          : throwError(() => err))
+    );
   }
 
-  listarPorUniversidad(universidad: string): Observable<EstudianteModel[]> {
-    return this.listarTodos().pipe(map(lista => lista.filter(e => e.university === universidad)));
-  }
-
-  listarUniversidades(): Observable<UniversidadModel[]> {
-    return this.listarTodos().pipe(map(lista =>
-      Array.from(new Set(lista.map(e => e.university)))
-        .sort((a, b) => a.localeCompare(b))
-        .map(nombre => {
-          const alumnos = lista.filter(e => e.university === nombre);
-          return { nombre, sigla: siglaDe(nombre), cantidad: alumnos.length, vistaPrevia: alumnos.slice(0, 4) };
-        })));
-  }
-
-  listarCompaneros(id: number, limite = 4): Observable<EstudianteModel[]> {
-    return this.obtenerPorId(id).pipe(
-      switchMap(est => est ? this.listarPorUniversidad(est.university) : of([] as EstudianteModel[])),
-      map(lista => lista.filter(e => e.id !== id).slice(0, limite)));
+  // Otros estudiantes de la primera universidad del estudiante, sin incluirlo a él.
+  listarCompaneros(estudiante: EstudianteModel, limite = 4): Observable<EstudianteModel[]> {
+    const idUniversidad = estudiante.estudios[0]?.idUniversidad;
+    if (idUniversidad === undefined) {
+      return of([]);
+    }
+    return this.listarPorUniversidad(idUniversidad).pipe(
+      map(lista => lista.filter(e => e.id !== estudiante.id).slice(0, limite)));
   }
 }

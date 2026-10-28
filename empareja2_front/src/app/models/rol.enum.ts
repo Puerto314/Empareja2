@@ -1,5 +1,8 @@
-// Confirmar los valores exactos con el enum Role del backend (entity/Role.java).
+<<<<<<< HEAD
+// Igual al enum Rol del backend (entity/Rol.java).
+=======
+>>>>>>> main
 export enum RolEnum {
-  ESTUDIANTE = 'STUDENT',
+  ESTUDIANTE = 'ESTUDIANTE',
   ADMIN = 'ADMIN'
 }
