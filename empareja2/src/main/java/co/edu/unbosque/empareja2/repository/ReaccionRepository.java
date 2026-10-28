@@ -39,6 +39,18 @@ public class ReaccionRepository {
         return r;
     };
 
+    private static final String SELECT_ADMIN = "SELECT r.id_autor, r.numero_reaccion, r.id_destinatario, "
+            + "r.tipo_reaccion, r.fecha_hora, a.nombre AS autor_nombre, a.apellido AS autor_apellido, "
+            + "a.foto_perfil AS autor_foto, d.nombre AS dest_nombre, d.apellido AS dest_apellido FROM reaccion r "
+            + "JOIN usuario a ON a.id_usuario = r.id_autor JOIN usuario d ON d.id_usuario = r.id_destinatario ";
+
+    private static final RowMapper<Reaccion> MAPPER_ADMIN = (rs, i) -> {
+        Reaccion r = MAPPER.mapRow(rs, i);
+        r.getDestinatario().setNombre(rs.getString("dest_nombre"));
+        r.getDestinatario().setApellido(rs.getString("dest_apellido"));
+        return r;
+    };
+
     private final JdbcTemplate jdbc;
 
     public ReaccionRepository(JdbcTemplate jdbc) {
@@ -99,6 +111,17 @@ public class ReaccionRepository {
         return jdbc.query("SELECT id_destinatario FROM reaccion WHERE id_autor = ? AND tipo_reaccion = ? "
                 + "AND id_destinatario IN (" + Sql.placeholders(ids.size()) + ")",
                 (rs, i) -> rs.getLong("id_destinatario"), args);
+    }
+
+    /** Todas las reacciones con el nombre de autor y destinatario (solo para administradores). */
+    public List<Reaccion> listarTodas() {
+        return jdbc.query(SELECT_ADMIN + "ORDER BY r.fecha_hora DESC, r.id_autor, r.numero_reaccion DESC",
+                MAPPER_ADMIN);
+    }
+
+    /** Elimina una reaccion por su llave (id_autor, numero_reaccion); devuelve cuantas filas borro (0 o 1). */
+    public int eliminar(Long idAutor, Integer numero) {
+        return jdbc.update("DELETE FROM reaccion WHERE id_autor = ? AND numero_reaccion = ?", idAutor, numero);
     }
 
     public Reaccion save(Reaccion r) {

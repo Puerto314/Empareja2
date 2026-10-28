@@ -103,4 +103,42 @@ public class UniversidadRepository {
         }
         return guardadas;
     }
+
+    public boolean existsByNombreAndIdNot(String nombre, Long id) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre) = LOWER(?) AND id_universidad <> ?",
+                Integer.class, nombre, id);
+        return n != null && n > 0;
+    }
+
+    public boolean existsBySiglaAndIdNot(String sigla, Long id) {
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM universidad WHERE LOWER(sigla) = LOWER(?) AND id_universidad <> ?",
+                Integer.class, sigla, id);
+        return n != null && n > 0;
+    }
+
+    /** Cuantas universidades hay en la ciudad. */
+    public long contarPorCiudad(Long idCiudad) {
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM universidad WHERE id_ciudad = ?", Long.class, idCiudad);
+        return n == null ? 0 : n;
+    }
+
+    /** Cuantos usuarios estudian en la universidad. */
+    public long contarEstudiantes(Long idUniversidad) {
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudio WHERE id_universidad = ?", Long.class,
+                idUniversidad);
+        return n == null ? 0 : n;
+    }
+
+    public void update(Universidad u) {
+        Direccion d = u.getDireccion() != null ? u.getDireccion() : new Direccion();
+        jdbc.update("UPDATE universidad SET nombre = ?, sigla = ?, calle = ?, barrio = ?, numero_direccion = ?, "
+                + "id_ciudad = ? WHERE id_universidad = ?", u.getNombre(), u.getSigla(), d.getCalle(), d.getBarrio(),
+                d.getNumeroDireccion(), u.getCiudad().getIdCiudad(), u.getIdUniversidad());
+    }
+
+    public void deleteById(Long id) {
+        jdbc.update("DELETE FROM universidad WHERE id_universidad = ?", id);
+    }
 }

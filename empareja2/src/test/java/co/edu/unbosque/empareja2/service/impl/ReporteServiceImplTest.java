@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +23,11 @@ import org.mockito.quality.Strictness;
 import co.edu.unbosque.empareja2.TestData;
 import co.edu.unbosque.empareja2.dto.request.ReporteRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.ReporteDTO;
+import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.Reporte;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
 import co.edu.unbosque.empareja2.entity.Usuario;
+import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
 import co.edu.unbosque.empareja2.repository.ReporteRepository;
@@ -113,5 +116,64 @@ class ReporteServiceImplTest {
         assertThat(lista).hasSize(1);
         assertThat(lista.get(0).nombreReportado()).isEqualTo("Luis Perez");
         assertThat(lista.get(0).tipoReporte()).isEqualTo(TipoReporte.ACOSO);
+    }
+
+    @Test
+    void elTipoOtroExigeDescripcion() {
+        assertThatThrownBy(() -> service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.OTRO, "  ")))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("OTRO");
+        verify(reporteRepository, never()).save(any());
+    }
+
+    @Test
+    void noSePermiteRepetirUnReporteActivoPorElMismoMotivo() {
+        when(reporteRepository.existeActivo(1L, 2L, TipoReporte.SPAM)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.SPAM, null)))
+                .isInstanceOf(DuplicateResourceException.class);
+        verify(reporteRepository, never()).save(any());
+    }
+
+    @Test
+    void unReporteNuevoEmpiezaPendiente() {
+        ReporteDTO dto = service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.SPAM, null));
+
+        assertThat(dto.estado()).isEqualTo(EstadoReporte.PENDIENTE);
+    }
+
+    @Test
+    void listarPorEstadoFiltraEnLaBaseDeDatos() {
+        Reporte r = new Reporte(ana, luis, TipoReporte.ACOSO, "x");
+        r.setIdReporte(5L);
+        when(reporteRepository.listarPorEstado(EstadoReporte.RESUELTO)).thenReturn(List.of(r));
+
+        assertThat(service.listarPorEstado(EstadoReporte.RESUELTO)).hasSize(1);
+    }
+
+    @Test
+    void adminCambiaElEstadoDeUnReporte() {
+        Reporte r = new Reporte(ana, luis, TipoReporte.ACOSO, "x");
+        r.setIdReporte(5L);
+        when(reporteRepository.findById(5L)).thenReturn(Optional.of(r));
+
+        ReporteDTO dto = service.actualizarEstado(5L, EstadoReporte.EN_REVISION);
+
+        verify(reporteRepository).actualizarEstado(5L, EstadoReporte.EN_REVISION);
+        assertThat(dto.estado()).isEqualTo(EstadoReporte.EN_REVISION);
+    }
+
+    @Test
+    void adminEliminaUnReporteYSiNoExisteDa404() {
+        Reporte r = new Reporte(ana, luis, TipoReporte.ACOSO, "x");
+        when(reporteRepository.findById(5L)).thenReturn(Optional.of(r));
+        when(reporteRepository.findById(6L)).thenReturn(Optional.empty());
+
+        service.eliminar(5L);
+        verify(reporteRepository).deleteById(5L);
+
+        assertThatThrownBy(() -> service.eliminar(6L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.obtener(6L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.actualizarEstado(6L, EstadoReporte.RESUELTO))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

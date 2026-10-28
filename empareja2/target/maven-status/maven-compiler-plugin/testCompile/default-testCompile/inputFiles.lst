@@ -1,5 +1,6 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/Empareja2ApplicationTests.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/TestData.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/AdminControllersTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/AuthControllerTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/ControllerTestSupport.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/InteraccionControllersTest.java

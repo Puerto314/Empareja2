@@ -55,6 +55,16 @@ public class ComentarioRepository {
                 MAPPER, idUsuario);
     }
 
+    /** Todos los comentarios (solo para moderacion por un administrador). */
+    public List<Comentario> listarTodos() {
+        return jdbc.query(SELECT + "ORDER BY c.fecha_hora DESC, c.id_autor, c.numero_comentario DESC", MAPPER);
+    }
+
+    /** Elimina un comentario por su llave (id_autor, numero_comentario); devuelve cuantas filas borro (0 o 1). */
+    public int eliminar(Long idAutor, Integer numero) {
+        return jdbc.update("DELETE FROM comentario WHERE id_autor = ? AND numero_comentario = ?", idAutor, numero);
+    }
+
     /** Mayor numero_comentario usado por el autor (0 si no tiene ninguno). */
     public Integer maximoNumero(Long idAutor) {
         return jdbc.queryForObject("SELECT COALESCE(MAX(numero_comentario), 0) FROM comentario WHERE id_autor = ?",

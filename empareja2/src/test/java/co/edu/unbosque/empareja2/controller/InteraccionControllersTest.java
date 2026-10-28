@@ -27,6 +27,7 @@ import co.edu.unbosque.empareja2.dto.response.ComentarioDTO;
 import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
 import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
 import co.edu.unbosque.empareja2.dto.response.ReporteDTO;
+import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
@@ -127,8 +128,8 @@ class InteraccionControllersTest extends ControllerTestSupport {
     void reportarPerfilDa201() throws Exception {
         when(reporteService.reportar(org.mockito.ArgumentMatchers.eq("ana@mail.com"),
                 org.mockito.ArgumentMatchers.eq(2L), any(ReporteRequestDTO.class)))
-                .thenReturn(new ReporteDTO(1L, 1L, "Ana Garcia", 2L, "Luis Perez", TipoReporte.SPAM, "spam",
-                        LocalDateTime.now()));
+                .thenReturn(new ReporteDTO(1L, 1L, "Ana Garcia", 2L, "Luis Perez", TipoReporte.SPAM,
+                        EstadoReporte.PENDIENTE, "spam", LocalDateTime.now()));
 
         mvc.perform(post("/api/usuarios/2/reportes").principal(ANA).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(new ReporteRequestDTO(TipoReporte.SPAM, "spam"))))

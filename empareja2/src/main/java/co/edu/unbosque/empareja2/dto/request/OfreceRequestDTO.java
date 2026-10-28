@@ -1,6 +1,7 @@
 package co.edu.unbosque.empareja2.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -9,5 +10,6 @@ import jakarta.validation.constraints.NotNull;
 public record OfreceRequestDTO(
         @NotNull(message = "La carrera es obligatoria") Long idCarrera,
         @NotNull(message = "La universidad es obligatoria") Long idUniversidad,
-        @NotBlank(message = "La facultad es obligatoria") String facultad) {
+        @NotBlank(message = "La facultad es obligatoria")
+        @Size(max = 150, message = "La facultad es demasiado larga") String facultad) {
 }

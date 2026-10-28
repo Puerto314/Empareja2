@@ -25,6 +25,7 @@ import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.RedPerfilRequestDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Tiene;
+import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
@@ -218,5 +219,52 @@ class PerfilAssemblerTest {
     void usaSetDeInteresesSinDuplicados() {
         assembler.aplicarIntereses(usuario, Set.of("a", "b"));
         assertThat(usuario.getIntereses()).hasSize(2);
+    }
+
+    // ---- datos de estudiante y documento ----
+
+    @Test
+    void documentoDebeSerNumericoParaCcYCeYAlfanumericoParaPasaporte() {
+        assertThatCode(() -> assembler.validarDocumento(TipoDocumento.CC, "1020304050")).doesNotThrowAnyException();
+        assertThatCode(() -> assembler.validarDocumento(TipoDocumento.CE, "123456")).doesNotThrowAnyException();
+        assertThatCode(() -> assembler.validarDocumento(TipoDocumento.PASAPORTE, "AB123456"))
+                .doesNotThrowAnyException();
+
+        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.CC, "ABC123"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.CC, "12"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.PASAPORTE, "AB-1"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.CC, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void laTarjetaDeIdentidadNoSeAceptaPorqueElCatalogoEsParaMayores() {
+        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.TI, "1020304050"))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("TI");
+    }
+
+    @Test
+    void validaElFormatoDelCorreo() {
+        assertThatCode(() -> assembler.validarCorreo("ana@mail.com")).doesNotThrowAnyException();
+        assertThatThrownBy(() -> assembler.validarCorreo("Puerto314")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.validarCorreo("a@b")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.validarCorreo(null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void unEstudianteNecesitaFechaDeNacimientoYAlMenosUnEstudio() {
+        List<EstudioRequestDTO> estudios = List.of(new EstudioRequestDTO(1L, 10L, 3));
+
+        assertThatCode(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), estudios))
+                .doesNotThrowAnyException();
+        assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(null, estudios))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), List.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), null))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

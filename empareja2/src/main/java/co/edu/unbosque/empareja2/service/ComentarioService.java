@@ -16,4 +16,10 @@ public interface ComentarioService {
     List<ComentarioDTO> listarRecibidos(String correoActual);
 
     List<ComentarioDTO> listarEnviados(String correoActual);
+
+    /** Moderacion (solo ADMIN): todos los comentarios del sistema. */
+    List<ComentarioDTO> listarTodosParaAdmin();
+
+    /** Moderacion (solo ADMIN): elimina un comentario por su llave (autor + numero). */
+    void eliminarPorAdmin(Long idAutor, Integer numeroComentario);
 }

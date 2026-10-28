@@ -22,6 +22,7 @@ import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
 import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
+import co.edu.unbosque.empareja2.dto.response.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
@@ -131,5 +132,27 @@ class ReaccionServiceImplTest {
         assertThat(lista.get(0).idAutor()).isEqualTo(1L);
         assertThat(lista.get(0).nombreAutor()).isEqualTo("Ana Garcia");
         assertThat(lista.get(0).fechaHora()).isEqualTo(LocalDateTime.of(2026, 10, 1, 12, 0));
+    }
+
+    @Test
+    void adminListaTodasLasReaccionesConAutorYDestinatario() {
+        when(reaccionRepository.listarTodas())
+                .thenReturn(List.of(new Reaccion(ana, luis, 1, TipoReaccion.ME_GUSTA)));
+
+        List<ReaccionAdminDTO> lista = service.listarTodasParaAdmin();
+
+        assertThat(lista).hasSize(1);
+        assertThat(lista.get(0).nombreAutor()).isEqualTo("Ana Garcia");
+        assertThat(lista.get(0).nombreDestinatario()).isEqualTo("Luis Perez");
+        assertThat(lista.get(0).numeroReaccion()).isEqualTo(1);
+    }
+
+    @Test
+    void adminEliminaUnaReaccionYSiNoExisteDa404() {
+        when(reaccionRepository.eliminar(1L, 1)).thenReturn(1);
+        when(reaccionRepository.eliminar(1L, 9)).thenReturn(0);
+
+        service.eliminarPorAdmin(1L, 1);
+        assertThatThrownBy(() -> service.eliminarPorAdmin(1L, 9)).isInstanceOf(ResourceNotFoundException.class);
     }
 }

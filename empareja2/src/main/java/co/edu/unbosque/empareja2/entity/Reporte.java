@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 /**
  * REPORTE(id_reporte, fecha_hora, tipo_reporte, descripcion). Relacion
  * Realizar: un usuario realiza muchos reportes (1:N). El modelo no define el
- * perfil reportado; se agrega la relacion "reportado" hacia USUARIO.
+ * perfil reportado; se agrega la relacion "reportado" hacia USUARIO. El atributo
+ * "estado" lo gestiona el administrador (empieza en PENDIENTE).
  */
 public class Reporte {
 
@@ -14,6 +15,7 @@ public class Reporte {
     private Usuario reportado;
     private TipoReporte tipoReporte;
     private String descripcion;
+    private EstadoReporte estado = EstadoReporte.PENDIENTE;
     private LocalDateTime fechaHora;
 
     public Reporte() {
@@ -65,6 +67,14 @@ public class Reporte {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public EstadoReporte getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoReporte estado) {
+        this.estado = estado;
     }
 
     public LocalDateTime getFechaHora() {

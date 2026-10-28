@@ -3,6 +3,7 @@ package co.edu.unbosque.empareja2.mapper;
 import org.springframework.stereotype.Component;
 
 import co.edu.unbosque.empareja2.dto.response.ComentarioDTO;
+import co.edu.unbosque.empareja2.dto.response.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
 import co.edu.unbosque.empareja2.dto.response.ReporteDTO;
 import co.edu.unbosque.empareja2.entity.Comentario;
@@ -27,10 +28,17 @@ public class InteraccionMapper {
                 reaccion.getAutor().getFotoPerfil(), reaccion.getTipoReaccion(), reaccion.getFechaHora());
     }
 
+    public ReaccionAdminDTO toReaccionAdminDTO(Reaccion reaccion) {
+        return new ReaccionAdminDTO(reaccion.getNumeroReaccion(), reaccion.getAutor().getId(),
+                reaccion.getAutor().getNombreCompleto(), reaccion.getDestinatario().getId(),
+                reaccion.getDestinatario().getNombreCompleto(), reaccion.getTipoReaccion(), reaccion.getFechaHora());
+    }
+
     public ReporteDTO toReporteDTO(Reporte reporte) {
         return new ReporteDTO(reporte.getIdReporte(), reporte.getRealizador().getId(),
                 reporte.getRealizador().getNombreCompleto(), reporte.getReportado().getId(),
-                reporte.getReportado().getNombreCompleto(), reporte.getTipoReporte(), reporte.getDescripcion(),
+                reporte.getReportado().getNombreCompleto(), reporte.getTipoReporte(), reporte.getEstado(),
+                reporte.getDescripcion(),
                 reporte.getFechaHora());
     }
 }
