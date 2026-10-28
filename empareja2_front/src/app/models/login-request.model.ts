@@ -1,5 +1,5 @@
-// Refleja LoginRequestDTO ("correo" también acepta el usuario del administrador).
+// Refleja LoginRequestDTO (campos supuestos: confirmar con el DTO real).
 export interface LoginRequestModel {
-  correo: string;
-  contrasena: string;
+  email: string;
+  password: string;
 }

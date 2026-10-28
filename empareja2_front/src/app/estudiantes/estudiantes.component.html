@@ -1,8 +1,8 @@
 <main class="layout">
-  <aside class="side" [style.background]="grad(hue(nombre()))">
-    <span class="sigla">{{ universidad()?.sigla }}</span>
+  <aside class="side" [style.background]="grad(hue(uni()))">
+    <span class="sigla">{{ sigla() }}</span>
     <a routerLink="/universidades" class="link">Cambiar universidad</a>
-    <h1>{{ nombre() }}</h1>
+    <h1>{{ uni() }}</h1>
     <p>{{ todos().length }} {{ todos().length === 1 ? 'estudiante' : 'estudiantes' }}</p>
     <input class="search" placeholder="Buscar por nombre o carrera" (input)="q.set($any($event.target).value)">
     <div class="filters">
@@ -12,22 +12,16 @@
     </div>
   </aside>
   <section class="cards">
-    @if (cargando()) {
-      <p class="empty">Cargando estudiantes…</p>
-    } @else if (error()) {
-      <p class="empty error">{{ error() }}</p>
-    } @else {
-      @for (s of list(); track s.id) {
-        <a class="card" [routerLink]="['/estudiantes', s.id]">
-          <span class="cover" [style.background]="grad(hue(s.nombreCompleto) + 40)"></span>
-          <span class="avatar big-ish" [style.background]="fondo(s)">{{ ini(s) }}</span>
-          <strong>{{ s.nombreCompleto }}</strong>
-          <small>{{ estudioEn(s)?.carrera }}</small>
-          <span class="chips"><em>Semestre {{ estudioEn(s)?.semestre }}</em></span>
-        </a>
-      } @empty {
-        <p class="empty">{{ todos().length ? 'No encontramos a nadie con esos filtros. Prueba con otro nombre, carrera o semestre.' : 'Aún no hay estudiantes registrados en esta universidad.' }}</p>
-      }
+    @for (s of list(); track s.id) {
+      <a class="card" [routerLink]="['/estudiantes', s.id]">
+        <span class="cover" [style.background]="grad(hue(s.fullName) + 40)"></span>
+        <span class="avatar big-ish" [style.background]="grad(hue(s.fullName))">{{ ini(s.fullName) }}</span>
+        <strong>{{ s.fullName }}</strong>
+        <small>{{ s.career }}</small>
+        <span class="chips"><em>Semestre {{ s.semester }}</em></span>
+      </a>
+    } @empty {
+      <p class="empty">No encontramos a nadie con esos filtros. Prueba con otro nombre, carrera o semestre.</p>
     }
   </section>
 </main>

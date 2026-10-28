@@ -17,14 +17,7 @@ export class AppComponent {
   constructor() {
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe((e: any) => {
-        const url: string = e.urlAfterRedirects;
-        this.mostrarBarra = !url.startsWith('/login') && !url.startsWith('/registro');
-      });
-  }
-
-  get nombre(): string {
-    return this.authService.obtenerUsuario()?.nombre ?? '';
+      .subscribe((e: any) => this.mostrarBarra = !e.urlAfterRedirects.startsWith('/login'));
   }
 
   cerrarSesion(): void {

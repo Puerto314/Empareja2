@@ -8,7 +8,6 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { UniversidadesComponent } from './universidades/universidades.component';
 import { EstudiantesComponent } from './estudiantes/estudiantes.component';
-import { RegistroComponent } from './registro/registro.component';
 import { PerfilComponent } from './perfil/perfil.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 
@@ -16,7 +15,6 @@ import { AuthInterceptor } from './services/auth.interceptor';
   declarations: [
     AppComponent,
     LoginComponent,
-    RegistroComponent,
     UniversidadesComponent,
     EstudiantesComponent,
     PerfilComponent
