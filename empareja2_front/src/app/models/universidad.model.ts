@@ -1,11 +1,5 @@
-// Refleja UniversidadDTO (y CiudadDTO).
-export interface CiudadModel {
-  idCiudad: number;
-  nombre: string;
-  departamento: string;
-}
+import { EstudianteModel } from './estudiante.model';
 
-<<<<<<< HEAD
 // Refleja CiudadDTO.
 export interface CiudadModel {
   idCiudad: number;
@@ -14,13 +8,10 @@ export interface CiudadModel {
 }
 
 // Refleja UniversidadDTO (GET /api/catalogos/universidades).
-=======
->>>>>>> main
 export interface UniversidadModel {
   idUniversidad: number;
   nombre: string;
   sigla: string;
-<<<<<<< HEAD
   calle: string | null;
   barrio: string | null;
   numeroDireccion: string | null;
@@ -32,12 +23,6 @@ export interface UniversidadModel {
 export interface UniversidadResumenModel extends UniversidadModel {
   cantidad: number;
   vistaPrevia: EstudianteModel[];
-=======
-  calle?: string | null;
-  barrio?: string | null;
-  numeroDireccion?: string | null;
-  ciudad?: CiudadModel | null;
->>>>>>> main
 }
 
 // Resultado de la pantalla de universidades. totalEstudiantes cuenta personas distintas

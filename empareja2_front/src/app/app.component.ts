@@ -13,22 +13,13 @@ export class AppComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
   mostrarBarra = false;
+  get esAdmin(): boolean { return this.authService.esAdmin(); }
+  get nombreUsuario(): string { return this.authService.obtenerUsuario()?.nombre ?? ''; }
 
   constructor() {
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
-<<<<<<< HEAD
-      .subscribe(e => this.mostrarBarra = !(e as NavigationEnd).urlAfterRedirects.startsWith('/login'));
-=======
-      .subscribe((e: any) => {
-        const url: string = e.urlAfterRedirects;
-        this.mostrarBarra = !url.startsWith('/login') && !url.startsWith('/registro');
-      });
-  }
-
-  get nombre(): string {
-    return this.authService.obtenerUsuario()?.nombre ?? '';
->>>>>>> main
+      .subscribe(e => this.mostrarBarra = !/^\/(login|registro)/.test((e as NavigationEnd).urlAfterRedirects));
   }
 
   cerrarSesion(): void {

@@ -42,6 +42,21 @@ describe('EstudianteService', () => {
     req.flush([]);
   });
 
+  it('debe pedir el ranking general con límite 20 por defecto', () => {
+    service.ranking().subscribe();
+    const req = http.expectOne(r => r.url === `${API_URL}/usuarios/ranking`);
+    expect(req.request.params.get('limite')).toBe('20');
+    expect(req.request.params.has('universidadId')).toBe(false);
+    req.flush([]);
+  });
+
+  it('debe pedir el ranking de una universidad', () => {
+    service.ranking(4, 20).subscribe();
+    const req = http.expectOne(r => r.url === `${API_URL}/usuarios/ranking`);
+    expect(req.request.params.get('universidadId')).toBe('4');
+    req.flush([]);
+  });
+
   it('debe obtener un estudiante por id', () => {
     let nombre = '';
     service.obtenerPorId(3).subscribe(e => nombre = e?.nombreCompleto ?? '');

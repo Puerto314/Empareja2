@@ -1,0 +1,35 @@
+<main class="page-wrap">
+  <h1>Los {{ limite }} con más me gusta</h1>
+  <p class="muted">{{ idUniversidad() === null ? 'Ranking general de todas las universidades.' : 'Ranking de ' + (nombreUniversidad() || 'la universidad elegida') + '.' }}</p>
+  <div class="toolbar">
+    <label class="field">Universidad
+      <select name="uni" [ngModel]="idUniversidad() === null ? '' : '' + idUniversidad()" (ngModelChange)="elegir($event)">
+        <option value="">Todas (ranking general)</option>
+        @for (u of universidades(); track u.idUniversidad) { <option [value]="'' + u.idUniversidad">{{ u.nombre }}</option> }
+      </select>
+    </label>
+  </div>
+  @if (cargando()) {
+    <p class="muted">Cargando ranking…</p>
+  } @else if (error()) {
+    <p class="msg-err" role="alert">{{ error() }}</p>
+  } @else {
+    <ol class="top">
+      @for (s of ranking(); track s.id; let i = $index) {
+        <li>
+          <a class="fila" [routerLink]="['/estudiantes', s.id]">
+            <span class="pos" [class.podio]="i < 3">{{ i + 1 }}</span>
+            <span class="avatar" [style.background]="grad(hue(s.nombreCompleto))">{{ ini(s.nombreCompleto) }}@if (s.fotoPerfil) {<img [src]="s.fotoPerfil" alt="" (error)="$any($event.target).hidden = true">}</span>
+            <span class="datos">
+              <strong>{{ s.nombreCompleto }}</strong>
+              <small>{{ s.estudios.length ? s.estudios[0].carrera + ' · ' + s.estudios[0].universidad : '' }}</small>
+            </span>
+            <span class="likes" aria-label="{{ s.totalMeGusta }} me gusta">♥ {{ s.totalMeGusta }}</span>
+          </a>
+        </li>
+      } @empty {
+        <li class="vacio">Todavía nadie tiene me gusta{{ idUniversidad() === null ? '' : ' en esta universidad' }}. ¡Sé el primero en dar uno!</li>
+      }
+    </ol>
+  }
+</main>

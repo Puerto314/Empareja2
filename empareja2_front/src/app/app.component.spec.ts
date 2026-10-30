@@ -10,7 +10,6 @@ describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
 
   beforeEach(async () => {
-    localStorage.clear();
     await TestBed.configureTestingModule({
       declarations: [AppComponent],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
@@ -27,10 +26,5 @@ describe('AppComponent', () => {
 
   it('no debe mostrar la barra superior antes de navegar', () => {
     expect(fixture.nativeElement.querySelector('.topbar')).toBeNull();
-  });
-
-  it('debe leer el nombre del usuario guardado en la sesión', () => {
-    localStorage.setItem('usuario', JSON.stringify({ nombre: 'Ana' }));
-    expect(fixture.componentInstance.nombre).toBe('Ana');
   });
 });

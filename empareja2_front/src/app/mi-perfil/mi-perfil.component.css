@@ -1,0 +1,5 @@
+.resumen { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.zona-peligro { border-color: #f0b6c3; }

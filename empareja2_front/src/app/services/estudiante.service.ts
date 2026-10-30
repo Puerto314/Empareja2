@@ -18,6 +18,13 @@ export class EstudianteService {
     return this.http.get<EstudianteModel[]>(`${API_URL}/usuarios`, { params: { universidadId: idUniversidad } });
   }
 
+  // GET /api/usuarios/ranking[?universidadId=N&limite=20]: usuarios con más "me gusta", de mayor a menor.
+  ranking(idUniversidad?: number, limite = 20): Observable<EstudianteModel[]> {
+    const params: Record<string, number> = { limite };
+    if (idUniversidad !== undefined) { params['universidadId'] = idUniversidad; }
+    return this.http.get<EstudianteModel[]>(`${API_URL}/usuarios/ranking`, { params });
+  }
+
   // GET /api/usuarios/{id}. Devuelve undefined si no existe (404) o el id no es válido (400).
   obtenerPorId(id: number): Observable<EstudianteModel | undefined> {
     return this.http.get<EstudianteModel>(`${API_URL}/usuarios/${id}`).pipe(

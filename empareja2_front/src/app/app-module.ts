@@ -8,18 +8,38 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { UniversidadesComponent } from './universidades/universidades.component';
 import { EstudiantesComponent } from './estudiantes/estudiantes.component';
-import { RegistroComponent } from './registro/registro.component';
 import { PerfilComponent } from './perfil/perfil.component';
+import { RegistroComponent } from './registro/registro.component';
+import { PerfilFormComponent } from './perfil-form/perfil-form.component';
+import { MiPerfilComponent } from './mi-perfil/mi-perfil.component';
+import { MensajesComponent } from './mensajes/mensajes.component';
+import { RankingComponent } from './ranking/ranking.component';
+import { AdminComponent } from './admin/admin.component';
+import { AdminUsuariosComponent } from './admin/admin-usuarios.component';
+import { AdminReportesComponent } from './admin/admin-reportes.component';
+import { AdminComentariosComponent } from './admin/admin-comentarios.component';
+import { AdminMeGustaComponent } from './admin/admin-megusta.component';
+import { AdminCatalogosComponent } from './admin/admin-catalogos.component';
 import { AuthInterceptor } from './services/auth.interceptor';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    RegistroComponent,
     UniversidadesComponent,
     EstudiantesComponent,
-    PerfilComponent
+    PerfilComponent,
+    RegistroComponent,
+    PerfilFormComponent,
+    MiPerfilComponent,
+    MensajesComponent,
+    RankingComponent,
+    AdminComponent,
+    AdminUsuariosComponent,
+    AdminReportesComponent,
+    AdminComentariosComponent,
+    AdminMeGustaComponent,
+    AdminCatalogosComponent
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule],
   providers: [

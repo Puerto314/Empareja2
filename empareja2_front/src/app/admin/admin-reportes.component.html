@@ -1,0 +1,58 @@
+<section class="panel">
+  <h2>Reportes</h2>
+  @if (exito()) { <p class="msg-ok" role="status">{{ exito() }}</p> }
+  @if (error()) { <p class="msg-err" role="alert">{{ error() }}</p> }
+  <div class="toolbar">
+    <label class="field">Estado
+      <select name="filtroEstado" [ngModel]="filtro()" (ngModelChange)="filtrar($event)">
+        <option value="">Todos</option>
+        @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+      </select>
+    </label>
+  </div>
+  @if (detalle(); as d) {
+    <div class="subbox" role="region" aria-label="Detalle del reporte">
+      <h3>Reporte #{{ d.idReporte }}</h3>
+      <p><strong>{{ d.nombreRealizador }}</strong> reportó a <a class="link" [routerLink]="['/estudiantes', d.idReportado]">{{ d.nombreReportado }}</a> por <strong>{{ d.tipoReporte }}</strong>
+        el {{ d.fechaHora | date: 'dd/MM/yyyy HH:mm' }}.</p>
+      <p>{{ d.descripcion || 'Sin descripción.' }}</p>
+      <div class="btn-row"><button type="button" class="btn sec sm" (click)="detalle.set(null)">Cerrar</button></div>
+    </div>
+  }
+  @if (cargando()) {
+    <p class="muted">Cargando reportes…</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="tabla">
+        <thead><tr><th>#</th><th>Reportado</th><th>Reportó</th><th>Motivo</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>
+          @for (r of reportes(); track r.idReporte) {
+            <tr>
+              <td>{{ r.idReporte }}</td>
+              <td>{{ r.nombreReportado }}</td>
+              <td>{{ r.nombreRealizador }}</td>
+              <td>{{ r.tipoReporte }}</td>
+              <td>
+                <select [name]="'estado' + r.idReporte" [ngModel]="r.estado" (ngModelChange)="cambiarEstado(r, $event)" [attr.aria-label]="'Estado del reporte ' + r.idReporte">
+                  @for (e of estados; track e) { <option [value]="e">{{ e }}</option> }
+                </select>
+              </td>
+              <td>{{ r.fechaHora | date: 'dd/MM/yyyy' }}</td>
+              <td class="acciones">
+                <button type="button" class="btn sec sm" (click)="ver(r)">Ver</button>
+                @if (confirmandoId() === r.idReporte) {
+                  <button type="button" class="btn danger sm" (click)="eliminar(r)">Confirmar</button>
+                  <button type="button" class="btn sec sm" (click)="cancelarBorrado()">No</button>
+                } @else {
+                  <button type="button" class="btn danger sm" (click)="pedirBorrado(r)">Eliminar</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="vacio">No hay reportes{{ filtro() ? ' con estado ' + filtro() : '' }}.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,60 @@
+<main class="page-wrap">
+  <h1>Mi perfil</h1>
+  @if (cargando()) {
+    <p class="muted">Cargando tu perfil…</p>
+  } @else if (error()) {
+    <p class="msg-err" role="alert">{{ error() }}</p>
+  } @else if (perfil(); as p) {
+    @if (exito()) { <p class="msg-ok" role="status">{{ exito() }}</p> }
+    @if (!editando()) {
+      <section class="panel resumen">
+        <span class="avatar big" [style.background]="grad(hue(p.nombreCompleto))">{{ ini(p.nombreCompleto) }}@if (p.fotoPerfil) {<img [src]="p.fotoPerfil" alt="Tu foto" (error)="$any($event.target).hidden = true">}</span>
+        <div>
+          <h2>{{ p.nombreCompleto }}</h2>
+          <p class="muted">{{ p.correo }} · {{ p.rol }}</p>
+          <div class="btn-row">
+            <button type="button" class="btn sm" (click)="editar()">Editar mi perfil</button>
+            <a class="btn sec sm" [routerLink]="['/estudiantes', p.id]">Ver cómo me ven</a>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Datos privados</h2>
+        <dl>
+          <dt>Documento</dt><dd>{{ p.tipoDocumento }} {{ p.documento }}</dd>
+          <dt>Fecha de nacimiento</dt><dd>{{ p.fechaNacimiento || '—' }}</dd>
+          <dt>Miembro desde</dt><dd>{{ p.fechaCreacion | date: 'dd/MM/yyyy' }}</dd>
+        </dl>
+      </section>
+      <section class="panel">
+        <h2>Datos públicos</h2>
+        <dl>
+          <dt>Edad</dt><dd>{{ p.edad ?? '—' }}</dd>
+          <dt>Gustos</dt><dd>{{ p.intereses.length ? p.intereses.join(', ') : '—' }}</dd>
+          @for (e of p.estudios; track e.idCarrera) { <dt>Estudios</dt><dd>{{ e.carrera }} · semestre {{ e.semestre }} · {{ e.universidad }}</dd> }
+          @for (r of p.redes; track r.idRedSocial) { <dt>{{ r.redSocial }}</dt><dd><a class="link" [href]="r.urlPerfil" target="_blank" rel="noopener noreferrer">{{ r.alias || r.urlPerfil }}</a></dd> }
+        </dl>
+      </section>
+      <section class="panel zona-peligro">
+        <h2>Eliminar cuenta</h2>
+        <p class="muted">Se borrarán tu perfil, tus me gusta, comentarios y reportes. No se puede deshacer.</p>
+        @if (errorGuardar()) { <p class="msg-err" role="alert">{{ errorGuardar() }}</p> }
+        @if (!confirmandoBorrado()) {
+          <div class="btn-row"><button type="button" class="btn danger sm" (click)="pedirBorrado()">Eliminar mi cuenta</button></div>
+        } @else {
+          <p><strong>¿Seguro que quieres eliminar tu cuenta?</strong></p>
+          <div class="btn-row">
+            <button type="button" class="btn danger sm" (click)="eliminarCuenta()">Sí, eliminar definitivamente</button>
+            <button type="button" class="btn sec sm" (click)="cancelarBorrado()">Cancelar</button>
+          </div>
+        }
+      </section>
+    } @else {
+      <section class="panel">
+        <h2>Editar mi perfil</h2>
+        <app-perfil-form modo="edicion" [inicial]="p" textoBoton="Guardar cambios" [cargando]="guardando()" [error]="errorGuardar()"
+          (enviar)="guardar($event)" (cancelar)="cancelarEdicion()" />
+      </section>
+    }
+  }
+</main>
