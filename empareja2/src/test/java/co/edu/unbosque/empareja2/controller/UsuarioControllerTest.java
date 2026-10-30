@@ -56,6 +56,34 @@ class UsuarioControllerTest extends ControllerTestSupport {
     }
 
     @Test
+    void rankingUsaLimite20PorDefectoYNoLoConfundeConUnId() throws Exception {
+        when(usuarioService.rankingMeGusta("ana@mail.com", null, 20))
+                .thenReturn(List.of(publico(3, "Marta"), publico(2, "Luis")));
+
+        mvc.perform(get("/api/usuarios/ranking").principal(ANA)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("0.id").value(3));
+        verify(usuarioService).rankingMeGusta("ana@mail.com", null, 20);
+    }
+
+    @Test
+    void rankingFiltraPorUniversidadYLimite() throws Exception {
+        when(usuarioService.rankingMeGusta("ana@mail.com", 10L, 5)).thenReturn(List.of(publico(2, "Luis")));
+
+        mvc.perform(get("/api/usuarios/ranking").param("universidadId", "10").param("limite", "5").principal(ANA))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        verify(usuarioService).rankingMeGusta("ana@mail.com", 10L, 5);
+    }
+
+    @Test
+    void rankingConUniversidadInexistenteDa404() throws Exception {
+        when(usuarioService.rankingMeGusta("ana@mail.com", 99L, 20))
+                .thenThrow(new ResourceNotFoundException("No existe la universidad"));
+
+        mvc.perform(get("/api/usuarios/ranking").param("universidadId", "99").principal(ANA))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void catalogoFiltraPorUniversidad() throws Exception {
         when(usuarioService.listarCatalogo("ana@mail.com", 10L)).thenReturn(List.of(publico(2, "Luis")));
 

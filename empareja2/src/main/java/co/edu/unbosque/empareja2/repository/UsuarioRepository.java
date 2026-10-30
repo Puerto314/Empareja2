@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.Tiene;
 import co.edu.unbosque.empareja2.entity.TipoDocumento;
+import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.entity.Usuario;
 
@@ -126,6 +128,29 @@ public class UsuarioRepository {
 		return conColecciones(jdbc.query(SELECT + "WHERE u.rol = ? AND u.id_usuario <> ? "
 				+ "AND EXISTS (SELECT 1 FROM estudio e WHERE e.id_usuario = u.id_usuario AND e.id_universidad = ?) "
 				+ "ORDER BY u.nombre ASC, u.apellido ASC", MAPPER, rol.name(), idExcluido, idUniversidad));
+	}
+
+	/**
+	 * Ranking por me gusta recibidos: los usuarios con ese rol que tienen al menos
+	 * una reaccion del tipo indicado, de mas a menos (empata por nombre y apellido).
+	 * Si idUniversidad no es nulo, solo cuenta a quienes estudian en esa universidad.
+	 * Incluye al usuario que consulta (es un ranking, no el catalogo).
+	 */
+	public List<Usuario> rankingPorMeGusta(Rol rol, TipoReaccion tipo, Long idUniversidad, int limite) {
+		String filtro = idUniversidad == null ? ""
+				: "AND EXISTS (SELECT 1 FROM estudio e WHERE e.id_usuario = u.id_usuario AND e.id_universidad = ?) ";
+		List<Object> args = new ArrayList<>();
+		args.add(tipo.name());
+		args.add(rol.name());
+		if (idUniversidad != null) {
+			args.add(idUniversidad);
+		}
+		args.add(limite);
+		return conColecciones(jdbc.query(SELECT
+				+ "JOIN (SELECT id_destinatario, COUNT(*) AS total FROM reaccion WHERE tipo_reaccion = ? "
+				+ "GROUP BY id_destinatario) r ON r.id_destinatario = u.id_usuario WHERE u.rol = ? " + filtro
+				+ "ORDER BY r.total DESC, u.nombre ASC, u.apellido ASC, u.id_usuario ASC LIMIT ?", MAPPER,
+				args.toArray()));
 	}
 
 	// ------------------------------------------------------------------
