@@ -4,35 +4,31 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 
 import { authGuard } from './auth.guard';
-import { AuthService } from '../services/auth.service';
 
 describe('authGuard', () => {
   let rutaDestino: string[] = [];
-  let logueado = false;
 
   beforeEach(() => {
     rutaDestino = [];
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
-<<<<<<< HEAD
         provideHttpClient(),
         provideHttpClientTesting(),
-=======
-        { provide: AuthService, useValue: { estaLogueado: () => logueado } },
->>>>>>> main
         { provide: Router, useValue: { navigate: (ruta: string[]) => { rutaDestino = ruta; } } }
       ]
     });
   });
 
-  it('debe permitir el acceso si hay sesión', () => {
-    logueado = true;
-    expect(TestBed.runInInjectionContext(() => authGuard({} as any, {} as any))).toBe(true);
+  it('debe permitir el acceso si hay token', () => {
+    localStorage.setItem('token', 'token-falso');
+    const resultado = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+    expect(resultado).toBe(true);
   });
 
-  it('debe bloquear el acceso y enviar al login si no hay sesión', () => {
-    logueado = false;
-    expect(TestBed.runInInjectionContext(() => authGuard({} as any, {} as any))).toBe(false);
+  it('debe bloquear el acceso y enviar al login si no hay token', () => {
+    const resultado = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+    expect(resultado).toBe(false);
     expect(rutaDestino).toEqual(['/login']);
   });
 });

@@ -1,0 +1,46 @@
+<section class="panel">
+  <h2>Usuarios</h2>
+  @if (exito()) { <p class="msg-ok" role="status">{{ exito() }}</p> }
+  @if (error()) { <p class="msg-err" role="alert">{{ error() }}</p> }
+  @if (formulario() === null) {
+    <div class="toolbar">
+      <input type="search" name="filtro" aria-label="Buscar usuarios" placeholder="Buscar por nombre o correo" [ngModel]="filtro()" (ngModelChange)="filtro.set($event)">
+      <button type="button" class="btn sm" (click)="nuevo()">+ Nuevo usuario</button>
+    </div>
+    @if (cargando()) {
+      <p class="muted">Cargando usuarios…</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="tabla">
+          <thead><tr><th>ID</th><th>Nombre</th><th>Correo / usuario</th><th>Rol</th><th>Universidades</th><th></th></tr></thead>
+          <tbody>
+            @for (u of visibles(); track u.id) {
+              <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.nombreCompleto }}</td>
+                <td>{{ u.correo }}</td>
+                <td><span class="badge" [class.ok]="u.rol === 'ADMIN'">{{ u.rol }}</span></td>
+                <td>{{ universidadesDe(u) }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn sec sm" (click)="editar(u)">Editar</button>
+                  @if (confirmandoId() === u.id) {
+                    <button type="button" class="btn danger sm" (click)="eliminar(u)">Confirmar</button>
+                    <button type="button" class="btn sec sm" (click)="cancelarBorrado()">No</button>
+                  } @else {
+                    <button type="button" class="btn danger sm" (click)="pedirBorrado(u)">Eliminar</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="vacio">No hay usuarios que coincidan.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else {
+    <app-perfil-form modo="admin" [inicial]="formulario() === 'nuevo' ? null : $any(formulario())"
+      [textoBoton]="formulario() === 'nuevo' ? 'Crear usuario' : 'Guardar cambios'" [cargando]="guardando()" [error]="errorForm()"
+      (enviar)="guardar($event)" (cancelar)="cancelar()" />
+  }
+</section>

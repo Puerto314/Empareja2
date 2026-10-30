@@ -2,8 +2,14 @@
   <header class="topbar">
     <a routerLink="/universidades" class="logo">empareja<b>2</b></a>
     <nav>
-      @if (nombre) { <span class="hola">Hola, {{ nombre }}</span> }
-      <a routerLink="/universidades">Universidades</a>
+      <a routerLink="/universidades" routerLinkActive="activo">Universidades</a>
+      <a routerLink="/ranking" routerLinkActive="activo">Ranking</a>
+      @if (!esAdmin) {
+        <a routerLink="/mensajes" routerLinkActive="activo">Comentarios</a>
+        <a routerLink="/mi-perfil" routerLinkActive="activo">Mi perfil{{ nombreUsuario ? ' (' + nombreUsuario + ')' : '' }}</a>
+      } @else {
+        <a routerLink="/admin" routerLinkActive="activo">Administración</a>
+      }
       <button type="button" class="exit" (click)="cerrarSesion()">Cerrar sesión</button>
     </nav>
   </header>

@@ -1,0 +1,8 @@
+.top { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fila { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 10px 16px; transition: border-color .15s; }
+.fila:hover { border-color: var(--plum); }
+.pos { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--line); flex: none; }
+.pos.podio { background: var(--pink); color: #fff; }
+.datos { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.datos small { color: var(--muted); }
+.likes { font-weight: 700; color: var(--pink); white-space: nowrap; }

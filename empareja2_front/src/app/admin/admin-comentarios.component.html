@@ -1,0 +1,34 @@
+<section class="panel">
+  <h2>Comentarios privados</h2>
+  @if (exito()) { <p class="msg-ok" role="status">{{ exito() }}</p> }
+  @if (error()) { <p class="msg-err" role="alert">{{ error() }}</p> }
+  @if (cargando()) {
+    <p class="muted">Cargando comentarios…</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="tabla">
+        <thead><tr><th>De</th><th>Para</th><th>Comentario</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>
+          @for (c of comentarios(); track llave(c)) {
+            <tr>
+              <td>{{ c.nombreAutor }}</td>
+              <td>{{ c.nombreDestinatario }}</td>
+              <td>{{ c.contenido }}</td>
+              <td>{{ c.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="acciones">
+                @if (confirmando() === llave(c)) {
+                  <button type="button" class="btn danger sm" (click)="eliminar(c)">Confirmar</button>
+                  <button type="button" class="btn sec sm" (click)="cancelarBorrado()">No</button>
+                } @else {
+                  <button type="button" class="btn danger sm" (click)="pedirBorrado(c)">Eliminar</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="vacio">No hay comentarios.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

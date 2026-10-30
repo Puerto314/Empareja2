@@ -1,0 +1,147 @@
+<section class="panel">
+  <h2>Catálogos</h2>
+  <div class="tabs" role="tablist">
+    @for (s of secciones; track s.id) {
+      <button type="button" role="tab" [class.on]="seccion() === s.id" (click)="cambiarSeccion(s.id)">{{ s.t }}</button>
+    }
+  </div>
+  @if (exito()) { <p class="msg-ok" role="status">{{ exito() }}</p> }
+  @if (error()) { <p class="msg-err" role="alert">{{ error() }}</p> }
+
+  @if (cargando()) {
+    <p class="muted">Cargando…</p>
+  } @else {
+    @switch (seccion()) {
+      @case ('ciudades') {
+        <form class="subbox row-fields" (ngSubmit)="guardarCiudad()">
+          <label class="field">Nombre<input name="cNombre" [(ngModel)]="fCiudad.nombre"></label>
+          <label class="field">Departamento<input name="cDep" [(ngModel)]="fCiudad.departamento"></label>
+          <div class="btn-row"><button type="submit" class="btn sm">{{ fCiudad.id === null ? 'Agregar ciudad' : 'Guardar cambios' }}</button></div>
+        </form>
+        <div class="table-wrap"><table class="tabla">
+          <thead><tr><th>ID</th><th>Ciudad</th><th>Departamento</th><th></th></tr></thead>
+          <tbody>
+            @for (c of ciudades(); track c.idCiudad) {
+              <tr><td>{{ c.idCiudad }}</td><td>{{ c.nombre }}</td><td>{{ c.departamento }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn sec sm" (click)="editarCiudad(c)">Editar</button>
+                  @if (confirmando() === 'ciudad' + c.idCiudad) {
+                    <button type="button" class="btn danger sm" (click)="eliminarCiudad(c)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
+                  } @else { <button type="button" class="btn danger sm" (click)="pedir('ciudad' + c.idCiudad)">Eliminar</button> }
+                </td></tr>
+            } @empty { <tr><td colspan="4" class="vacio">No hay ciudades.</td></tr> }
+          </tbody></table></div>
+      }
+      @case ('universidades') {
+        <form class="subbox stack-v" (ngSubmit)="guardarUniversidad()">
+          <div class="row-fields">
+            <label class="field">Nombre<input name="uNombre" [(ngModel)]="fUni.nombre"></label>
+            <label class="field">Sigla<input name="uSigla" [(ngModel)]="fUni.sigla"></label>
+            <label class="field">Ciudad
+              <select name="uCiudad" [(ngModel)]="fUni.idCiudad">
+                <option [ngValue]="null">Elige…</option>
+                @for (c of ciudades(); track c.idCiudad) { <option [ngValue]="c.idCiudad">{{ c.nombre }}</option> }
+              </select>
+            </label>
+          </div>
+          <div class="row-fields">
+            <label class="field">Calle<input name="uCalle" [(ngModel)]="fUni.calle"></label>
+            <label class="field">Barrio<input name="uBarrio" [(ngModel)]="fUni.barrio"></label>
+            <label class="field">Número<input name="uNum" [(ngModel)]="fUni.numeroDireccion"></label>
+          </div>
+          <div class="btn-row"><button type="submit" class="btn sm">{{ fUni.id === null ? 'Agregar universidad' : 'Guardar cambios' }}</button></div>
+        </form>
+        <form class="toolbar" (ngSubmit)="cargar()">
+          <input name="busquedaUni" aria-label="Buscar universidad por nombre o sigla" placeholder="Buscar por nombre o sigla" [(ngModel)]="busquedaUni">
+          <button type="submit" class="btn sec sm">Buscar</button>
+        </form>
+        <div class="table-wrap"><table class="tabla">
+          <thead><tr><th>ID</th><th>Nombre</th><th>Sigla</th><th>Ciudad</th><th></th></tr></thead>
+          <tbody>
+            @for (u of universidades(); track u.idUniversidad) {
+              <tr><td>{{ u.idUniversidad }}</td><td>{{ u.nombre }}</td><td>{{ u.sigla }}</td><td>{{ u.ciudad?.nombre }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn sec sm" (click)="editarUniversidad(u)">Editar</button>
+                  @if (confirmando() === 'uni' + u.idUniversidad) {
+                    <button type="button" class="btn danger sm" (click)="eliminarUniversidad(u)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
+                  } @else { <button type="button" class="btn danger sm" (click)="pedir('uni' + u.idUniversidad)">Eliminar</button> }
+                </td></tr>
+            } @empty { <tr><td colspan="5" class="vacio">No hay universidades.</td></tr> }
+          </tbody></table></div>
+      }
+      @case ('carreras') {
+        <form class="subbox row-fields" (ngSubmit)="guardarCarrera()">
+          <label class="field">Nombre<input name="caNombre" [(ngModel)]="fCarrera.nombre"></label>
+          <div class="btn-row"><button type="submit" class="btn sm">{{ fCarrera.id === null ? 'Agregar carrera' : 'Guardar cambios' }}</button></div>
+        </form>
+        <div class="table-wrap"><table class="tabla">
+          <thead><tr><th>ID</th><th>Carrera</th><th></th></tr></thead>
+          <tbody>
+            @for (c of carreras(); track c.idCarrera) {
+              <tr><td>{{ c.idCarrera }}</td><td>{{ c.nombre }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn sec sm" (click)="editarCarrera(c)">Editar</button>
+                  @if (confirmando() === 'carrera' + c.idCarrera) {
+                    <button type="button" class="btn danger sm" (click)="eliminarCarrera(c)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
+                  } @else { <button type="button" class="btn danger sm" (click)="pedir('carrera' + c.idCarrera)">Eliminar</button> }
+                </td></tr>
+            } @empty { <tr><td colspan="3" class="vacio">No hay carreras.</td></tr> }
+          </tbody></table></div>
+      }
+      @case ('redes') {
+        <form class="subbox row-fields" (ngSubmit)="guardarRed()">
+          <label class="field">Nombre<input name="rNombre" [(ngModel)]="fRed.nombreRedSocial"></label>
+          <label class="field">Url base<input name="rUrl" [(ngModel)]="fRed.url" placeholder="https://..."></label>
+          <div class="btn-row"><button type="submit" class="btn sm">{{ fRed.id === null ? 'Agregar red social' : 'Guardar cambios' }}</button></div>
+        </form>
+        <div class="table-wrap"><table class="tabla">
+          <thead><tr><th>ID</th><th>Red</th><th>Url</th><th></th></tr></thead>
+          <tbody>
+            @for (r of redes(); track r.idRedSocial) {
+              <tr><td>{{ r.idRedSocial }}</td><td>{{ r.nombreRedSocial }}</td><td>{{ r.url }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn sec sm" (click)="editarRed(r)">Editar</button>
+                  @if (confirmando() === 'red' + r.idRedSocial) {
+                    <button type="button" class="btn danger sm" (click)="eliminarRed(r)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
+                  } @else { <button type="button" class="btn danger sm" (click)="pedir('red' + r.idRedSocial)">Eliminar</button> }
+                </td></tr>
+            } @empty { <tr><td colspan="4" class="vacio">No hay redes sociales.</td></tr> }
+          </tbody></table></div>
+      }
+      @case ('oferta') {
+        <form class="subbox row-fields" (ngSubmit)="guardarOferta()">
+          <label class="field">Universidad
+            <select name="oUni" [(ngModel)]="fOferta.idUniversidad" [disabled]="fOferta.editando">
+              <option [ngValue]="null">Elige…</option>
+              @for (u of universidades(); track u.idUniversidad) { <option [ngValue]="u.idUniversidad">{{ u.nombre }}</option> }
+            </select>
+          </label>
+          <label class="field">Carrera
+            <select name="oCarrera" [(ngModel)]="fOferta.idCarrera" [disabled]="fOferta.editando">
+              <option [ngValue]="null">Elige…</option>
+              @for (c of carreras(); track c.idCarrera) { <option [ngValue]="c.idCarrera">{{ c.nombre }}</option> }
+            </select>
+          </label>
+          <label class="field">Facultad<input name="oFac" [(ngModel)]="fOferta.facultad"></label>
+          <div class="btn-row">
+            <button type="submit" class="btn sm">{{ fOferta.editando ? 'Guardar facultad' : 'Agregar oferta' }}</button>
+            @if (fOferta.editando) { <button type="button" class="btn sec sm" (click)="cancelarOferta()">Cancelar</button> }
+          </div>
+        </form>
+        <div class="table-wrap"><table class="tabla">
+          <thead><tr><th>Universidad</th><th>Carrera</th><th>Facultad</th><th></th></tr></thead>
+          <tbody>
+            @for (o of oferta(); track o.idCarrera + '-' + o.idUniversidad) {
+              <tr><td>{{ o.universidad }}</td><td>{{ o.carrera }}</td><td>{{ o.facultad }}</td>
+                <td class="acciones">
+                  <button type="button" class="btn sec sm" (click)="editarOferta(o)">Editar</button>
+                  @if (confirmando() === 'oferta' + o.idCarrera + '-' + o.idUniversidad) {
+                    <button type="button" class="btn danger sm" (click)="eliminarOferta(o)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
+                  } @else { <button type="button" class="btn danger sm" (click)="pedir('oferta' + o.idCarrera + '-' + o.idUniversidad)">Eliminar</button> }
+                </td></tr>
+            } @empty { <tr><td colspan="4" class="vacio">No hay ofertas.</td></tr> }
+          </tbody></table></div>
+      }
+    }
+  }
+</section>

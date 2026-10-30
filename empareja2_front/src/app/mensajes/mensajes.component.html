@@ -1,0 +1,31 @@
+<main class="page-wrap">
+  <h1>Comentarios privados</h1>
+  <p class="muted">Solo tú y quien lo escribió pueden ver cada comentario.</p>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" [class.on]="pestana() === 'recibidos'" (click)="pestana.set('recibidos')">Recibidos ({{ recibidos().length }})</button>
+    <button type="button" role="tab" [class.on]="pestana() === 'enviados'" (click)="pestana.set('enviados')">Enviados ({{ enviados().length }})</button>
+  </div>
+  @if (cargando()) {
+    <p class="muted">Cargando…</p>
+  } @else if (error()) {
+    <p class="msg-err" role="alert">{{ error() }}</p>
+  } @else {
+    <section class="lista">
+      @for (c of pestana() === 'recibidos' ? recibidos() : enviados(); track c.idAutor + '-' + c.numeroComentario) {
+        <article class="panel comentario">
+          <header>
+            @if (pestana() === 'recibidos') {
+              De <a class="link" [routerLink]="['/estudiantes', c.idAutor]">{{ c.nombreAutor }}</a>
+            } @else {
+              Para <a class="link" [routerLink]="['/estudiantes', c.idDestinatario]">{{ c.nombreDestinatario }}</a>
+            }
+            <small>{{ c.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</small>
+          </header>
+          <p>{{ c.contenido }}</p>
+        </article>
+      } @empty {
+        <p class="vacio">{{ pestana() === 'recibidos' ? 'Todavía no has recibido comentarios.' : 'Todavía no has enviado comentarios. Entra al perfil de alguien para escribirle.' }}</p>
+      }
+    </section>
+  }
+</main>

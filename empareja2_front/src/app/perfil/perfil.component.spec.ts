@@ -1,11 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { PerfilComponent } from './perfil.component';
-import { UsuarioService } from '../services/usuario.service';
-import { OTRO_USUARIO_EJEMPLO, USUARIO_EJEMPLO } from '../testing/fixtures';
+import { AuthService } from '../services/auth.service';
+import { EstudianteService } from '../services/estudiante.service';
+import { InteraccionService } from '../services/interaccion.service';
 
 const estudio = { idCarrera: 1, carrera: 'Medicina', idUniversidad: 5, universidad: 'Universidad Uno', siglaUniversidad: 'UU', semestre: 2 };
 const ana: any = {
@@ -17,42 +20,49 @@ const luis: any = { ...ana, id: 2, nombre: 'Luis', nombreCompleto: 'Luis Prueba'
 
 describe('PerfilComponent', () => {
   let fixture: ComponentFixture<PerfilComponent>;
-  let component: PerfilComponent;
-  const serviceMock: any = {};
+  let comp: PerfilComponent;
+  let llamadas: string[] = [];
+  let usuarioActual: any = { id: 99, rol: 'ESTUDIANTE' };
 
-<<<<<<< HEAD
   const serviceMock: any = {};
+  const interaccionMock: any = {};
+  const authMock: any = { obtenerUsuario: () => usuarioActual, esAdmin: () => usuarioActual?.rol === 'ADMIN' };
+
   beforeEach(() => {
+    llamadas = [];
+    usuarioActual = { id: 99, rol: 'ESTUDIANTE' };
     serviceMock.obtenerPorId = () => of(ana);
     serviceMock.listarCompaneros = () => of([luis]);
+    interaccionMock.listarMeGusta = () => of([{ idAutor: 50, nombreAutor: 'Marta Ruiz', fotoAutor: null, tipoReaccion: 'ME_GUSTA', fechaHora: '2026-10-01T10:00:00' }]);
+    interaccionMock.darMeGusta = (id: number) => { llamadas.push('dar ' + id); return of({ idUsuario: id, totalMeGusta: 4, meGusta: true }); };
+    interaccionMock.quitarMeGusta = (id: number) => { llamadas.push('quitar ' + id); return of({ idUsuario: id, totalMeGusta: 3, meGusta: false }); };
+    interaccionMock.enviarComentario = (id: number, t: string) => { llamadas.push(`comentario ${id} ${t}`); return of({}); };
+    interaccionMock.reportar = (id: number, d: any) => { llamadas.push(`reporte ${id} ${d.tipoReporte} ${d.descripcion ?? ''}`); return of({}); };
   });
 
-=======
->>>>>>> main
   const crear = async () => {
     await TestBed.configureTestingModule({
       declarations: [PerfilComponent],
+      imports: [FormsModule],
       providers: [
-<<<<<<< HEAD
         { provide: EstudianteService, useValue: serviceMock },
-=======
-        { provide: UsuarioService, useValue: serviceMock },
->>>>>>> main
+        { provide: InteraccionService, useValue: interaccionMock },
+        { provide: AuthService, useValue: authMock },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '1' })) } }
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(PerfilComponent);
-    component = fixture.componentInstance;
+    comp = fixture.componentInstance;
     fixture.detectChanges();
   };
-<<<<<<< HEAD
 
   const texto = () => fixture.nativeElement.textContent as string;
+  const clic = (sel: string) => { (fixture.nativeElement.querySelector(sel) as HTMLElement).click(); fixture.detectChanges(); };
 
   it('debe crearse', async () => {
     await crear();
-    expect(fixture.componentInstance).toBeTruthy();
+    expect(comp).toBeTruthy();
   });
 
   it('debe mostrar el nombre del estudiante', async () => {
@@ -78,7 +88,93 @@ describe('PerfilComponent', () => {
 
   it('debe listar compañeros de la misma universidad', async () => {
     await crear();
-    expect(fixture.nativeElement.querySelectorAll('.mini-row:not(.red)').length).toBe(1);
+    expect(texto()).toContain('Luis Prueba');
+  });
+
+  it('debe listar quién le dio me gusta', async () => {
+    await crear();
+    expect(texto()).toContain('Marta Ruiz');
+  });
+
+  it('debe dar me gusta y actualizar el contador', async () => {
+    await crear();
+    clic('button.like');
+    expect(llamadas).toEqual(['dar 1']);
+    expect(comp.meGusta()).toBe(true);
+    expect(comp.totalMeGusta()).toBe(4);
+  });
+
+  it('debe quitar el me gusta si ya se lo había dado', async () => {
+    serviceMock.obtenerPorId = () => of({ ...ana, meGustaDelUsuarioActual: true });
+    await crear();
+    clic('button.like');
+    expect(llamadas).toEqual(['quitar 1']);
+    expect(comp.meGusta()).toBe(false);
+    expect(comp.totalMeGusta()).toBe(3);
+  });
+
+  it('debe mostrar el error si el me gusta falla (p. ej. ya lo había dado)', async () => {
+    interaccionMock.darMeGusta = () => throwError(() => new HttpErrorResponse({ status: 409, error: { message: 'Ya le diste me gusta a este perfil' } }));
+    await crear();
+    clic('button.like');
+    expect(texto()).toContain('Ya le diste me gusta a este perfil');
+  });
+
+  it('debe enviar un comentario privado', async () => {
+    await crear();
+    comp.comentario = '  Hola, qué buen perfil  ';
+    comp.enviarComentario();
+    expect(llamadas).toEqual(['comentario 1 Hola, qué buen perfil']);
+    expect(comp.exitoComentario()).toContain('Solo Ana puede leerlo');
+    expect(comp.comentario).toBe('');
+  });
+
+  it('no debe enviar un comentario vacío', async () => {
+    await crear();
+    comp.comentario = '   ';
+    comp.enviarComentario();
+    expect(llamadas).toEqual([]);
+    expect(comp.errorComentario()).toContain('Escribe el comentario');
+  });
+
+  it('debe reportar el perfil con el motivo elegido', async () => {
+    await crear();
+    comp.alternarReporte();
+    comp.tipoReporte = 'ACOSO' as any;
+    comp.enviarReporte();
+    expect(llamadas).toEqual(['reporte 1 ACOSO ']);
+    expect(comp.exitoReporte()).toContain('Reporte enviado');
+  });
+
+  it('debe exigir descripción cuando el motivo es OTRO', async () => {
+    await crear();
+    comp.tipoReporte = 'OTRO' as any;
+    comp.descripcionReporte = ' ';
+    comp.enviarReporte();
+    expect(llamadas).toEqual([]);
+    expect(comp.errorReporte()).toContain('Describe el motivo');
+  });
+
+  it('debe mostrar el mensaje del back si el reporte ya existe (409)', async () => {
+    interaccionMock.reportar = () => throwError(() => new HttpErrorResponse({ status: 409, error: { message: 'Ya reportaste este perfil' } }));
+    await crear();
+    comp.enviarReporte();
+    expect(comp.errorReporte()).toContain('Ya reportaste este perfil');
+  });
+
+  it('no debe ofrecer me gusta, comentario ni reporte en el perfil propio', async () => {
+    usuarioActual = { id: 1, rol: 'ESTUDIANTE' };
+    await crear();
+    expect(fixture.nativeElement.querySelector('button.like')).toBeNull();
+    expect(texto()).not.toContain('Escríbele en privado');
+    expect(texto()).toContain('Editar mi perfil');
+  });
+
+  it('no debe ofrecer interacciones a un administrador', async () => {
+    usuarioActual = { id: 3, rol: 'ADMIN' };
+    await crear();
+    expect(fixture.nativeElement.querySelector('button.like')).toBeNull();
+    expect(texto()).not.toContain('Reportar este perfil');
   });
 
   it('debe avisar si el perfil no existe', async () => {
@@ -91,49 +187,5 @@ describe('PerfilComponent', () => {
     serviceMock.obtenerPorId = () => throwError(() => new Error('falló'));
     await crear();
     expect(texto()).toContain('No pudimos cargar este perfil');
-=======
-
-  beforeEach(() => {
-    serviceMock.obtenerPublico = () => of(USUARIO_EJEMPLO);
-    serviceMock.listarCatalogo = () => of([USUARIO_EJEMPLO, OTRO_USUARIO_EJEMPLO]);
-    serviceMock.darMeGusta = () => of({ idUsuario: 1, totalMeGusta: 4, meGusta: true });
-    serviceMock.quitarMeGusta = () => of({ idUsuario: 1, totalMeGusta: 2, meGusta: false });
-  });
-
-  it('debe crearse y mostrar el nombre', async () => {
-    await crear();
-    expect(component).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Ana Prueba');
-  });
-
-  /* PRUEBAS A y B: descomenta estos tests cuando actives el me gusta y los compañeros
-  it('debe listar compañeros sin incluir al propio perfil', async () => {
-    await crear();
-    expect(component.otros().map(o => o.id)).toEqual([2]);
-    expect(fixture.nativeElement.querySelectorAll('.mini-row').length).toBe(1);
->>>>>>> main
-  });
-
-  it('debe dar me gusta y actualizar el contador', async () => {
-    await crear();
-    component.alternarMeGusta();
-    expect(component.u()?.totalMeGusta).toBe(4);
-    expect(component.u()?.meGustaDelUsuarioActual).toBe(true);
-  });
-
-  it('debe quitar el me gusta si ya estaba dado', async () => {
-    serviceMock.obtenerPublico = () => of({ ...USUARIO_EJEMPLO, totalMeGusta: 3, meGustaDelUsuarioActual: true });
-    await crear();
-    component.alternarMeGusta();
-    expect(component.u()?.totalMeGusta).toBe(2);
-    expect(component.u()?.meGustaDelUsuarioActual).toBe(false);
-  });
-
-  fin PRUEBAS A y B */
-
-  it('debe mostrar el error si el perfil no existe', async () => {
-    serviceMock.obtenerPublico = () => throwError(() => ({ status: 404, error: { message: 'No existe el usuario' } }));
-    await crear();
-    expect(component.error()).toBe('No existe el usuario');
   });
 });

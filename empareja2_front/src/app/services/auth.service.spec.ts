@@ -4,19 +4,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 
 import { AuthService } from './auth.service';
 import { API_URL } from '../config/api.config';
-<<<<<<< HEAD
 import { TipoDocumentoEnum } from '../models/tipo-documento.enum';
-=======
->>>>>>> main
 
 describe('AuthService', () => {
   let service: AuthService;
   let http: HttpTestingController;
-<<<<<<< HEAD
-=======
-
-  const respuesta: any = { token: 'jwt-falso', tokenType: 'Bearer', expiresInMs: 60000, usuario: { id: 1, nombre: 'Ana' } };
->>>>>>> main
 
   beforeEach(() => {
     localStorage.clear();
@@ -31,37 +23,32 @@ describe('AuthService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('debe iniciar sesión y guardar token y usuario', () => {
-    service.iniciarSesion({ correo: 'ana@x.co', contrasena: '12345678' }).subscribe();
-    const req = http.expectOne(`${API_URL}/auth/login`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ correo: 'ana@x.co', contrasena: '12345678' });
-    req.flush(respuesta);
-
-    expect(service.obtenerToken()).toBe('jwt-falso');
-    expect(service.obtenerUsuario()?.nombre).toBe('Ana');
+  it('debe guardar y leer el token', () => {
+    service.guardarToken('abc');
+    expect(service.obtenerToken()).toBe('abc');
     expect(service.estaLogueado()).toBe(true);
   });
 
-  it('debe registrar usando el endpoint de registro', () => {
-    service.registrar({} as any).subscribe();
-    const req = http.expectOne(`${API_URL}/auth/registro`);
-    expect(req.request.method).toBe('POST');
-    req.flush(respuesta);
-    expect(service.estaLogueado()).toBe(true);
-  });
-
-  it('no debe considerar logueado un token vencido', () => {
-    service.guardarSesion({ ...respuesta, expiresInMs: -1000 });
-    expect(service.estaLogueado()).toBe(false);
-  });
-
-  it('debe borrar la sesión al cerrarla', () => {
-    service.guardarSesion(respuesta);
+  it('debe borrar el token al cerrar sesión', () => {
+    service.guardarToken('abc');
     service.cerrarSesion();
     expect(service.obtenerToken()).toBeNull();
-    expect(service.obtenerUsuario()).toBeNull();
     expect(service.estaLogueado()).toBe(false);
+  });
+
+  it('debe guardar la sesión (token + usuario) y saber si es administrador', () => {
+    service.guardarSesion({ token: 'jwt', tokenType: 'Bearer', expiresInMs: 1, usuario: { id: 7, rol: 'ADMIN' } as any });
+    expect(service.obtenerToken()).toBe('jwt');
+    expect(service.obtenerUsuario()?.id).toBe(7);
+    expect(service.esAdmin()).toBe(true);
+    service.cerrarSesion();
+    expect(service.obtenerUsuario()).toBeNull();
+    expect(service.esAdmin()).toBe(false);
+  });
+
+  it('debe tolerar un usuario guardado dañado', () => {
+    localStorage.setItem('usuario', '{no es json');
+    expect(service.obtenerUsuario()).toBeNull();
   });
 
   it('debe iniciar sesión con POST /auth/login usando correo y contrasena', () => {

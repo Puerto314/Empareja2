@@ -1,0 +1,3 @@
+.comentario header { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-weight: 500; }
+.comentario small { color: var(--muted); font-weight: 400; }
+.comentario p { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }

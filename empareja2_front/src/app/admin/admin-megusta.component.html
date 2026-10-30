@@ -1,0 +1,34 @@
+<section class="panel">
+  <h2>Me gusta</h2>
+  @if (exito()) { <p class="msg-ok" role="status">{{ exito() }}</p> }
+  @if (error()) { <p class="msg-err" role="alert">{{ error() }}</p> }
+  @if (cargando()) {
+    <p class="muted">Cargando me gusta…</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="tabla">
+        <thead><tr><th>Quién</th><th>A quién</th><th>Tipo</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>
+          @for (r of reacciones(); track llave(r)) {
+            <tr>
+              <td>{{ r.nombreAutor }}</td>
+              <td>{{ r.nombreDestinatario }}</td>
+              <td>{{ r.tipoReaccion }}</td>
+              <td>{{ r.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="acciones">
+                @if (confirmando() === llave(r)) {
+                  <button type="button" class="btn danger sm" (click)="eliminar(r)">Confirmar</button>
+                  <button type="button" class="btn sec sm" (click)="cancelarBorrado()">No</button>
+                } @else {
+                  <button type="button" class="btn danger sm" (click)="pedirBorrado(r)">Eliminar</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="vacio">No hay me gusta.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
