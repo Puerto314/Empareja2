@@ -125,6 +125,60 @@ class UsuarioServiceImplTest {
     }
 
     @Test
+    void rankingGeneralConservaElOrdenDelRepositorioYAgregaLosConteos() {
+        when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, null, 20))
+                .thenReturn(List.of(marta, luis));
+        when(reaccionRepository.contarPorDestinatarios(List.of(3L, 2L), TipoReaccion.ME_GUSTA))
+                .thenReturn(List.of(new ConteoReacciones(3L, 9L), new ConteoReacciones(2L, 4L)));
+        when(reaccionRepository.destinatariosReaccionados(1L, TipoReaccion.ME_GUSTA, List.of(3L, 2L)))
+                .thenReturn(List.of(2L));
+
+        List<UsuarioPublicoDTO> ranking = service.rankingMeGusta("ana@mail.com", null, 20);
+
+        assertThat(ranking).extracting(UsuarioPublicoDTO::id).containsExactly(3L, 2L);
+        assertThat(ranking).extracting(UsuarioPublicoDTO::totalMeGusta).containsExactly(9L, 4L);
+        assertThat(ranking.get(1).meGustaDelUsuarioActual()).isTrue();
+        verifyNoInteractions(universidadRepository);
+    }
+
+    @Test
+    void rankingPorUniversidadFiltraEnElRepositorio() {
+        when(universidadRepository.existsById(10L)).thenReturn(true);
+        when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, 10L, 20))
+                .thenReturn(List.of(luis));
+
+        List<UsuarioPublicoDTO> ranking = service.rankingMeGusta("ana@mail.com", 10L, 20);
+
+        assertThat(ranking).extracting(UsuarioPublicoDTO::id).containsExactly(2L);
+    }
+
+    @Test
+    void rankingConUniversidadInexistenteDa404() {
+        when(universidadRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.rankingMeGusta("ana@mail.com", 99L, 20))
+                .isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("99");
+        verify(usuarioRepository, never()).rankingPorMeGusta(any(), any(), any(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    void rankingConLimiteFueraDeRangoDa400() {
+        assertThatThrownBy(() -> service.rankingMeGusta("ana@mail.com", null, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.rankingMeGusta("ana@mail.com", null, 101))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rankingVacioNoConsultaReacciones() {
+        when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, null, 20))
+                .thenReturn(List.of());
+
+        assertThat(service.rankingMeGusta("ana@mail.com", null, 20)).isEmpty();
+        verifyNoInteractions(reaccionRepository);
+    }
+
+    @Test
     void catalogoVacioNoConsultaReacciones() {
         when(usuarioRepository.findByRolAndIdNotOrderByNombreAscApellidoAsc(Rol.ESTUDIANTE, 1L)).thenReturn(List.of());
 

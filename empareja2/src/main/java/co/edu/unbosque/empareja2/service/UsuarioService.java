@@ -21,6 +21,13 @@ public interface UsuarioService {
 
     UsuarioPublicoDTO obtenerPerfilPublico(String correoActual, Long id);
 
+    /**
+     * Ranking de los usuarios con mas "me gusta" (solo estudiantes con al menos uno),
+     * de mas a menos. Si idUniversidad no es null, solo los de esa universidad.
+     * limite debe estar entre 1 y 100 (el front usa 20).
+     */
+    List<UsuarioPublicoDTO> rankingMeGusta(String correoActual, Long idUniversidad, int limite);
+
     UsuarioPerfilDTO obtenerPerfilPropio(String correo);
 
     UsuarioPerfilDTO actualizarPerfilPropio(String correo, ActualizarPerfilRequestDTO request);

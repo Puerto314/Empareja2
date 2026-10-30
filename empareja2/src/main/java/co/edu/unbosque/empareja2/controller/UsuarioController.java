@@ -46,6 +46,14 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarCatalogo(authentication.getName(), universidadId));
     }
 
+    @GetMapping("/ranking")
+    @Operation(summary = "Ranking de usuarios con mas me gusta (por defecto los 20 primeros); "
+            + "con ?universidadId=N solo los de esa universidad")
+    public ResponseEntity<List<UsuarioPublicoDTO>> ranking(Authentication authentication,
+            @RequestParam(required = false) Long universidadId, @RequestParam(defaultValue = "20") int limite) {
+        return ResponseEntity.ok(usuarioService.rankingMeGusta(authentication.getName(), universidadId, limite));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Obtiene la informacion publica de un usuario por id")
     public ResponseEntity<UsuarioPublicoDTO> obtenerPerfilPublico(Authentication authentication,

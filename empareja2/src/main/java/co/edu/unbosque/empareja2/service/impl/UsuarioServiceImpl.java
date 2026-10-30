@@ -75,6 +75,19 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    public List<UsuarioPublicoDTO> rankingMeGusta(String correoActual, Long idUniversidad, int limite) {
+        Usuario actual = usuarioFinder.porCorreo(correoActual);
+        if (limite < 1 || limite > 100) {
+            throw new IllegalArgumentException("El limite del ranking debe estar entre 1 y 100");
+        }
+        if (idUniversidad != null && !universidadRepository.existsById(idUniversidad)) {
+            throw new ResourceNotFoundException("No existe la universidad con id " + idUniversidad);
+        }
+        return aPublicos(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, idUniversidad,
+                limite), actual);
+    }
+
+    @Override
     public UsuarioPublicoDTO obtenerPerfilPublico(String correoActual, Long id) {
         Usuario actual = usuarioFinder.porCorreo(correoActual);
         Usuario usuario = usuarioFinder.estudianteVisible(id);
