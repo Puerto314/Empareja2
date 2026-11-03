@@ -8,8 +8,8 @@ import { CatalogoService } from '../services/catalogo.service';
 import { UniversidadService } from '../services/universidad.service';
 
 const unis = [
-  { idUniversidad: 1, nombre: 'Uni Uno', sigla: 'U1', calle: null, barrio: null, numeroDireccion: null, ciudad: null },
-  { idUniversidad: 2, nombre: 'Uni Dos', sigla: 'U2', calle: null, barrio: null, numeroDireccion: null, ciudad: null }
+  { idUniversidad: 1, nombre: 'Uni Uno', sigla: 'U1', calle: 'c', barrio: 'b', ciudad: null },
+  { idUniversidad: 2, nombre: 'Uni Dos', sigla: 'U2', calle: 'c', barrio: 'b', ciudad: null }
 ];
 const oferta = [
   { idCarrera: 10, carrera: 'Medicina', idUniversidad: 1, universidad: 'Uni Uno', facultad: 'F' },
@@ -42,7 +42,7 @@ describe('PerfilFormComponent', () => {
   };
 
   const llenarValido = () => {
-    comp.correo = 'ana@unbosque.edu.co'; comp.contrasena = '12345678'; comp.documento = '1012345678';
+    comp.correo = 'ana@unbosque.edu.co'; comp.contrasena = '12345678';
     comp.nombre = 'Ana'; comp.apellido = 'Pérez'; comp.fechaNacimiento = '2000-05-10';
     comp.estudios = [{ idUniversidad: 1, idCarrera: 10, semestre: 4 }];
   };
@@ -74,20 +74,21 @@ describe('PerfilFormComponent', () => {
     expect(fila.idCarrera).toBeNull();
   });
 
-  it('en registro no ofrece TI como tipo de documento', async () => {
+  it('el registro exige exactamente una carrera (no se puede agregar otra)', async () => {
     await crear('registro');
-    expect(comp.tiposDocumento).not.toContain('TI' as any);
+    llenarValido();
+    expect(comp.estudios.length).toBe(1);
+    comp.estudios.push({ idUniversidad: 1, idCarrera: 10, semestre: 2 });
+    expect(comp.validar()).toContain('universidad, carrera y semestre');
   });
 
-  it('rechaza correo mal formado, clave corta y documento inválido', async () => {
+  it('rechaza correo mal formado y clave corta', async () => {
     await crear('registro');
     llenarValido();
     comp.correo = 'sin-arroba';
     expect(comp.validar()).toContain('correo');
     comp.correo = 'ana@unbosque.edu.co'; comp.contrasena = '123';
     expect(comp.validar()).toContain('contraseña');
-    comp.contrasena = '12345678'; comp.documento = '12ab';
-    expect(comp.validar()).toContain('documento');
   });
 
   it('rechaza menores de 18 años', async () => {
@@ -97,23 +98,21 @@ describe('PerfilFormComponent', () => {
     expect(comp.validar()).toContain('al menos 18');
   });
 
-  it('exige completar los estudios y no repetir carrera', async () => {
+  it('exige completar los estudios y limita el semestre', async () => {
     await crear('registro');
     llenarValido();
     comp.estudios = [{ idUniversidad: 1, idCarrera: null, semestre: 3 }];
     expect(comp.validar()).toContain('Completa');
-    comp.estudios = [{ idUniversidad: 1, idCarrera: 10, semestre: 3 }, { idUniversidad: 1, idCarrera: 10, semestre: 4 }];
-    expect(comp.validar()).toContain('repitas');
     comp.estudios = [{ idUniversidad: 1, idCarrera: 10, semestre: 25 }];
     expect(comp.validar()).toContain('entre 1 y 20');
   });
 
-  it('valida las redes sociales (enlace http/https y sin repetir)', async () => {
+  it('valida las redes sociales (nombre de usuario obligatorio y sin repetir)', async () => {
     await crear('registro');
     llenarValido();
-    comp.redes = [{ idRedSocial: 1, urlPerfil: 'instagram.com/ana', alias: '' }];
-    expect(comp.validar()).toContain('http');
-    comp.redes = [{ idRedSocial: 1, urlPerfil: 'https://i.com/a', alias: '' }, { idRedSocial: 1, urlPerfil: 'https://i.com/b', alias: '' }];
+    comp.redes = [{ idRedSocial: 1, nombreUsuario: ' ' }];
+    expect(comp.validar()).toContain('nombre de usuario');
+    comp.redes = [{ idRedSocial: 1, nombreUsuario: 'a' }, { idRedSocial: 1, nombreUsuario: 'b' }];
     expect(comp.validar()).toContain('repitas');
   });
 
@@ -122,13 +121,13 @@ describe('PerfilFormComponent', () => {
     llenarValido();
     comp.genero = 'FEMENINO' as any;
     comp.interesesTexto = 'Cine, rock, cine, ';
-    comp.redes = [{ idRedSocial: 1, urlPerfil: 'https://instagram.com/ana', alias: '@ana' }];
+    comp.redes = [{ idRedSocial: 1, nombreUsuario: '@ana' }];
     comp.guardar();
     expect(emitido).toEqual({
       nombre: 'Ana', apellido: 'Pérez', genero: 'FEMENINO', fechaNacimiento: '2000-05-10', fotoPerfil: '',
       intereses: ['Cine', 'rock'], estudios: [{ idCarrera: 10, idUniversidad: 1, semestre: 4 }],
-      redes: [{ idRedSocial: 1, urlPerfil: 'https://instagram.com/ana', alias: '@ana' }],
-      correo: 'ana@unbosque.edu.co', contrasena: '12345678', tipoDocumento: 'CC', documento: '1012345678'
+      redes: [{ idRedSocial: 1, nombreUsuario: '@ana' }],
+      correo: 'ana@unbosque.edu.co', contrasena: '12345678'
     } as any);
   });
 
@@ -139,9 +138,9 @@ describe('PerfilFormComponent', () => {
     expect(comp.errorLocal()).not.toBe('');
   });
 
-  it('en edición no pide cuenta y emite sin correo ni documento', async () => {
+  it('en edición no pide cuenta y emite sin correo', async () => {
     const perfil: any = {
-      id: 1, correo: 'ana@x.co', rol: 'ESTUDIANTE', tipoDocumento: 'CC', documento: '123456', genero: null, nombre: 'Ana', apellido: 'Gil',
+      id: 1, correo: 'ana@x.co', rol: 'ESTUDIANTE', genero: null, nombre: 'Ana', apellido: 'Gil',
       fechaNacimiento: '2000-01-01', fotoPerfil: null, intereses: ['Cine'],
       estudios: [{ idCarrera: 10, carrera: 'Medicina', idUniversidad: 1, universidad: 'Uni Uno', siglaUniversidad: 'U1', semestre: 2 }], redes: []
     };
@@ -150,14 +149,13 @@ describe('PerfilFormComponent', () => {
     comp.guardar();
     expect(emitido).toBeTruthy();
     expect((emitido as any).correo).toBeUndefined();
-    expect((emitido as any).documento).toBeUndefined();
     expect((emitido as any).intereses).toEqual(['Cine']);
     expect((emitido as any).estudios).toEqual([{ idCarrera: 10, idUniversidad: 1, semestre: 2 }]);
   });
 
   it('en admin permite editar sin contraseña y no la envía', async () => {
     const perfil: any = {
-      id: 5, correo: 'luis@x.co', rol: 'ESTUDIANTE', tipoDocumento: 'CC', documento: '987654', genero: 'MASCULINO', nombre: 'Luis', apellido: 'Paz',
+      id: 5, correo: 'luis@x.co', rol: 'ESTUDIANTE', genero: 'MASCULINO', nombre: 'Luis', apellido: 'Paz',
       fechaNacimiento: '1999-01-01', fotoPerfil: null, intereses: [],
       estudios: [{ idCarrera: 11, carrera: 'Derecho', idUniversidad: 2, universidad: 'Uni Dos', siglaUniversidad: 'U2', semestre: 5 }], redes: []
     };
@@ -170,7 +168,7 @@ describe('PerfilFormComponent', () => {
 
   it('en admin una cuenta ADMIN no exige estudios ni fecha de nacimiento', async () => {
     await crear('admin');
-    comp.correo = 'Puerto314'; comp.contrasena = 'claveSegura1'; comp.documento = '1'; comp.rol = 'ADMIN' as any;
+    comp.correo = 'Puerto314'; comp.contrasena = 'claveSegura1'; comp.rol = 'ADMIN' as any;
     comp.nombre = 'Admin'; comp.apellido = 'Sistema'; comp.estudios = [];
     expect(comp.validar()).toBe('');
     comp.guardar();

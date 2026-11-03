@@ -9,7 +9,6 @@ import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CarreraRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RedSocialRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.CarreraDTO;
 import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
@@ -110,7 +109,7 @@ public class CatalogoServiceImpl implements CatalogoService {
         Ciudad ciudad = ciudadRepository.findById(request.idCiudad())
                 .orElseThrow(() -> new ResourceNotFoundException("No existe la ciudad con id " + request.idCiudad()));
 
-        Direccion direccion = new Direccion(request.calle(), request.barrio(), request.numeroDireccion());
+        Direccion direccion = new Direccion(request.calle().trim(), request.barrio().trim());
         Universidad universidad = new Universidad(request.nombre().trim(), request.sigla().trim(), direccion, ciudad);
         return mapper.toDTO(universidadRepository.save(universidad));
     }
@@ -121,17 +120,7 @@ public class CatalogoServiceImpl implements CatalogoService {
         if (carreraRepository.existsByNombreIgnoreCase(request.nombre())) {
             throw new DuplicateResourceException("Ya existe una carrera con ese nombre");
         }
-        return mapper.toDTO(carreraRepository.save(new Carrera(request.nombre().trim())));
-    }
-
-    @Override
-    @Transactional
-    public RedSocialDTO crearRedSocial(RedSocialRequestDTO request) {
-        if (redSocialRepository.existsByNombreRedSocialIgnoreCase(request.nombreRedSocial())) {
-            throw new DuplicateResourceException("Ya existe una red social con ese nombre");
-        }
-        return mapper.toDTO(
-                redSocialRepository.save(new RedSocial(request.nombreRedSocial().trim(), request.url().trim())));
+        return mapper.toDTO(carreraRepository.save(new Carrera(request.nombre().trim(), request.facultad().trim())));
     }
 
     @Override
@@ -145,7 +134,7 @@ public class CatalogoServiceImpl implements CatalogoService {
         if (ofreceRepository.existsByCarreraAndUniversidad(carrera.getIdCarrera(), universidad.getIdUniversidad())) {
             throw new DuplicateResourceException("Esa universidad ya ofrece esa carrera");
         }
-        return mapper.toDTO(ofreceRepository.save(new Ofrece(carrera, universidad, request.facultad().trim())));
+        return mapper.toDTO(ofreceRepository.save(new Ofrece(carrera, universidad, carrera.getFacultad())));
     }
 
     // ------------------------------------------------------------------
@@ -207,7 +196,7 @@ public class CatalogoServiceImpl implements CatalogoService {
 
         universidad.setNombre(nombre);
         universidad.setSigla(sigla);
-        universidad.setDireccion(new Direccion(request.calle(), request.barrio(), request.numeroDireccion()));
+        universidad.setDireccion(new Direccion(request.calle().trim(), request.barrio().trim()));
         universidad.setCiudad(ciudad);
         universidadRepository.update(universidad);
         return mapper.toDTO(universidad);
@@ -222,30 +211,20 @@ public class CatalogoServiceImpl implements CatalogoService {
             throw new DuplicateResourceException("Ya existe una carrera con ese nombre");
         }
         carrera.setNombre(nombre);
+        carrera.setFacultad(request.facultad().trim());
         carreraRepository.update(carrera);
         return mapper.toDTO(carrera);
     }
 
     @Override
     @Transactional
-    public RedSocialDTO actualizarRedSocial(Long id, RedSocialRequestDTO request) {
-        RedSocial red = buscarRedSocial(id);
-        String nombre = request.nombreRedSocial().trim();
-        if (redSocialRepository.existsByNombreRedSocialAndIdNot(nombre, id)) {
-            throw new DuplicateResourceException("Ya existe una red social con ese nombre");
-        }
-        red.setNombreRedSocial(nombre);
-        red.setUrl(request.url().trim());
-        redSocialRepository.update(red);
-        return mapper.toDTO(red);
-    }
-
-    @Override
-    @Transactional
     public OfreceDTO actualizarOferta(Long idCarrera, Long idUniversidad, ActualizarOfertaRequestDTO request) {
         Ofrece oferta = buscarOferta(idCarrera, idUniversidad);
-        oferta.setFacultad(request.facultad().trim());
-        ofreceRepository.update(oferta);
+        // En el modelo la facultad es un atributo de la CARRERA: cambiarla la cambia en todas las universidades.
+        String facultad = request.facultad().trim();
+        oferta.setFacultad(facultad);
+        oferta.getCarrera().setFacultad(facultad);
+        carreraRepository.update(oferta.getCarrera());
         return mapper.toDTO(oferta);
     }
 
@@ -285,17 +264,6 @@ public class CatalogoServiceImpl implements CatalogoService {
         }
         ofreceRepository.eliminarPorCarrera(id);
         carreraRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
-    public void eliminarRedSocial(Long id) {
-        buscarRedSocial(id);
-        if (redSocialRepository.contarUsos(id) > 0) {
-            throw new OperationNotAllowedException(
-                    "No se puede eliminar la red social: hay usuarios que la tienen en su perfil");
-        }
-        redSocialRepository.deleteById(id);
     }
 
     @Override

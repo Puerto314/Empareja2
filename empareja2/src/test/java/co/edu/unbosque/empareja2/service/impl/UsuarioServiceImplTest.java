@@ -31,7 +31,6 @@ import co.edu.unbosque.empareja2.dto.response.UsuarioPerfilDTO;
 import co.edu.unbosque.empareja2.dto.response.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
@@ -217,7 +216,6 @@ class UsuarioServiceImplTest {
         UsuarioPerfilDTO dto = service.obtenerPerfilPropio("ana@mail.com");
 
         assertThat(dto.correo()).isEqualTo("ana@mail.com");
-        assertThat(dto.documento()).isEqualTo("1001");
         assertThat(dto.fechaNacimiento()).isNotNull();
     }
 
@@ -237,9 +235,8 @@ class UsuarioServiceImplTest {
         verify(perfilAssembler).aplicarIntereses(ana, request.intereses());
         verify(perfilAssembler).sincronizarEstudios(ana, estudios);
         verify(perfilAssembler).sincronizarRedes(ana, request.redes());
-        // el correo y el documento NO se pueden cambiar desde el perfil propio
+        // el correo NO se puede cambiar desde el perfil propio
         assertThat(ana.getCorreo()).isEqualTo("ana@mail.com");
-        assertThat(ana.getDocumento()).isEqualTo("1001");
     }
 
     @Test
@@ -254,7 +251,7 @@ class UsuarioServiceImplTest {
     // ------------------------------------------------------------------
 
     private AdminUsuarioRequestDTO adminRequest(String correo, String contrasena, Rol rol) {
-        return new AdminUsuarioRequestDTO(correo, contrasena, rol, TipoDocumento.CC, "999", null, "Nuevo", "Usuario",
+        return new AdminUsuarioRequestDTO(correo, contrasena, rol, null, "Nuevo", "Usuario",
                 null, null, null, null, null);
     }
 
@@ -270,14 +267,11 @@ class UsuarioServiceImplTest {
     }
 
     @Test
-    void adminNoPuedeCrearConCorreoODocumentoRepetido() {
+    void adminNoPuedeCrearConCorreoRepetido() {
         when(usuarioRepository.existsByCorreo("repetido@mail.com")).thenReturn(true);
         assertThatThrownBy(() -> service.crearPorAdmin(adminRequest("repetido@mail.com", "secreto123", null)))
                 .isInstanceOf(DuplicateResourceException.class);
 
-        when(usuarioRepository.existsByTipoDocumentoAndDocumento(TipoDocumento.CC, "999")).thenReturn(true);
-        assertThatThrownBy(() -> service.crearPorAdmin(adminRequest("otro@mail.com", "secreto123", null)))
-                .isInstanceOf(DuplicateResourceException.class);
         verify(usuarioRepository, never()).save(any());
     }
 
@@ -321,16 +315,6 @@ class UsuarioServiceImplTest {
     }
 
     @Test
-    void adminNoPuedeCambiarElDocumentoPorUnoYaUsado() {
-        when(usuarioFinder.porId(2L)).thenReturn(luis);
-        when(usuarioRepository.existsByTipoDocumentoAndDocumentoAndIdNot(TipoDocumento.CC, "999", 2L))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> service.actualizarPorAdmin(2L, adminRequest("luis@mail.com", null, null)))
-                .isInstanceOf(DuplicateResourceException.class).hasMessageContaining("documento");
-    }
-
-    @Test
     void adminEliminaUsuarioInexistenteDa404() {
         when(usuarioFinder.porId(77L)).thenThrow(new ResourceNotFoundException("No existe"));
 
@@ -360,7 +344,6 @@ class UsuarioServiceImplTest {
         service.crearPorAdmin(adminRequest("nuevo@mail.com", "secreto123", null));
 
         verify(perfilAssembler).validarCorreo("nuevo@mail.com");
-        verify(perfilAssembler).validarDocumento(TipoDocumento.CC, "999");
         verify(perfilAssembler).exigirDatosDeEstudiante(null, null);
         verify(perfilAssembler).sincronizarEstudios(any(Usuario.class), any());
     }

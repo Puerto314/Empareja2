@@ -3,8 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_URL } from '../config/api.config';
 import {
-  CarreraModel, CarreraRequestModel, CiudadRequestModel, OfertaModel, OfertaRequestModel, RedSocialModel,
-  RedSocialRequestModel, UniversidadRequestModel
+  CarreraModel, CarreraRequestModel, CiudadRequestModel, OfertaModel, OfertaRequestModel,
+  UniversidadRequestModel
 } from '../models/catalogo.model';
 import { EstadoReporteEnum } from '../models/estado-reporte.enum';
 import { ComentarioModel, ReaccionAdminModel, ReporteModel } from '../models/interaccion.model';
@@ -62,12 +62,8 @@ export class AdminService {
   actualizarCarrera(id: number, d: CarreraRequestModel): Observable<CarreraModel> { return this.http.put<CarreraModel>(`${this.base}/catalogos/carreras/${id}`, d); }
   eliminarCarrera(id: number): Observable<void> { return this.http.delete<void>(`${this.base}/catalogos/carreras/${id}`); }
 
-  // ---- Catálogos: redes sociales ----
-  crearRedSocial(d: RedSocialRequestModel): Observable<RedSocialModel> { return this.http.post<RedSocialModel>(`${this.base}/catalogos/redes-sociales`, d); }
-  actualizarRedSocial(id: number, d: RedSocialRequestModel): Observable<RedSocialModel> { return this.http.put<RedSocialModel>(`${this.base}/catalogos/redes-sociales/${id}`, d); }
-  eliminarRedSocial(id: number): Observable<void> { return this.http.delete<void>(`${this.base}/catalogos/redes-sociales/${id}`); }
-
-  // ---- Catálogos: oferta académica (universidad + carrera + facultad) ----
+  // ---- Catálogos: oferta académica (qué carreras ofrece cada universidad) ----
+  // La facultad pertenece a la CARRERA: editarla aquí la cambia en todas las universidades que la ofrecen.
   crearOferta(d: OfertaRequestModel): Observable<OfertaModel> { return this.http.post<OfertaModel>(`${this.base}/catalogos/oferta`, d); }
   actualizarOferta(idCarrera: number, idUniversidad: number, facultad: string): Observable<OfertaModel> {
     return this.http.put<OfertaModel>(`${this.base}/catalogos/oferta/${idCarrera}/${idUniversidad}`, { facultad });

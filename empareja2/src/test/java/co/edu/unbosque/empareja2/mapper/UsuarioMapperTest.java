@@ -19,7 +19,6 @@ import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.Tiene;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Usuario;
 
 class UsuarioMapperTest {
@@ -33,7 +32,7 @@ class UsuarioMapperTest {
         u.getIntereses().addAll(Set.of("Musica", "cine", "Anime"));
         u.getEstudios().add(new Estudio(TestData.carrera(1L, "Medicina"),
                 TestData.universidad(10L, "Universidad El Bosque", "UNBOSQUE"), 5));
-        u.getRedes().add(new Tiene(TestData.redSocial(2L, "Instagram"), "https://instagram.com/ana", "ana.g"));
+        u.getRedes().add(new Tiene(TestData.redSocial(2L, "Instagram"), "ana.g"));
         return u;
     }
 
@@ -42,8 +41,8 @@ class UsuarioMapperTest {
         List<String> componentes = Arrays.stream(UsuarioPublicoDTO.class.getRecordComponents())
                 .map(RecordComponent::getName).toList();
 
-        assertThat(componentes).doesNotContain("correo", "contrasena", "contrasenaHash", "tipoDocumento",
-                "documento", "fechaNacimiento", "rol");
+        assertThat(componentes).doesNotContain("correo", "contrasena", "contrasenaHash",
+                "fechaNacimiento", "rol");
     }
 
     @Test
@@ -61,7 +60,8 @@ class UsuarioMapperTest {
         assertThat(dto.estudios().get(0).universidad()).isEqualTo("Universidad El Bosque");
         assertThat(dto.estudios().get(0).semestre()).isEqualTo(5);
         assertThat(dto.redes()).hasSize(1);
-        assertThat(dto.redes().get(0).alias()).isEqualTo("ana.g");
+        assertThat(dto.redes().get(0).redSocial()).isEqualTo("Instagram");
+        assertThat(dto.redes().get(0).nombreUsuario()).isEqualTo("ana.g");
     }
 
     @Test
@@ -69,19 +69,17 @@ class UsuarioMapperTest {
         UsuarioPerfilDTO dto = mapper.toPerfilDTO(usuarioCompleto());
 
         assertThat(dto.correo()).isEqualTo("ana@mail.com");
-        assertThat(dto.documento()).isEqualTo("1007");
-        assertThat(dto.tipoDocumento()).isEqualTo(TipoDocumento.CC);
         assertThat(dto.rol()).isEqualTo(Rol.ESTUDIANTE);
         assertThat(dto.fechaNacimiento()).isNotNull();
 
         List<String> componentes = Arrays.stream(UsuarioPerfilDTO.class.getRecordComponents())
                 .map(RecordComponent::getName).toList();
-        assertThat(componentes).doesNotContain("contrasena", "contrasenaHash");
+        assertThat(componentes).doesNotContain("contrasena", "contrasenaHash", "tipoDocumento", "documento");
     }
 
     @Test
     void toEntityDeRegistroSiempreCreaEstudiante() {
-        RegistroRequestDTO dto = new RegistroRequestDTO("a@b.com", "secreto123", TipoDocumento.TI, "55", Genero.OTRO,
+        RegistroRequestDTO dto = new RegistroRequestDTO("a@b.com", "secreto123", Genero.OTRO,
                 "Luis", "Perez", LocalDate.of(2000, 1, 1), "foto", Set.of("x"), List.of(), List.of());
 
         Usuario u = mapper.toEntity(dto, "HASH");
@@ -89,16 +87,15 @@ class UsuarioMapperTest {
         assertThat(u.getRol()).isEqualTo(Rol.ESTUDIANTE);
         assertThat(u.getContrasenaHash()).isEqualTo("HASH");
         assertThat(u.getCorreo()).isEqualTo("a@b.com");
-        assertThat(u.getTipoDocumento()).isEqualTo(TipoDocumento.TI);
-        assertThat(u.getDocumento()).isEqualTo("55");
+        assertThat(u.getGenero()).isEqualTo(Genero.OTRO);
         assertThat(u.getNombreCompleto()).isEqualTo("Luis Perez");
     }
 
     @Test
     void toEntityDeAdminRespetaElRolSolicitadoYPorDefectoEsEstudiante() {
-        AdminUsuarioRequestDTO conRol = new AdminUsuarioRequestDTO("root", "secreto123", Rol.ADMIN, TipoDocumento.CC,
-                "1", null, "Root", "Admin", null, null, null, null, null);
-        AdminUsuarioRequestDTO sinRol = new AdminUsuarioRequestDTO("est", "secreto123", null, TipoDocumento.CC, "2",
+        AdminUsuarioRequestDTO conRol = new AdminUsuarioRequestDTO("root", "secreto123", Rol.ADMIN,
+                null, "Root", "Admin", null, null, null, null, null);
+        AdminUsuarioRequestDTO sinRol = new AdminUsuarioRequestDTO("est", "secreto123", null,
                 null, "Est", "Udiante", null, null, null, null, null);
 
         assertThat(mapper.toEntity(conRol, "H").getRol()).isEqualTo(Rol.ADMIN);

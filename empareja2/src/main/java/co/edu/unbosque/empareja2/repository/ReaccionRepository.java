@@ -20,9 +20,10 @@ import co.edu.unbosque.empareja2.entity.Usuario;
 @Repository
 public class ReaccionRepository {
 
-    private static final String SELECT = "SELECT r.id_autor, r.numero_reaccion, r.id_destinatario, "
-            + "r.tipo_reaccion, r.fecha_hora, a.nombre AS autor_nombre, a.apellido AS autor_apellido, "
-            + "a.foto_perfil AS autor_foto FROM reaccion r JOIN usuario a ON a.id_usuario = r.id_autor ";
+    private static final String SELECT = "SELECT r.estudiante_id_usuario AS id_autor, r.numero_reaccion, r.estudiante_id_usuario1 AS id_destinatario, "
+            + "r.tipo_reaccion, r.fecha_hora_reaccion AS fecha_hora, a.nombre AS autor_nombre, "
+            + "a.apellido AS autor_apellido, a.foto_perfil AS autor_foto "
+            + "FROM reaccion r JOIN usuario a ON a.id_usuario = r.estudiante_id_usuario ";
 
     private static final RowMapper<Reaccion> MAPPER = (rs, i) -> {
         Usuario autor = new Usuario();
@@ -39,10 +40,12 @@ public class ReaccionRepository {
         return r;
     };
 
-    private static final String SELECT_ADMIN = "SELECT r.id_autor, r.numero_reaccion, r.id_destinatario, "
-            + "r.tipo_reaccion, r.fecha_hora, a.nombre AS autor_nombre, a.apellido AS autor_apellido, "
-            + "a.foto_perfil AS autor_foto, d.nombre AS dest_nombre, d.apellido AS dest_apellido FROM reaccion r "
-            + "JOIN usuario a ON a.id_usuario = r.id_autor JOIN usuario d ON d.id_usuario = r.id_destinatario ";
+    private static final String SELECT_ADMIN = "SELECT r.estudiante_id_usuario AS id_autor, r.numero_reaccion, r.estudiante_id_usuario1 AS id_destinatario, "
+            + "r.tipo_reaccion, r.fecha_hora_reaccion AS fecha_hora, a.nombre AS autor_nombre, "
+            + "a.apellido AS autor_apellido, a.foto_perfil AS autor_foto, d.nombre AS dest_nombre, "
+            + "d.apellido AS dest_apellido FROM reaccion r "
+            + "JOIN usuario a ON a.id_usuario = r.estudiante_id_usuario "
+            + "JOIN usuario d ON d.id_usuario = r.estudiante_id_usuario1 ";
 
     private static final RowMapper<Reaccion> MAPPER_ADMIN = (rs, i) -> {
         Reaccion r = MAPPER.mapRow(rs, i);
@@ -58,25 +61,25 @@ public class ReaccionRepository {
     }
 
     public Optional<Reaccion> buscar(Long idAutor, Long idDestinatario, TipoReaccion tipo) {
-        return jdbc.query(SELECT + "WHERE r.id_autor = ? AND r.id_destinatario = ? AND r.tipo_reaccion = ?", MAPPER,
+        return jdbc.query(SELECT + "WHERE r.estudiante_id_usuario = ? AND r.estudiante_id_usuario1 = ? AND r.tipo_reaccion = ?", MAPPER,
                 idAutor, idDestinatario, tipo.name()).stream().findFirst();
     }
 
     public long contar(Long idDestinatario, TipoReaccion tipo) {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM reaccion WHERE id_destinatario = ? AND tipo_reaccion = ?",
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM reaccion WHERE estudiante_id_usuario1 = ? AND tipo_reaccion = ?",
                 Long.class, idDestinatario, tipo.name());
         return n == null ? 0 : n;
     }
 
     /** Quienes dieron la reaccion al perfil, la mas reciente primero (con nombre y foto del autor). */
     public List<Reaccion> listarPorDestinatario(Long idDestinatario, TipoReaccion tipo) {
-        return jdbc.query(SELECT + "WHERE r.id_destinatario = ? AND r.tipo_reaccion = ? "
-                + "ORDER BY r.fecha_hora DESC, r.numero_reaccion DESC", MAPPER, idDestinatario, tipo.name());
+        return jdbc.query(SELECT + "WHERE r.estudiante_id_usuario1 = ? AND r.tipo_reaccion = ? "
+                + "ORDER BY r.fecha_hora_reaccion DESC, r.numero_reaccion DESC", MAPPER, idDestinatario, tipo.name());
     }
 
     /** Mayor numero_reaccion usado por el autor (0 si no tiene ninguna). */
     public Integer maximoNumero(Long idAutor) {
-        return jdbc.queryForObject("SELECT COALESCE(MAX(numero_reaccion), 0) FROM reaccion WHERE id_autor = ?",
+        return jdbc.queryForObject("SELECT COALESCE(MAX(numero_reaccion), 0) FROM reaccion WHERE estudiante_id_usuario = ?",
                 Integer.class, idAutor);
     }
 
@@ -91,8 +94,8 @@ public class ReaccionRepository {
         for (Long id : ids) {
             args[k++] = id;
         }
-        return jdbc.query("SELECT id_destinatario, COUNT(*) AS total FROM reaccion WHERE tipo_reaccion = ? "
-                + "AND id_destinatario IN (" + Sql.placeholders(ids.size()) + ") GROUP BY id_destinatario",
+        return jdbc.query("SELECT estudiante_id_usuario1 AS id_destinatario, COUNT(*) AS total FROM reaccion "
+                + "WHERE tipo_reaccion = ? AND estudiante_id_usuario1 IN (" + Sql.placeholders(ids.size()) + ") GROUP BY estudiante_id_usuario1",
                 (rs, i) -> new ConteoReacciones(rs.getLong("id_destinatario"), rs.getLong("total")), args);
     }
 
@@ -108,31 +111,32 @@ public class ReaccionRepository {
         for (Long id : ids) {
             args[k++] = id;
         }
-        return jdbc.query("SELECT id_destinatario FROM reaccion WHERE id_autor = ? AND tipo_reaccion = ? "
-                + "AND id_destinatario IN (" + Sql.placeholders(ids.size()) + ")",
+        return jdbc.query("SELECT estudiante_id_usuario1 AS id_destinatario FROM reaccion WHERE estudiante_id_usuario = ? "
+                + "AND tipo_reaccion = ? AND estudiante_id_usuario1 IN (" + Sql.placeholders(ids.size()) + ")",
                 (rs, i) -> rs.getLong("id_destinatario"), args);
     }
 
     /** Todas las reacciones con el nombre de autor y destinatario (solo para administradores). */
     public List<Reaccion> listarTodas() {
-        return jdbc.query(SELECT_ADMIN + "ORDER BY r.fecha_hora DESC, r.id_autor, r.numero_reaccion DESC",
+        return jdbc.query(SELECT_ADMIN + "ORDER BY r.fecha_hora_reaccion DESC, r.estudiante_id_usuario, r.numero_reaccion DESC",
                 MAPPER_ADMIN);
     }
 
     /** Elimina una reaccion por su llave (id_autor, numero_reaccion); devuelve cuantas filas borro (0 o 1). */
     public int eliminar(Long idAutor, Integer numero) {
-        return jdbc.update("DELETE FROM reaccion WHERE id_autor = ? AND numero_reaccion = ?", idAutor, numero);
+        return jdbc.update("DELETE FROM reaccion WHERE estudiante_id_usuario = ? AND numero_reaccion = ?", idAutor, numero);
     }
 
     public Reaccion save(Reaccion r) {
-        jdbc.update("INSERT INTO reaccion (id_autor, numero_reaccion, id_destinatario, tipo_reaccion, fecha_hora) "
+        jdbc.update("INSERT INTO reaccion (estudiante_id_usuario, numero_reaccion, estudiante_id_usuario1, tipo_reaccion, "
+                + "fecha_hora_reaccion) "
                 + "VALUES (?, ?, ?, ?, ?)", r.getAutor().getId(), r.getNumeroReaccion(),
                 r.getDestinatario().getId(), r.getTipoReaccion().name(), r.getFechaHora());
         return r;
     }
 
     public void delete(Reaccion r) {
-        jdbc.update("DELETE FROM reaccion WHERE id_autor = ? AND numero_reaccion = ?", r.getAutor().getId(),
+        jdbc.update("DELETE FROM reaccion WHERE estudiante_id_usuario = ? AND numero_reaccion = ?", r.getAutor().getId(),
                 r.getNumeroReaccion());
     }
 }

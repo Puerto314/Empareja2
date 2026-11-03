@@ -9,5 +9,5 @@ import jakarta.validation.constraints.Size;
  */
 public record ActualizarOfertaRequestDTO(
         @NotBlank(message = "La facultad es obligatoria")
-        @Size(max = 150, message = "La facultad es demasiado larga") String facultad) {
+        @Size(max = 100, message = "La facultad es demasiado larga") String facultad) {
 }

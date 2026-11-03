@@ -13,7 +13,7 @@ import { InteraccionService } from '../services/interaccion.service';
 const estudio = { idCarrera: 1, carrera: 'Medicina', idUniversidad: 5, universidad: 'Universidad Uno', siglaUniversidad: 'UU', semestre: 2 };
 const ana: any = {
   id: 1, nombre: 'Ana', apellido: 'Prueba', nombreCompleto: 'Ana Prueba', edad: 21, genero: 'FEMENINO', fotoPerfil: null,
-  intereses: ['Cine', 'Rock'], redes: [{ idRedSocial: 1, redSocial: 'Instagram', urlPerfil: 'https://instagram.com/ana', alias: '@ana' }],
+  intereses: ['Cine', 'Rock'], redes: [{ idRedSocial: 1, redSocial: 'Instagram', nombreUsuario: '@ana' }],
   estudios: [estudio], totalMeGusta: 3, meGustaDelUsuarioActual: false
 };
 const luis: any = { ...ana, id: 2, nombre: 'Luis', nombreCompleto: 'Luis Prueba', intereses: [], redes: [] };
@@ -78,12 +78,12 @@ describe('PerfilComponent', () => {
     expect(texto()).toContain('Medicina');
   });
 
-  it('debe mostrar las redes sociales como enlaces externos seguros', async () => {
+  it('debe mostrar las redes sociales con el nombre de usuario (sin enlaces externos)', async () => {
     await crear();
-    const enlace = fixture.nativeElement.querySelector('a.red') as HTMLAnchorElement;
-    expect(enlace.href).toBe('https://instagram.com/ana');
-    expect(enlace.rel).toContain('noopener');
-    expect(enlace.target).toBe('_blank');
+    const red = fixture.nativeElement.querySelector('.mini-row.red') as HTMLElement;
+    expect(red.textContent).toContain('Instagram');
+    expect(red.textContent).toContain('@ana');
+    expect(fixture.nativeElement.querySelector('a.red')).toBeNull();
   });
 
   it('debe listar compañeros de la misma universidad', async () => {

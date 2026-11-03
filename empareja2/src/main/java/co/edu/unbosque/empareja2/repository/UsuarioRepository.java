@@ -3,7 +3,6 @@ package co.edu.unbosque.empareja2.repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,14 +23,17 @@ import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.Tiene;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.entity.Usuario;
 
 /**
- * Acceso a datos (JDBC) del agregado USUARIO: la fila de la tabla usuario mas
- * sus intereses (usuario_interes), estudios (estudio) y redes sociales (tiene).
+ * Acceso a datos (JDBC) del agregado USUARIO segun el modelo relacional:
+ * usuario (datos comunes), administrador (subtipo), estudiante (subtipo con su
+ * carrera, universidad y semestre), interes_estudiante y red_social.
+ *
+ * El rol no se guarda como columna: es ADMIN si el usuario esta en la tabla
+ * administrador y ESTUDIANTE si no esta ahi y tiene fila en estudiante.
  *
  * Los metodos de escritura deben ejecutarse dentro de una transaccion (los
  * servicios usan @Transactional) para que el usuario y sus colecciones se
@@ -40,15 +42,17 @@ import co.edu.unbosque.empareja2.entity.Usuario;
 @Repository
 public class UsuarioRepository {
 
-	private static final String SELECT = "SELECT u.id_usuario, u.tipo_documento, u.documento, u.correo, "
-			+ "u.contrasena_hash, u.genero, u.rol, u.nombre, u.apellido, u.foto_perfil, u.fecha_nacimiento, "
-			+ "u.fecha_creacion FROM usuario u ";
+	/** Fecha de nacimiento por defecto (columna NOT NULL) para cuentas que no la indican, p. ej. administradores. */
+	static final LocalDate FECHA_NACIMIENTO_POR_DEFECTO = LocalDate.of(2000, 1, 1);
+
+	private static final String SELECT = "SELECT u.id_usuario, u.correo, u.contrasena_hash, u.genero, "
+			+ "CASE WHEN ad.id_usuario IS NULL THEN 'ESTUDIANTE' ELSE 'ADMIN' END AS rol, "
+			+ "u.nombre, u.apellido, u.foto_perfil, u.fecha_nacimiento "
+			+ "FROM usuario u LEFT JOIN administrador ad ON ad.id_usuario = u.id_usuario ";
 
 	private static final RowMapper<Usuario> MAPPER = (rs, i) -> {
 		Usuario u = new Usuario();
 		u.setId(rs.getLong("id_usuario"));
-		u.setTipoDocumento(TipoDocumento.valueOf(rs.getString("tipo_documento")));
-		u.setDocumento(rs.getString("documento"));
 		u.setCorreo(rs.getString("correo"));
 		u.setContrasenaHash(rs.getString("contrasena_hash"));
 		String genero = rs.getString("genero");
@@ -58,7 +62,6 @@ public class UsuarioRepository {
 		u.setApellido(rs.getString("apellido"));
 		u.setFotoPerfil(rs.getString("foto_perfil"));
 		u.setFechaNacimiento(rs.getObject("fecha_nacimiento", LocalDate.class));
-		u.setFechaCreacion(rs.getObject("fecha_creacion", LocalDateTime.class));
 		return u;
 	};
 
@@ -68,6 +71,12 @@ public class UsuarioRepository {
 	public UsuarioRepository(JdbcTemplate jdbc) {
 		this.jdbc = jdbc;
 		this.insert = new SimpleJdbcInsert(jdbc).withTableName("usuario").usingGeneratedKeyColumns("id_usuario");
+	}
+
+	/** Condicion SQL (sobre los alias u y ad de SELECT) que corresponde a cada rol. */
+	private static String filtroRol(Rol rol) {
+		return rol == Rol.ADMIN ? "ad.id_usuario IS NOT NULL"
+				: "ad.id_usuario IS NULL AND EXISTS (SELECT 1 FROM estudiante es0 WHERE es0.id_usuario = u.id_usuario)";
 	}
 
 	// ------------------------------------------------------------------
@@ -83,7 +92,7 @@ public class UsuarioRepository {
 	}
 
 	public Optional<Usuario> findByIdAndRol(Long id, Rol rol) {
-		return primero(jdbc.query(SELECT + "WHERE u.id_usuario = ? AND u.rol = ?", MAPPER, id, rol.name()));
+		return primero(jdbc.query(SELECT + "WHERE u.id_usuario = ? AND " + filtroRol(rol), MAPPER, id));
 	}
 
 	public List<Usuario> findAll() {
@@ -94,30 +103,20 @@ public class UsuarioRepository {
 		return contar("SELECT COUNT(*) FROM usuario WHERE correo = ?", correo) > 0;
 	}
 
-	public boolean existsByTipoDocumentoAndDocumento(TipoDocumento tipoDocumento, String documento) {
-		return contar("SELECT COUNT(*) FROM usuario WHERE tipo_documento = ? AND documento = ?", tipoDocumento.name(),
-				documento) > 0;
-	}
-
 	/** Igual que existsByCorreo pero ignorando al propio usuario (para editar sin falso duplicado). */
 	public boolean existsByCorreoAndIdNot(String correo, Long id) {
 		return contar("SELECT COUNT(*) FROM usuario WHERE correo = ? AND id_usuario <> ?", correo, id) > 0;
 	}
 
-	public boolean existsByTipoDocumentoAndDocumentoAndIdNot(TipoDocumento tipoDocumento, String documento, Long id) {
-		return contar("SELECT COUNT(*) FROM usuario WHERE tipo_documento = ? AND documento = ? AND id_usuario <> ?",
-				tipoDocumento.name(), documento, id) > 0;
-	}
-
 	public long contarPorRol(Rol rol) {
-		return contar("SELECT COUNT(*) FROM usuario WHERE rol = ?", rol.name());
+		return contar("SELECT COUNT(*) FROM usuario u LEFT JOIN administrador ad ON ad.id_usuario = u.id_usuario WHERE "
+				+ filtroRol(rol));
 	}
 
 	/** Catalogo completo: todos los usuarios con ese rol, excepto el indicado. */
 	public List<Usuario> findByRolAndIdNotOrderByNombreAscApellidoAsc(Rol rol, Long idExcluido) {
-		return conColecciones(
-				jdbc.query(SELECT + "WHERE u.rol = ? AND u.id_usuario <> ? ORDER BY u.nombre ASC, u.apellido ASC",
-						MAPPER, rol.name(), idExcluido));
+		return conColecciones(jdbc.query(SELECT + "WHERE " + filtroRol(rol)
+				+ " AND u.id_usuario <> ? ORDER BY u.nombre ASC, u.apellido ASC", MAPPER, idExcluido));
 	}
 
 	/**
@@ -125,9 +124,10 @@ public class UsuarioRepository {
 	 * indicado).
 	 */
 	public List<Usuario> buscarPorUniversidad(Rol rol, Long idExcluido, Long idUniversidad) {
-		return conColecciones(jdbc.query(SELECT + "WHERE u.rol = ? AND u.id_usuario <> ? "
-				+ "AND EXISTS (SELECT 1 FROM estudio e WHERE e.id_usuario = u.id_usuario AND e.id_universidad = ?) "
-				+ "ORDER BY u.nombre ASC, u.apellido ASC", MAPPER, rol.name(), idExcluido, idUniversidad));
+		return conColecciones(jdbc.query(SELECT + "WHERE " + filtroRol(rol) + " AND u.id_usuario <> ? "
+				+ "AND EXISTS (SELECT 1 FROM estudiante e WHERE e.id_usuario = u.id_usuario "
+				+ "AND e.universidad_id_universidad = ?) " + "ORDER BY u.nombre ASC, u.apellido ASC", MAPPER,
+				idExcluido, idUniversidad));
 	}
 
 	/**
@@ -138,17 +138,18 @@ public class UsuarioRepository {
 	 */
 	public List<Usuario> rankingPorMeGusta(Rol rol, TipoReaccion tipo, Long idUniversidad, int limite) {
 		String filtro = idUniversidad == null ? ""
-				: "AND EXISTS (SELECT 1 FROM estudio e WHERE e.id_usuario = u.id_usuario AND e.id_universidad = ?) ";
+				: "AND EXISTS (SELECT 1 FROM estudiante e WHERE e.id_usuario = u.id_usuario "
+						+ "AND e.universidad_id_universidad = ?) ";
 		List<Object> args = new ArrayList<>();
 		args.add(tipo.name());
-		args.add(rol.name());
 		if (idUniversidad != null) {
 			args.add(idUniversidad);
 		}
 		args.add(limite);
 		return conColecciones(jdbc.query(SELECT
-				+ "JOIN (SELECT id_destinatario, COUNT(*) AS total FROM reaccion WHERE tipo_reaccion = ? "
-				+ "GROUP BY id_destinatario) r ON r.id_destinatario = u.id_usuario WHERE u.rol = ? " + filtro
+				+ "JOIN (SELECT estudiante_id_usuario1 AS id_destinatario, COUNT(*) AS total FROM reaccion "
+				+ "WHERE tipo_reaccion = ? GROUP BY estudiante_id_usuario1) r ON r.id_destinatario = u.id_usuario "
+				+ "WHERE " + filtroRol(rol) + " " + filtro
 				+ "ORDER BY r.total DESC, u.nombre ASC, u.apellido ASC, u.id_usuario ASC LIMIT ?", MAPPER,
 				args.toArray()));
 	}
@@ -158,64 +159,83 @@ public class UsuarioRepository {
 	// ------------------------------------------------------------------
 
 	/**
-	 * Inserta (id nulo) o actualiza el usuario y REEMPLAZA sus intereses, estudios
-	 * y redes por los que trae el objeto. Devuelve el usuario recargado desde la
-	 * base de datos.
+	 * Inserta (id nulo) o actualiza el usuario, ajusta su rol (tablas
+	 * administrador / estudiante) y REEMPLAZA sus intereses y redes por los que
+	 * trae el objeto. Un estudiante tiene exactamente un estudio. Devuelve el
+	 * usuario recargado desde la base de datos.
 	 */
 	public Usuario save(Usuario u) {
+		if (u.getRol() == Rol.ESTUDIANTE && u.getEstudios().isEmpty()) {
+			throw new IllegalStateException("Un estudiante necesita una carrera y una universidad");
+		}
+		String genero = u.getGenero() == null ? Genero.NO_ESPECIFICA.name() : u.getGenero().name();
+		LocalDate nacimiento = u.getFechaNacimiento() != null ? u.getFechaNacimiento() : FECHA_NACIMIENTO_POR_DEFECTO;
 		if (u.getId() == null) {
 			Map<String, Object> valores = new HashMap<>();
-			valores.put("tipo_documento", u.getTipoDocumento().name());
-			valores.put("documento", u.getDocumento());
 			valores.put("correo", u.getCorreo());
 			valores.put("contrasena_hash", u.getContrasenaHash());
-			valores.put("genero", u.getGenero() == null ? null : u.getGenero().name());
-			valores.put("rol", u.getRol().name());
+			valores.put("genero", genero);
 			valores.put("nombre", u.getNombre());
 			valores.put("apellido", u.getApellido());
 			valores.put("foto_perfil", u.getFotoPerfil());
-			valores.put("fecha_nacimiento", u.getFechaNacimiento());
-			valores.put("fecha_creacion", u.getFechaCreacion() != null ? u.getFechaCreacion() : LocalDateTime.now());
+			valores.put("fecha_nacimiento", nacimiento);
 			u.setId(insert.executeAndReturnKey(valores).longValue());
 		} else {
-			jdbc.update(
-					"UPDATE usuario SET tipo_documento = ?, documento = ?, correo = ?, contrasena_hash = ?, "
-							+ "genero = ?, rol = ?, nombre = ?, apellido = ?, foto_perfil = ?, fecha_nacimiento = ? "
-							+ "WHERE id_usuario = ?",
-					u.getTipoDocumento().name(), u.getDocumento(), u.getCorreo(), u.getContrasenaHash(),
-					u.getGenero() == null ? null : u.getGenero().name(), u.getRol().name(), u.getNombre(),
-					u.getApellido(), u.getFotoPerfil(), u.getFechaNacimiento(), u.getId());
+			jdbc.update("UPDATE usuario SET correo = ?, contrasena_hash = ?, genero = ?, nombre = ?, apellido = ?, "
+					+ "foto_perfil = ?, fecha_nacimiento = ? WHERE id_usuario = ?", u.getCorreo(),
+					u.getContrasenaHash(), genero, u.getNombre(), u.getApellido(), u.getFotoPerfil(), nacimiento,
+					u.getId());
 		}
-		reemplazarColecciones(u);
+		sincronizarRol(u);
 		return findById(u.getId()).orElseThrow(() -> new IllegalStateException("No se pudo recargar el usuario"));
 	}
 
 	/**
-	 * Elimina el usuario. Sus intereses, estudios, redes, me gusta, comentarios y
-	 * reportes se borran solos por las llaves foraneas ON DELETE CASCADE.
+	 * Elimina el usuario. Su fila de administrador/estudiante, intereses, redes,
+	 * me gusta, comentarios y reportes se borran solos por las llaves foraneas
+	 * ON DELETE CASCADE.
 	 */
 	public void delete(Usuario u) {
 		jdbc.update("DELETE FROM usuario WHERE id_usuario = ?", u.getId());
 	}
 
-	private void reemplazarColecciones(Usuario u) {
+	private void sincronizarRol(Usuario u) {
 		Long id = u.getId();
+		if (u.getRol() == Rol.ADMIN) {
+			// Un administrador no es un perfil: si antes era estudiante se borra esa fila
+			// (y con ella sus intereses, redes, me gusta, comentarios y reportes).
+			jdbc.update("DELETE FROM estudiante WHERE id_usuario = ?", id);
+			jdbc.update("INSERT IGNORE INTO administrador (id_usuario) VALUES (?)", id);
+			return;
+		}
+		jdbc.update("DELETE FROM administrador WHERE id_usuario = ?", id);
+		Estudio e = u.getEstudios().get(0);
+		Long idCarrera = e.getCarrera().getIdCarrera();
+		Long idUniversidad = e.getUniversidad().getIdUniversidad();
+		// Se actualiza la fila existente en lugar de borrarla y reinsertarla: borrarla dispararia el
+		// ON DELETE CASCADE sobre las reacciones, comentarios y reportes del estudiante.
+		if (contar("SELECT COUNT(*) FROM estudiante WHERE id_usuario = ?", id) > 0) {
+			jdbc.update("UPDATE estudiante e JOIN universidad un ON un.id_universidad = ? "
+					+ "SET e.carrera_id_carrera = ?, e.universidad_id_universidad = un.id_universidad, "
+					+ "e.universidad_ciudad_id_ciudad = un.ciudad_id_ciudad, e.semestre = ? WHERE e.id_usuario = ?",
+					idUniversidad, idCarrera, e.getSemestre(), id);
+		} else {
+			jdbc.update("INSERT INTO estudiante (id_usuario, carrera_id_carrera, universidad_id_universidad, "
+					+ "universidad_ciudad_id_ciudad, semestre) SELECT ?, ?, un.id_universidad, un.ciudad_id_ciudad, ? "
+					+ "FROM universidad un WHERE un.id_universidad = ?", id, idCarrera, e.getSemestre(),
+					idUniversidad);
+		}
 
-		jdbc.update("DELETE FROM usuario_interes WHERE id_usuario = ?", id);
+		jdbc.update("DELETE FROM interes_estudiante WHERE estudiante_id_usuario = ?", id);
 		for (String interes : u.getIntereses()) {
-			jdbc.update("INSERT INTO usuario_interes (id_usuario, interes) VALUES (?, ?)", id, interes);
+			jdbc.update("INSERT INTO interes_estudiante (interes, estudiante_id_usuario) VALUES (?, ?)", interes, id);
 		}
 
-		jdbc.update("DELETE FROM estudio WHERE id_usuario = ?", id);
-		for (Estudio e : u.getEstudios()) {
-			jdbc.update("INSERT INTO estudio (id_usuario, id_carrera, id_universidad, semestre) VALUES (?, ?, ?, ?)",
-					id, e.getCarrera().getIdCarrera(), e.getUniversidad().getIdUniversidad(), e.getSemestre());
-		}
-
-		jdbc.update("DELETE FROM tiene WHERE id_usuario = ?", id);
+		jdbc.update("DELETE FROM red_social WHERE estudiante_id_usuario = ?", id);
 		for (Tiene t : u.getRedes()) {
-			jdbc.update("INSERT INTO tiene (id_usuario, id_red_social, url_perfil, alias) VALUES (?, ?, ?, ?)", id,
-					t.getRedSocial().getIdRedSocial(), t.getUrlPerfil(), t.getAlias());
+			jdbc.update("INSERT INTO red_social (id_red_social, nombre_red_social, nombre_usuario, "
+					+ "estudiante_id_usuario) VALUES (?, ?, ?, ?)", t.getRedSocial().getIdRedSocial(),
+					t.getRedSocial().getNombreRedSocial(), t.getNombreUsuario(), id);
 		}
 	}
 
@@ -235,25 +255,24 @@ public class UsuarioRepository {
 		Object[] ids = porId.keySet().toArray();
 		String in = Sql.placeholders(ids.length);
 
-		jdbc.query("SELECT id_usuario, interes FROM usuario_interes WHERE id_usuario IN (" + in + ")",
-				(RowCallbackHandler) rs -> {
+		jdbc.query("SELECT estudiante_id_usuario AS id_usuario, interes FROM interes_estudiante "
+				+ "WHERE estudiante_id_usuario IN (" + in + ")", (RowCallbackHandler) rs -> {
 					porId.get(rs.getLong("id_usuario")).getIntereses().add(rs.getString("interes"));
 				}, ids);
 
-		jdbc.query("SELECT e.id_usuario, e.semestre, c.id_carrera, c.nombre AS carrera_nombre, "
-				+ "un.id_universidad, un.nombre AS universidad_nombre, un.sigla "
-				+ "FROM estudio e JOIN carrera c ON c.id_carrera = e.id_carrera "
-				+ "JOIN universidad un ON un.id_universidad = e.id_universidad " + "WHERE e.id_usuario IN (" + in + ")",
+		jdbc.query("SELECT e.id_usuario, e.semestre, c.id_carrera, c.nombre_carrera AS carrera_nombre, "
+				+ "un.id_universidad, un.nombre_universidad AS universidad_nombre, un.sigla "
+				+ "FROM estudiante e JOIN carrera c ON c.id_carrera = e.carrera_id_carrera "
+				+ "JOIN universidad un ON un.id_universidad = e.universidad_id_universidad "
+				+ "AND un.ciudad_id_ciudad = e.universidad_ciudad_id_ciudad " + "WHERE e.id_usuario IN (" + in + ")",
 				(RowCallbackHandler) rs -> {
 					porId.get(rs.getLong("id_usuario")).getEstudios().add(mapearEstudio(rs));
 				}, ids);
 
-		jdbc.query("SELECT t.id_usuario, t.url_perfil, t.alias, r.id_red_social, r.nombre_red_social, r.url "
-				+ "FROM tiene t JOIN red_social r ON r.id_red_social = t.id_red_social " + "WHERE t.id_usuario IN ("
-				+ in + ")", (RowCallbackHandler) rs -> {
+		jdbc.query("SELECT estudiante_id_usuario AS id_usuario, id_red_social, nombre_red_social, nombre_usuario "
+				+ "FROM red_social WHERE estudiante_id_usuario IN (" + in + ")", (RowCallbackHandler) rs -> {
 					porId.get(rs.getLong("id_usuario")).getRedes().add(mapearRed(rs));
 				}, ids);
-
 		return usuarios;
 	}
 
@@ -268,9 +287,9 @@ public class UsuarioRepository {
 	}
 
 	private static Tiene mapearRed(ResultSet rs) throws SQLException {
-		RedSocial red = new RedSocial(rs.getString("nombre_red_social"), rs.getString("url"));
+		RedSocial red = new RedSocial(rs.getString("nombre_red_social"), null);
 		red.setIdRedSocial(rs.getLong("id_red_social"));
-		return new Tiene(red, rs.getString("url_perfil"), rs.getString("alias"));
+		return new Tiene(red, rs.getString("nombre_usuario"));
 	}
 
 	private long contar(String sql, Object... args) {

@@ -7,7 +7,7 @@ import { CatalogoService } from '../services/catalogo.service';
 import { UniversidadService } from '../services/universidad.service';
 import { mensajeDeError } from '../utils/error.util';
 
-type Seccion = 'ciudades' | 'universidades' | 'carreras' | 'redes' | 'oferta';
+type Seccion = 'ciudades' | 'universidades' | 'carreras' | 'redes' | 'oferta';  // 'redes' es solo lectura: el modelo no tiene tabla de catálogo
 
 // Datos de referencia: ciudades, universidades, carreras, redes sociales y oferta académica (crear, editar, eliminar).
 @Component({
@@ -39,10 +39,9 @@ export class AdminCatalogosComponent {
 
   // Formularios (id = null => crear; con id => editar)
   fCiudad: { id: number | null; nombre: string; departamento: string } = { id: null, nombre: '', departamento: '' };
-  fUni: { id: number | null; nombre: string; sigla: string; calle: string; barrio: string; numeroDireccion: string; idCiudad: number | null } =
-    { id: null, nombre: '', sigla: '', calle: '', barrio: '', numeroDireccion: '', idCiudad: null };
-  fCarrera: { id: number | null; nombre: string } = { id: null, nombre: '' };
-  fRed: { id: number | null; nombreRedSocial: string; url: string } = { id: null, nombreRedSocial: '', url: '' };
+  fUni: { id: number | null; nombre: string; sigla: string; calle: string; barrio: string; idCiudad: number | null } =
+    { id: null, nombre: '', sigla: '', calle: '', barrio: '', idCiudad: null };
+  fCarrera: { id: number | null; nombre: string; facultad: string } = { id: null, nombre: '', facultad: '' };
   fOferta: { editando: boolean; idCarrera: number | null; idUniversidad: number | null; facultad: string } =
     { editando: false, idCarrera: null, idUniversidad: null, facultad: '' };
   busquedaUni = '';
@@ -102,21 +101,20 @@ export class AdminCatalogosComponent {
     this.universidadService.obtener(u.idUniversidad).subscribe({
       next: x => {
         if (!x) { this.error.set('La universidad ya no existe.'); return; }
-        this.fUni = { id: x.idUniversidad, nombre: x.nombre, sigla: x.sigla, calle: x.calle ?? '', barrio: x.barrio ?? '', numeroDireccion: x.numeroDireccion ?? '', idCiudad: x.ciudad?.idCiudad ?? null };
+        this.fUni = { id: x.idUniversidad, nombre: x.nombre, sigla: x.sigla, calle: x.calle ?? '', barrio: x.barrio ?? '', idCiudad: x.ciudad?.idCiudad ?? null };
       },
       error: e => this.fallo(e, 'No pudimos abrir la universidad.')
     });
   }
   guardarUniversidad(): void {
     const f = this.fUni;
-    if (!f.nombre.trim() || !f.sigla.trim() || f.idCiudad === null) { this.error.set('Escribe nombre y sigla, y elige la ciudad.'); return; }
+    if (!f.nombre.trim() || !f.sigla.trim() || !f.calle.trim() || !f.barrio.trim() || f.idCiudad === null) { this.error.set('Escribe nombre, sigla, calle y barrio, y elige la ciudad.'); return; }
     const datos = {
       nombre: f.nombre.trim(), sigla: f.sigla.trim(), idCiudad: f.idCiudad,
-      ...(f.calle.trim() ? { calle: f.calle.trim() } : {}), ...(f.barrio.trim() ? { barrio: f.barrio.trim() } : {}),
-      ...(f.numeroDireccion.trim() ? { numeroDireccion: f.numeroDireccion.trim() } : {})
+      calle: f.calle.trim(), barrio: f.barrio.trim()
     };
     (f.id === null ? this.admin.crearUniversidad(datos) : this.admin.actualizarUniversidad(f.id, datos)).subscribe({
-      next: () => this.ok(f.id === null ? 'Universidad creada.' : 'Universidad actualizada.', () => (this.fUni = { id: null, nombre: '', sigla: '', calle: '', barrio: '', numeroDireccion: '', idCiudad: null })),
+      next: () => this.ok(f.id === null ? 'Universidad creada.' : 'Universidad actualizada.', () => (this.fUni = { id: null, nombre: '', sigla: '', calle: '', barrio: '', idCiudad: null })),
       error: e => this.fallo(e, 'No pudimos guardar la universidad.')
     });
   }
@@ -127,41 +125,21 @@ export class AdminCatalogosComponent {
   // ---- Carreras ----
   editarCarrera(c: CarreraModel): void {
     this.catalogo.carrera(c.idCarrera).subscribe({
-      next: x => (this.fCarrera = { id: x.idCarrera, nombre: x.nombre }),
+      next: x => (this.fCarrera = { id: x.idCarrera, nombre: x.nombre, facultad: x.facultad }),
       error: e => this.fallo(e, 'No pudimos abrir la carrera.')
     });
   }
   guardarCarrera(): void {
     const f = this.fCarrera;
-    if (!f.nombre.trim()) { this.error.set('Escribe el nombre de la carrera.'); return; }
-    const datos = { nombre: f.nombre.trim() };
+    if (!f.nombre.trim() || !f.facultad.trim()) { this.error.set('Escribe el nombre y la facultad de la carrera.'); return; }
+    const datos = { nombre: f.nombre.trim(), facultad: f.facultad.trim() };
     (f.id === null ? this.admin.crearCarrera(datos) : this.admin.actualizarCarrera(f.id, datos)).subscribe({
-      next: () => this.ok(f.id === null ? 'Carrera creada.' : 'Carrera actualizada.', () => (this.fCarrera = { id: null, nombre: '' })),
+      next: () => this.ok(f.id === null ? 'Carrera creada.' : 'Carrera actualizada.', () => (this.fCarrera = { id: null, nombre: '', facultad: '' })),
       error: e => this.fallo(e, 'No pudimos guardar la carrera.')
     });
   }
   eliminarCarrera(c: CarreraModel): void {
     this.admin.eliminarCarrera(c.idCarrera).subscribe({ next: () => this.ok('Carrera eliminada.'), error: e => this.fallo(e, 'No pudimos eliminar la carrera.') });
-  }
-
-  // ---- Redes sociales ----
-  editarRed(r: RedSocialModel): void {
-    this.catalogo.redSocial(r.idRedSocial).subscribe({
-      next: x => (this.fRed = { id: x.idRedSocial, nombreRedSocial: x.nombreRedSocial, url: x.url }),
-      error: e => this.fallo(e, 'No pudimos abrir la red social.')
-    });
-  }
-  guardarRed(): void {
-    const f = this.fRed;
-    if (!f.nombreRedSocial.trim() || !/^https?:\/\/\S+$/.test(f.url.trim())) { this.error.set('Escribe el nombre y una url que empiece por http:// o https://.'); return; }
-    const datos = { nombreRedSocial: f.nombreRedSocial.trim(), url: f.url.trim() };
-    (f.id === null ? this.admin.crearRedSocial(datos) : this.admin.actualizarRedSocial(f.id, datos)).subscribe({
-      next: () => this.ok(f.id === null ? 'Red social creada.' : 'Red social actualizada.', () => (this.fRed = { id: null, nombreRedSocial: '', url: '' })),
-      error: e => this.fallo(e, 'No pudimos guardar la red social.')
-    });
-  }
-  eliminarRed(r: RedSocialModel): void {
-    this.admin.eliminarRedSocial(r.idRedSocial).subscribe({ next: () => this.ok('Red social eliminada.'), error: e => this.fallo(e, 'No pudimos eliminar la red social.') });
   }
 
   // ---- Oferta académica ----
@@ -171,11 +149,11 @@ export class AdminCatalogosComponent {
   cancelarOferta(): void { this.fOferta = { editando: false, idCarrera: null, idUniversidad: null, facultad: '' }; }
   guardarOferta(): void {
     const f = this.fOferta;
-    if (f.idCarrera === null || f.idUniversidad === null || !f.facultad.trim()) { this.error.set('Elige carrera y universidad, y escribe la facultad.'); return; }
+    if (f.idCarrera === null || f.idUniversidad === null || (f.editando && !f.facultad.trim())) { this.error.set(f.editando ? 'Escribe la facultad.' : 'Elige carrera y universidad.'); return; }
     const facultad = f.facultad.trim();
     (f.editando
       ? this.admin.actualizarOferta(f.idCarrera, f.idUniversidad, facultad)
-      : this.admin.crearOferta({ idCarrera: f.idCarrera, idUniversidad: f.idUniversidad, facultad })).subscribe({
+      : this.admin.crearOferta({ idCarrera: f.idCarrera, idUniversidad: f.idUniversidad })).subscribe({
       next: () => this.ok(f.editando ? 'Oferta actualizada.' : 'Oferta creada.', () => this.cancelarOferta()),
       error: e => this.fallo(e, 'No pudimos guardar la oferta.')
     });

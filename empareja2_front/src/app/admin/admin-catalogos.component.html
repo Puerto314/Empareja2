@@ -45,9 +45,8 @@
             </label>
           </div>
           <div class="row-fields">
-            <label class="field">Calle<input name="uCalle" [(ngModel)]="fUni.calle"></label>
-            <label class="field">Barrio<input name="uBarrio" [(ngModel)]="fUni.barrio"></label>
-            <label class="field">Número<input name="uNum" [(ngModel)]="fUni.numeroDireccion"></label>
+            <label class="field">Calle *<input name="uCalle" [(ngModel)]="fUni.calle"></label>
+            <label class="field">Barrio *<input name="uBarrio" [(ngModel)]="fUni.barrio"></label>
           </div>
           <div class="btn-row"><button type="submit" class="btn sm">{{ fUni.id === null ? 'Agregar universidad' : 'Guardar cambios' }}</button></div>
         </form>
@@ -72,40 +71,30 @@
       @case ('carreras') {
         <form class="subbox row-fields" (ngSubmit)="guardarCarrera()">
           <label class="field">Nombre<input name="caNombre" [(ngModel)]="fCarrera.nombre"></label>
+          <label class="field">Facultad<input name="caFac" [(ngModel)]="fCarrera.facultad"></label>
           <div class="btn-row"><button type="submit" class="btn sm">{{ fCarrera.id === null ? 'Agregar carrera' : 'Guardar cambios' }}</button></div>
         </form>
         <div class="table-wrap"><table class="tabla">
-          <thead><tr><th>ID</th><th>Carrera</th><th></th></tr></thead>
+          <thead><tr><th>ID</th><th>Carrera</th><th>Facultad</th><th></th></tr></thead>
           <tbody>
             @for (c of carreras(); track c.idCarrera) {
-              <tr><td>{{ c.idCarrera }}</td><td>{{ c.nombre }}</td>
+              <tr><td>{{ c.idCarrera }}</td><td>{{ c.nombre }}</td><td>{{ c.facultad }}</td>
                 <td class="acciones">
                   <button type="button" class="btn sec sm" (click)="editarCarrera(c)">Editar</button>
                   @if (confirmando() === 'carrera' + c.idCarrera) {
                     <button type="button" class="btn danger sm" (click)="eliminarCarrera(c)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
                   } @else { <button type="button" class="btn danger sm" (click)="pedir('carrera' + c.idCarrera)">Eliminar</button> }
                 </td></tr>
-            } @empty { <tr><td colspan="3" class="vacio">No hay carreras.</td></tr> }
+            } @empty { <tr><td colspan="4" class="vacio">No hay carreras.</td></tr> }
           </tbody></table></div>
       }
       @case ('redes') {
-        <form class="subbox row-fields" (ngSubmit)="guardarRed()">
-          <label class="field">Nombre<input name="rNombre" [(ngModel)]="fRed.nombreRedSocial"></label>
-          <label class="field">Url base<input name="rUrl" [(ngModel)]="fRed.url" placeholder="https://..."></label>
-          <div class="btn-row"><button type="submit" class="btn sm">{{ fRed.id === null ? 'Agregar red social' : 'Guardar cambios' }}</button></div>
-        </form>
+        <p class="muted">Redes sociales disponibles para los perfiles (lista fija del sistema; no se editan).</p>
         <div class="table-wrap"><table class="tabla">
-          <thead><tr><th>ID</th><th>Red</th><th>Url</th><th></th></tr></thead>
+          <thead><tr><th>ID</th><th>Red</th><th>Url base</th></tr></thead>
           <tbody>
-            @for (r of redes(); track r.idRedSocial) {
-              <tr><td>{{ r.idRedSocial }}</td><td>{{ r.nombreRedSocial }}</td><td>{{ r.url }}</td>
-                <td class="acciones">
-                  <button type="button" class="btn sec sm" (click)="editarRed(r)">Editar</button>
-                  @if (confirmando() === 'red' + r.idRedSocial) {
-                    <button type="button" class="btn danger sm" (click)="eliminarRed(r)">Confirmar</button><button type="button" class="btn sec sm" (click)="cancelarPedido()">No</button>
-                  } @else { <button type="button" class="btn danger sm" (click)="pedir('red' + r.idRedSocial)">Eliminar</button> }
-                </td></tr>
-            } @empty { <tr><td colspan="4" class="vacio">No hay redes sociales.</td></tr> }
+            @for (r of redes(); track r.idRedSocial) { <tr><td>{{ r.idRedSocial }}</td><td>{{ r.nombreRedSocial }}</td><td>{{ r.url }}</td></tr> }
+            @empty { <tr><td colspan="3" class="vacio">No hay redes sociales.</td></tr> }
           </tbody></table></div>
       }
       @case ('oferta') {
@@ -122,7 +111,7 @@
               @for (c of carreras(); track c.idCarrera) { <option [ngValue]="c.idCarrera">{{ c.nombre }}</option> }
             </select>
           </label>
-          <label class="field">Facultad<input name="oFac" [(ngModel)]="fOferta.facultad"></label>
+          @if (fOferta.editando) { <label class="field">Facultad de la carrera (cambia en todas las universidades)<input name="oFac" [(ngModel)]="fOferta.facultad"></label> }
           <div class="btn-row">
             <button type="submit" class="btn sm">{{ fOferta.editando ? 'Guardar facultad' : 'Agregar oferta' }}</button>
             @if (fOferta.editando) { <button type="button" class="btn sec sm" (click)="cancelarOferta()">Cancelar</button> }

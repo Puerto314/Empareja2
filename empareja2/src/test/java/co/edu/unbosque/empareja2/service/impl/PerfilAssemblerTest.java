@@ -25,7 +25,6 @@ import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.RedPerfilRequestDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Tiene;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
@@ -127,10 +126,8 @@ class PerfilAssemblerTest {
     }
 
     @Test
-    void eliminaLosEstudiosQueYaNoVienen() {
-        assembler.sincronizarEstudios(usuario,
-                List.of(new EstudioRequestDTO(1L, 10L, 4), new EstudioRequestDTO(2L, 10L, 2)));
-        assertThat(usuario.getEstudios()).hasSize(2);
+    void cambiarDeCarreraReemplazaElEstudio() {
+        assembler.sincronizarEstudios(usuario, List.of(new EstudioRequestDTO(1L, 10L, 4)));
 
         assembler.sincronizarEstudios(usuario, List.of(new EstudioRequestDTO(2L, 10L, 3)));
 
@@ -139,11 +136,11 @@ class PerfilAssemblerTest {
     }
 
     @Test
-    void rechazaCarreraRepetida() {
-        List<EstudioRequestDTO> repetidos = List.of(new EstudioRequestDTO(1L, 10L, 4),
-                new EstudioRequestDTO(1L, 20L, 2));
-        assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, repetidos))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("repetida");
+    void rechazaMasDeUnEstudio() {
+        List<EstudioRequestDTO> dos = List.of(new EstudioRequestDTO(1L, 10L, 4), new EstudioRequestDTO(2L, 10L, 2));
+        assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, dos))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("una carrera");
+        assertThat(usuario.getEstudios()).isEmpty();
     }
 
     @Test
@@ -181,36 +178,36 @@ class PerfilAssemblerTest {
 
     @Test
     void agregaYActualizaRedes() {
-        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(5L, "https://ig/ana", "ana")));
+        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(5L, "ana")));
         assertThat(usuario.getRedes()).hasSize(1);
         Tiene original = usuario.getRedes().get(0);
+        assertThat(original.getNombreUsuario()).isEqualTo("ana");
 
-        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(5L, "https://ig/ana2", "ana2"),
-                new RedPerfilRequestDTO(6L, "https://fb/ana", null)));
+        assembler.sincronizarRedes(usuario,
+                List.of(new RedPerfilRequestDTO(5L, " ana2 "), new RedPerfilRequestDTO(6L, "ana.fb")));
 
         assertThat(usuario.getRedes()).hasSize(2);
-        assertThat(original.getUrlPerfil()).isEqualTo("https://ig/ana2");
-        assertThat(original.getAlias()).isEqualTo("ana2");
+        assertThat(original.getNombreUsuario()).isEqualTo("ana2");
     }
 
     @Test
     void eliminaRedesQueYaNoVienen() {
-        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(5L, "u1", "a"),
-                new RedPerfilRequestDTO(6L, "u2", "b")));
+        assembler.sincronizarRedes(usuario,
+                List.of(new RedPerfilRequestDTO(5L, "a"), new RedPerfilRequestDTO(6L, "b")));
 
-        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(6L, "u2", "b")));
+        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(6L, "b")));
 
         assertThat(usuario.getRedes()).extracting(t -> t.getRedSocial().getIdRedSocial()).containsExactly(6L);
     }
 
     @Test
     void rechazaRedRepetidaEInexistente() {
-        List<RedPerfilRequestDTO> repetidas = List.of(new RedPerfilRequestDTO(5L, "u", "a"),
-                new RedPerfilRequestDTO(5L, "v", "b"));
+        List<RedPerfilRequestDTO> repetidas = List.of(new RedPerfilRequestDTO(5L, "a"),
+                new RedPerfilRequestDTO(5L, "b"));
         assertThatThrownBy(() -> assembler.sincronizarRedes(usuario, repetidas))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        List<RedPerfilRequestDTO> inexistente = List.of(new RedPerfilRequestDTO(99L, "u", "a"));
+        List<RedPerfilRequestDTO> inexistente = List.of(new RedPerfilRequestDTO(99L, "a"));
         assertThatThrownBy(() -> assembler.sincronizarRedes(usuario, inexistente))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
@@ -221,30 +218,7 @@ class PerfilAssemblerTest {
         assertThat(usuario.getIntereses()).hasSize(2);
     }
 
-    // ---- datos de estudiante y documento ----
-
-    @Test
-    void documentoDebeSerNumericoParaCcYCeYAlfanumericoParaPasaporte() {
-        assertThatCode(() -> assembler.validarDocumento(TipoDocumento.CC, "1020304050")).doesNotThrowAnyException();
-        assertThatCode(() -> assembler.validarDocumento(TipoDocumento.CE, "123456")).doesNotThrowAnyException();
-        assertThatCode(() -> assembler.validarDocumento(TipoDocumento.PASAPORTE, "AB123456"))
-                .doesNotThrowAnyException();
-
-        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.CC, "ABC123"))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.CC, "12"))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.PASAPORTE, "AB-1"))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.CC, null))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void laTarjetaDeIdentidadNoSeAceptaPorqueElCatalogoEsParaMayores() {
-        assertThatThrownBy(() -> assembler.validarDocumento(TipoDocumento.TI, "1020304050"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("TI");
-    }
+    // ---- datos de estudiante ----
 
     @Test
     void validaElFormatoDelCorreo() {
@@ -255,13 +229,16 @@ class PerfilAssemblerTest {
     }
 
     @Test
-    void unEstudianteNecesitaFechaDeNacimientoYAlMenosUnEstudio() {
+    void unEstudianteNecesitaFechaDeNacimientoYExactamenteUnEstudio() {
         List<EstudioRequestDTO> estudios = List.of(new EstudioRequestDTO(1L, 10L, 3));
 
         assertThatCode(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), estudios))
                 .doesNotThrowAnyException();
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(null, estudios))
                 .isInstanceOf(IllegalArgumentException.class);
+        List<EstudioRequestDTO> dos = List.of(new EstudioRequestDTO(1L, 10L, 3), new EstudioRequestDTO(2L, 10L, 3));
+        assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), dos))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactamente una");
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), List.of()))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), null))

@@ -1,22 +1,20 @@
 package co.edu.unbosque.empareja2.entity;
 
 /**
- * Relacion Tener (RED_SOCIAL N:M USUARIO) con los atributos "url_perfil" y
- * "alias". Vive dentro de la lista de redes de un Usuario.
+ * Perfil de un estudiante en una red social: la red y su nombre de usuario en ella
+ * (tabla red_social del modelo, una fila por estudiante y red).
  */
 public class Tiene {
 
     private RedSocial redSocial;
-    private String urlPerfil;
-    private String alias;
+    private String nombreUsuario;
 
     public Tiene() {
     }
 
-    public Tiene(RedSocial redSocial, String urlPerfil, String alias) {
+    public Tiene(RedSocial redSocial, String nombreUsuario) {
         this.redSocial = redSocial;
-        this.urlPerfil = urlPerfil;
-        this.alias = alias;
+        this.nombreUsuario = nombreUsuario;
     }
 
     public RedSocial getRedSocial() {
@@ -27,19 +25,11 @@ public class Tiene {
         this.redSocial = redSocial;
     }
 
-    public String getUrlPerfil() {
-        return urlPerfil;
+    public String getNombreUsuario() {
+        return nombreUsuario;
     }
 
-    public void setUrlPerfil(String urlPerfil) {
-        this.urlPerfil = urlPerfil;
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    public void setAlias(String alias) {
-        this.alias = alias;
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
     }
 }

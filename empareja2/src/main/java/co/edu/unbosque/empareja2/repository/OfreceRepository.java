@@ -17,13 +17,14 @@ import co.edu.unbosque.empareja2.entity.Universidad;
 @Repository
 public class OfreceRepository {
 
-    private static final String SELECT = "SELECT o.facultad, c.id_carrera, c.nombre AS carrera_nombre, "
-            + "u.id_universidad, u.nombre AS universidad_nombre, u.sigla "
-            + "FROM ofrece o JOIN carrera c ON c.id_carrera = o.id_carrera "
-            + "JOIN universidad u ON u.id_universidad = o.id_universidad ";
+    private static final String SELECT = "SELECT c.facultad, c.id_carrera, c.nombre_carrera AS carrera_nombre, "
+            + "u.id_universidad, u.nombre_universidad AS universidad_nombre, u.sigla "
+            + "FROM ofrecer o JOIN carrera c ON c.id_carrera = o.carrera_id_carrera "
+            + "JOIN universidad u ON u.id_universidad = o.universidad_id_universidad "
+            + "AND u.ciudad_id_ciudad = o.universidad_ciudad_id_ciudad ";
 
     private static final RowMapper<Ofrece> MAPPER = (rs, i) -> {
-        Carrera carrera = new Carrera(rs.getString("carrera_nombre"));
+        Carrera carrera = new Carrera(rs.getString("carrera_nombre"), rs.getString("facultad"));
         carrera.setIdCarrera(rs.getLong("id_carrera"));
         Universidad universidad = new Universidad();
         universidad.setIdUniversidad(rs.getLong("id_universidad"));
@@ -39,54 +40,61 @@ public class OfreceRepository {
     }
 
     public boolean existsByCarreraAndUniversidad(Long idCarrera, Long idUniversidad) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM ofrece WHERE id_carrera = ? AND id_universidad = ?",
+        Integer n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM ofrecer WHERE carrera_id_carrera = ? AND universidad_id_universidad = ?",
                 Integer.class, idCarrera, idUniversidad);
         return n != null && n > 0;
     }
 
     public List<Ofrece> listarTodas() {
-        return jdbc.query(SELECT + "ORDER BY u.nombre, c.nombre", MAPPER);
+        return jdbc.query(SELECT + "ORDER BY u.nombre_universidad, c.nombre_carrera", MAPPER);
     }
 
     public List<Ofrece> listarPorUniversidad(Long idUniversidad) {
-        return jdbc.query(SELECT + "WHERE o.id_universidad = ? ORDER BY c.nombre", MAPPER, idUniversidad);
+        return jdbc.query(SELECT + "WHERE o.universidad_id_universidad = ? ORDER BY c.nombre_carrera", MAPPER,
+                idUniversidad);
     }
 
+    /** La facultad es un atributo de la carrera (no de la oferta): aqui solo se registra la pareja. */
     public Ofrece save(Ofrece ofrece) {
-        jdbc.update("INSERT INTO ofrece (id_carrera, id_universidad, facultad) VALUES (?, ?, ?)",
-                ofrece.getCarrera().getIdCarrera(), ofrece.getUniversidad().getIdUniversidad(),
-                ofrece.getFacultad());
+        jdbc.update("INSERT INTO ofrecer (universidad_id_universidad, universidad_ciudad_id_ciudad, "
+                + "carrera_id_carrera) SELECT un.id_universidad, un.ciudad_id_ciudad, ? FROM universidad un "
+                + "WHERE un.id_universidad = ?", ofrece.getCarrera().getIdCarrera(),
+                ofrece.getUniversidad().getIdUniversidad());
         return ofrece;
     }
 
     public Optional<Ofrece> findByIds(Long idCarrera, Long idUniversidad) {
-        return jdbc.query(SELECT + "WHERE o.id_carrera = ? AND o.id_universidad = ?", MAPPER, idCarrera, idUniversidad)
-                .stream().findFirst();
+        return jdbc.query(SELECT + "WHERE o.carrera_id_carrera = ? AND o.universidad_id_universidad = ?", MAPPER,
+                idCarrera, idUniversidad).stream().findFirst();
     }
 
     /** Cuantos usuarios estudian esa carrera en esa universidad (dependen de que la oferta exista). */
     public long contarEstudiantes(Long idCarrera, Long idUniversidad) {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudio WHERE id_carrera = ? AND id_universidad = ?",
+        Long n = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM estudiante WHERE carrera_id_carrera = ? AND universidad_id_universidad = ?",
                 Long.class, idCarrera, idUniversidad);
         return n == null ? 0 : n;
     }
 
+    /** Cambia la facultad de la CARRERA de la oferta (en el modelo la facultad es de la carrera). */
     public void update(Ofrece ofrece) {
-        jdbc.update("UPDATE ofrece SET facultad = ? WHERE id_carrera = ? AND id_universidad = ?", ofrece.getFacultad(),
-                ofrece.getCarrera().getIdCarrera(), ofrece.getUniversidad().getIdUniversidad());
+        jdbc.update("UPDATE carrera SET facultad = ? WHERE id_carrera = ?", ofrece.getFacultad(),
+                ofrece.getCarrera().getIdCarrera());
     }
 
     public void delete(Long idCarrera, Long idUniversidad) {
-        jdbc.update("DELETE FROM ofrece WHERE id_carrera = ? AND id_universidad = ?", idCarrera, idUniversidad);
+        jdbc.update("DELETE FROM ofrecer WHERE carrera_id_carrera = ? AND universidad_id_universidad = ?", idCarrera,
+                idUniversidad);
     }
 
     /** Se usa al eliminar una universidad: sus ofertas se van con ella. */
     public void eliminarPorUniversidad(Long idUniversidad) {
-        jdbc.update("DELETE FROM ofrece WHERE id_universidad = ?", idUniversidad);
+        jdbc.update("DELETE FROM ofrecer WHERE universidad_id_universidad = ?", idUniversidad);
     }
 
     /** Se usa al eliminar una carrera: sus ofertas se van con ella. */
     public void eliminarPorCarrera(Long idCarrera) {
-        jdbc.update("DELETE FROM ofrece WHERE id_carrera = ?", idCarrera);
+        jdbc.update("DELETE FROM ofrecer WHERE carrera_id_carrera = ?", idCarrera);
     }
 }

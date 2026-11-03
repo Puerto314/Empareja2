@@ -22,13 +22,13 @@ import co.edu.unbosque.empareja2.entity.Usuario;
 @Repository
 public class ReporteRepository {
 
-    private static final String SELECT = "SELECT r.id_reporte, r.id_realizador, r.id_reportado, r.tipo_reporte, "
-            + "r.estado, r.descripcion, r.fecha_hora, a.nombre AS realizador_nombre, "
+    private static final String SELECT = "SELECT r.id_reporte, r.estudiante_id_usuario AS id_realizador, r.estudiante_id_usuario1 AS id_reportado, "
+            + "r.tipo_reporte, r.estado, r.descripcion, r.fecha_hora_reporte AS fecha_hora, a.nombre AS realizador_nombre, "
             + "a.apellido AS realizador_apellido, b.nombre AS reportado_nombre, b.apellido AS reportado_apellido "
-            + "FROM reporte r JOIN usuario a ON a.id_usuario = r.id_realizador "
-            + "JOIN usuario b ON b.id_usuario = r.id_reportado ";
+            + "FROM reporte r JOIN usuario a ON a.id_usuario = r.estudiante_id_usuario "
+            + "JOIN usuario b ON b.id_usuario = r.estudiante_id_usuario1 ";
 
-    private static final String ORDEN = "ORDER BY r.fecha_hora DESC, r.id_reporte DESC";
+    private static final String ORDEN = "ORDER BY r.fecha_hora_reporte DESC, r.id_reporte DESC";
 
     private static final RowMapper<Reporte> MAPPER = (rs, i) -> {
         Usuario realizador = new Usuario();
@@ -71,7 +71,7 @@ public class ReporteRepository {
 
     /** Hay un reporte sin cerrar (PENDIENTE o EN_REVISION) del mismo usuario al mismo perfil por el mismo motivo. */
     public boolean existeActivo(Long idRealizador, Long idReportado, TipoReporte tipo) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM reporte WHERE id_realizador = ? AND id_reportado = ? "
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM reporte WHERE estudiante_id_usuario = ? AND estudiante_id_usuario1 = ? "
                 + "AND tipo_reporte = ? AND estado IN ('PENDIENTE', 'EN_REVISION')", Integer.class, idRealizador,
                 idReportado, tipo.name());
         return n != null && n > 0;
@@ -79,12 +79,12 @@ public class ReporteRepository {
 
     public Reporte save(Reporte r) {
         Map<String, Object> valores = new HashMap<>();
-        valores.put("id_realizador", r.getRealizador().getId());
-        valores.put("id_reportado", r.getReportado().getId());
+        valores.put("estudiante_id_usuario", r.getRealizador().getId());
+        valores.put("estudiante_id_usuario1", r.getReportado().getId());
         valores.put("tipo_reporte", r.getTipoReporte().name());
         valores.put("estado", r.getEstado().name());
         valores.put("descripcion", r.getDescripcion());
-        valores.put("fecha_hora", r.getFechaHora());
+        valores.put("fecha_hora_reporte", r.getFechaHora());
         r.setIdReporte(insert.executeAndReturnKey(valores).longValue());
         return r;
     }

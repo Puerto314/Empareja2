@@ -1,17 +1,14 @@
 package co.edu.unbosque.empareja2.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Relacion Tener: red social + url_perfil + alias.
+ * Red social + nombre de usuario del estudiante en ella (tabla red_social del modelo).
  */
 public record RedPerfilRequestDTO(
         @NotNull(message = "La red social es obligatoria") Long idRedSocial,
-        @NotBlank(message = "La url del perfil es obligatoria")
-        @Pattern(regexp = "^https?://\\S+$", message = "La url del perfil debe empezar por http:// o https://")
-        @Size(max = 300, message = "La url del perfil es demasiado larga") String urlPerfil,
-        @Size(max = 100, message = "El alias es demasiado largo") String alias) {
+        @NotBlank(message = "El nombre de usuario en la red social es obligatorio")
+        @Size(max = 50, message = "El nombre de usuario en la red social es demasiado largo") String nombreUsuario) {
 }

@@ -26,7 +26,7 @@ public class CatalogoMapper {
     }
 
     public CarreraDTO toDTO(Carrera carrera) {
-        return new CarreraDTO(carrera.getIdCarrera(), carrera.getNombre());
+        return new CarreraDTO(carrera.getIdCarrera(), carrera.getNombre(), carrera.getFacultad());
     }
 
     public RedSocialDTO toDTO(RedSocial red) {
@@ -36,7 +36,7 @@ public class CatalogoMapper {
     public UniversidadDTO toDTO(Universidad universidad) {
         Direccion d = universidad.getDireccion() != null ? universidad.getDireccion() : new Direccion();
         return new UniversidadDTO(universidad.getIdUniversidad(), universidad.getNombre(), universidad.getSigla(),
-                d.getCalle(), d.getBarrio(), d.getNumeroDireccion(), toDTO(universidad.getCiudad()));
+                d.getCalle(), d.getBarrio(), toDTO(universidad.getCiudad()));
     }
 
     public OfreceDTO toDTO(Ofrece ofrece) {

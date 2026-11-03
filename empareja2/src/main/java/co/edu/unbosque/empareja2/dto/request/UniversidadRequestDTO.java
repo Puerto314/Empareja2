@@ -12,8 +12,9 @@ public record UniversidadRequestDTO(
         @Size(max = 150, message = "El nombre es demasiado largo") String nombre,
         @NotBlank(message = "La sigla es obligatoria")
         @Size(max = 20, message = "La sigla es demasiado larga") String sigla,
+        @NotBlank(message = "La calle es obligatoria")
         @Size(max = 100, message = "La calle es demasiado larga") String calle,
+        @NotBlank(message = "El barrio es obligatorio")
         @Size(max = 100, message = "El barrio es demasiado largo") String barrio,
-        @Size(max = 20, message = "El numero de direccion es demasiado largo") String numeroDireccion,
         @NotNull(message = "La ciudad es obligatoria") Long idCiudad) {
 }

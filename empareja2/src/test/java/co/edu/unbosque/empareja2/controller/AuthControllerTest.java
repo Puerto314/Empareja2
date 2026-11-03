@@ -25,7 +25,7 @@ import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.LoginRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.RegistroRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.AuthResponseDTO;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
+import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.service.AuthService;
 
@@ -43,7 +43,7 @@ class AuthControllerTest extends ControllerTestSupport {
     }
 
     private RegistroRequestDTO registro(String correo, String contrasena, List<EstudioRequestDTO> estudios) {
-        return new RegistroRequestDTO(correo, contrasena, TipoDocumento.CC, "123", null, "Ana", "Garcia",
+        return new RegistroRequestDTO(correo, contrasena, Genero.FEMENINO, "Ana", "Garcia",
                 LocalDate.now().minusYears(21), null, Set.of(), estudios, List.of());
     }
 
@@ -63,6 +63,20 @@ class AuthControllerTest extends ControllerTestSupport {
         mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(registro("no-es-correo", "corta", List.of()))))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.details.length()").value(3));
+        verify(authService, never()).registrar(any());
+    }
+
+    @Test
+    void registroSinGeneroOConMasDeUnEstudioDa400() throws Exception {
+        RegistroRequestDTO sinGenero = new RegistroRequestDTO("ana@mail.com", "secreto123", null, "Ana", "Garcia",
+                LocalDate.now().minusYears(21), null, Set.of(), List.of(new EstudioRequestDTO(1L, 10L, 3)), List.of());
+        mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(sinGenero))).andExpect(status().isBadRequest());
+
+        mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(registro("ana@mail.com", "secreto123",
+                        List.of(new EstudioRequestDTO(1L, 10L, 3), new EstudioRequestDTO(2L, 10L, 3))))))
+                .andExpect(status().isBadRequest());
         verify(authService, never()).registrar(any());
     }
 

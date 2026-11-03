@@ -1,7 +1,6 @@
-// Refleja RedPerfilDTO: enlace del usuario a una red social.
+// Refleja RedPerfilDTO: la red social del estudiante y su nombre de usuario en ella.
 export interface RedPerfilModel {
   idRedSocial: number;
   redSocial: string;
-  urlPerfil: string;
-  alias: string | null;
+  nombreUsuario: string;
 }

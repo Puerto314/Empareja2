@@ -8,8 +8,8 @@ import { MiPerfilComponent } from './mi-perfil.component';
 import { CuentaService } from '../services/cuenta.service';
 
 const perfil: any = {
-  id: 1, correo: 'ana@x.co', rol: 'ESTUDIANTE', tipoDocumento: 'CC', documento: '123456', genero: null, nombre: 'Ana', apellido: 'Gil',
-  nombreCompleto: 'Ana Gil', edad: 25, fechaNacimiento: '2001-01-01', fotoPerfil: null, intereses: ['Cine'], estudios: [], redes: [], fechaCreacion: '2026-01-01T00:00:00'
+  id: 1, correo: 'ana@x.co', rol: 'ESTUDIANTE', genero: null, nombre: 'Ana', apellido: 'Gil',
+  nombreCompleto: 'Ana Gil', edad: 25, fechaNacimiento: '2001-01-01', fotoPerfil: null, intereses: ['Cine'], estudios: [], redes: []
 };
 
 describe('MiPerfilComponent', () => {
@@ -35,7 +35,7 @@ describe('MiPerfilComponent', () => {
     f.detectChanges();
     expect(f.nativeElement.textContent).toContain('Ana Gil');
     expect(f.nativeElement.textContent).toContain('ana@x.co');
-    expect(f.nativeElement.textContent).toContain('123456');
+    expect(f.nativeElement.textContent).toContain('2001-01-01');
   });
 
   it('debe guardar los cambios con PUT y mostrar el perfil actualizado', () => {
