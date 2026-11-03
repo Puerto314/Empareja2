@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { AuthService } from './auth.service';
+import { GeneroEnum } from '../models/genero.enum';
 import { API_URL } from '../config/api.config';
-import { TipoDocumentoEnum } from '../models/tipo-documento.enum';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -65,7 +65,7 @@ describe('AuthService', () => {
 
   it('debe registrar con POST /auth/registro', () => {
     service.registrar({
-      correo: 'ana@unbosque.edu.co', contrasena: '12345678', tipoDocumento: TipoDocumentoEnum.CC, documento: '1',
+      correo: 'ana@unbosque.edu.co', contrasena: '12345678', genero: GeneroEnum.FEMENINO,
       nombre: 'Ana', apellido: 'Prueba', fechaNacimiento: '2002-05-01',
       estudios: [{ idCarrera: 1, idUniversidad: 1, semestre: 3 }]
     }).subscribe();

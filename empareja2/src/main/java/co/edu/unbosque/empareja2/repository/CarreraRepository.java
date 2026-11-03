@@ -19,7 +19,7 @@ import co.edu.unbosque.empareja2.entity.Carrera;
 public class CarreraRepository {
 
     private static final RowMapper<Carrera> MAPPER = (rs, i) -> {
-        Carrera c = new Carrera(rs.getString("nombre"));
+        Carrera c = new Carrera(rs.getString("nombre_carrera"), rs.getString("facultad"));
         c.setIdCarrera(rs.getLong("id_carrera"));
         return c;
     };
@@ -33,22 +33,22 @@ public class CarreraRepository {
     }
 
     public Optional<Carrera> findById(Long id) {
-        return jdbc.query("SELECT id_carrera, nombre FROM carrera WHERE id_carrera = ?", MAPPER, id).stream()
+        return jdbc.query("SELECT id_carrera, nombre_carrera, facultad FROM carrera WHERE id_carrera = ?", MAPPER, id).stream()
                 .findFirst();
     }
 
     public boolean existsByNombreIgnoreCase(String nombre) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM carrera WHERE LOWER(nombre) = LOWER(?)",
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM carrera WHERE LOWER(nombre_carrera) = LOWER(?)",
                 Integer.class, nombre);
         return n != null && n > 0;
     }
 
     public List<Carrera> findAllByOrderByNombreAsc() {
-        return jdbc.query("SELECT id_carrera, nombre FROM carrera ORDER BY nombre", MAPPER);
+        return jdbc.query("SELECT id_carrera, nombre_carrera, facultad FROM carrera ORDER BY nombre_carrera", MAPPER);
     }
 
     public Carrera save(Carrera carrera) {
-        Number id = insert.executeAndReturnKey(Map.of("nombre", carrera.getNombre()));
+        Number id = insert.executeAndReturnKey(Map.of("nombre_carrera", carrera.getNombre(), "facultad", carrera.getFacultad()));
         carrera.setIdCarrera(id.longValue());
         return carrera;
     }
@@ -62,19 +62,20 @@ public class CarreraRepository {
     }
 
     public boolean existsByNombreAndIdNot(String nombre, Long id) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM carrera WHERE LOWER(nombre) = LOWER(?) AND id_carrera <> ?",
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM carrera WHERE LOWER(nombre_carrera) = LOWER(?) AND id_carrera <> ?",
                 Integer.class, nombre, id);
         return n != null && n > 0;
     }
 
     /** Cuantos usuarios estudian esta carrera (en cualquier universidad). */
     public long contarEstudiantes(Long idCarrera) {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudio WHERE id_carrera = ?", Long.class, idCarrera);
+        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudiante WHERE carrera_id_carrera = ?", Long.class, idCarrera);
         return n == null ? 0 : n;
     }
 
     public void update(Carrera carrera) {
-        jdbc.update("UPDATE carrera SET nombre = ? WHERE id_carrera = ?", carrera.getNombre(), carrera.getIdCarrera());
+        jdbc.update("UPDATE carrera SET nombre_carrera = ?, facultad = ? WHERE id_carrera = ?", carrera.getNombre(),
+                carrera.getFacultad(), carrera.getIdCarrera());
     }
 
     public void deleteById(Long id) {

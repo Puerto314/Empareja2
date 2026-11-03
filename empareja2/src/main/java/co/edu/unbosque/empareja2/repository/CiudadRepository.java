@@ -18,7 +18,7 @@ import co.edu.unbosque.empareja2.entity.Ciudad;
 public class CiudadRepository {
 
     private static final RowMapper<Ciudad> MAPPER = (rs, i) -> {
-        Ciudad c = new Ciudad(rs.getString("nombre"), rs.getString("departamento"));
+        Ciudad c = new Ciudad(rs.getString("nombre_ciudad"), rs.getString("departamento"));
         c.setIdCiudad(rs.getLong("id_ciudad"));
         return c;
     };
@@ -32,36 +32,36 @@ public class CiudadRepository {
     }
 
     public Optional<Ciudad> findById(Long id) {
-        return jdbc.query("SELECT id_ciudad, nombre, departamento FROM ciudad WHERE id_ciudad = ?", MAPPER, id)
+        return jdbc.query("SELECT id_ciudad, nombre_ciudad, departamento FROM ciudad WHERE id_ciudad = ?", MAPPER, id)
                 .stream().findFirst();
     }
 
     public boolean existsByNombreIgnoreCaseAndDepartamentoIgnoreCase(String nombre, String departamento) {
         Integer n = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) AND LOWER(departamento) = LOWER(?)",
+                "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre_ciudad) = LOWER(?) AND LOWER(departamento) = LOWER(?)",
                 Integer.class, nombre, departamento);
         return n != null && n > 0;
     }
 
     public List<Ciudad> findAllByOrderByNombreAsc() {
-        return jdbc.query("SELECT id_ciudad, nombre, departamento FROM ciudad ORDER BY nombre", MAPPER);
+        return jdbc.query("SELECT id_ciudad, nombre_ciudad, departamento FROM ciudad ORDER BY nombre_ciudad", MAPPER);
     }
 
     public Ciudad save(Ciudad ciudad) {
         Number id = insert.executeAndReturnKey(
-                Map.of("nombre", ciudad.getNombre(), "departamento", ciudad.getDepartamento()));
+                Map.of("nombre_ciudad", ciudad.getNombre(), "departamento", ciudad.getDepartamento()));
         ciudad.setIdCiudad(id.longValue());
         return ciudad;
     }
 
     public boolean existsByNombreAndDepartamentoAndIdNot(String nombre, String departamento, Long id) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) "
+        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre_ciudad) = LOWER(?) "
                 + "AND LOWER(departamento) = LOWER(?) AND id_ciudad <> ?", Integer.class, nombre, departamento, id);
         return n != null && n > 0;
     }
 
     public void update(Ciudad ciudad) {
-        jdbc.update("UPDATE ciudad SET nombre = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
+        jdbc.update("UPDATE ciudad SET nombre_ciudad = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
                 ciudad.getDepartamento(), ciudad.getIdCiudad());
     }
 

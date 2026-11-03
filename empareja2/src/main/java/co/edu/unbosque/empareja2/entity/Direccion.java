@@ -1,21 +1,19 @@
 package co.edu.unbosque.empareja2.entity;
 
 /**
- * Atributo compuesto "direccion" de UNIVERSIDAD: calle + barrio + numero_direccion.
+ * Atributo compuesto "direccion" de UNIVERSIDAD: calle + barrio.
  */
 public class Direccion {
 
     private String calle;
     private String barrio;
-    private String numeroDireccion;
 
     public Direccion() {
     }
 
-    public Direccion(String calle, String barrio, String numeroDireccion) {
+    public Direccion(String calle, String barrio) {
         this.calle = calle;
         this.barrio = barrio;
-        this.numeroDireccion = numeroDireccion;
     }
 
     public String getCalle() {
@@ -32,13 +30,5 @@ public class Direccion {
 
     public void setBarrio(String barrio) {
         this.barrio = barrio;
-    }
-
-    public String getNumeroDireccion() {
-        return numeroDireccion;
-    }
-
-    public void setNumeroDireccion(String numeroDireccion) {
-        this.numeroDireccion = numeroDireccion;
     }
 }

@@ -5,7 +5,7 @@ import { of, throwError } from 'rxjs';
 import { UniversidadesComponent } from './universidades.component';
 import { UniversidadService } from '../services/universidad.service';
 
-const base = { calle: null, barrio: null, numeroDireccion: null, ciudad: null };
+const base = { calle: 'c', barrio: 'b', ciudad: null };
 
 describe('UniversidadesComponent', () => {
   const serviceMock: any = {};

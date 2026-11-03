@@ -7,12 +7,18 @@ public class Carrera {
 
     private Long idCarrera;
     private String nombre;
+    private String facultad;
 
     public Carrera() {
     }
 
     public Carrera(String nombre) {
         this.nombre = nombre;
+    }
+
+    public Carrera(String nombre, String facultad) {
+        this.nombre = nombre;
+        this.facultad = facultad;
     }
 
     public Long getIdCarrera() {
@@ -29,5 +35,13 @@ public class Carrera {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getFacultad() {
+        return facultad;
+    }
+
+    public void setFacultad(String facultad) {
+        this.facultad = facultad;
     }
 }

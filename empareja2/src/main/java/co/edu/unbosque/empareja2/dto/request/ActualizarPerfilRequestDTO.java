@@ -20,17 +20,18 @@ import jakarta.validation.constraints.Size;
  */
 public record ActualizarPerfilRequestDTO(
         @NotBlank(message = "El nombre es obligatorio")
-        @Size(max = 100, message = "El nombre es demasiado largo") String nombre,
+        @Size(max = 50, message = "El nombre es demasiado largo") String nombre,
         @NotBlank(message = "El apellido es obligatorio")
-        @Size(max = 100, message = "El apellido es demasiado largo") String apellido,
-        Genero genero,
+        @Size(max = 50, message = "El apellido es demasiado largo") String apellido,
+        @NotNull(message = "El genero es obligatorio") Genero genero,
         @NotNull(message = "La fecha de nacimiento es obligatoria")
         @Past(message = "La fecha de nacimiento debe ser en el pasado") LocalDate fechaNacimiento,
-        @Size(max = 500, message = "La foto de perfil es demasiado larga")
+        @Size(max = 255, message = "La foto de perfil es demasiado larga")
         @Pattern(regexp = "^(https?://\\S+)?$", message = "La foto de perfil debe ser una url http:// o https://") String fotoPerfil,
         Set<@NotBlank(message = "Un interes no puede estar vacio")
-        @Size(max = 60, message = "Un interes es demasiado largo") String> intereses,
-        @NotEmpty(message = "Debes indicar al menos una carrera y universidad")
+        @Size(max = 50, message = "Un interes es demasiado largo") String> intereses,
+        @NotEmpty(message = "Debes indicar tu carrera y universidad")
+        @Size(max = 1, message = "Solo puedes indicar una carrera y universidad")
         List<@Valid EstudioRequestDTO> estudios,
         List<@Valid RedPerfilRequestDTO> redes) {
 }

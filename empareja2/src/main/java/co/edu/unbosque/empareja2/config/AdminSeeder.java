@@ -1,6 +1,7 @@
 package co.edu.unbosque.empareja2.config;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.Base64;
 
 import org.slf4j.Logger;
@@ -10,8 +11,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.repository.UsuarioRepository;
 
@@ -59,8 +60,8 @@ public class AdminSeeder implements CommandLineRunner {
         admin.setCorreo(adminCorreo);
         admin.setContrasenaHash(passwordEncoder.encode(contrasena));
         admin.setRol(Rol.ADMIN);
-        admin.setTipoDocumento(TipoDocumento.CC);
-        admin.setDocumento("ADMIN");
+        admin.setGenero(Genero.NO_ESPECIFICA);
+        admin.setFechaNacimiento(LocalDate.of(2000, 1, 1));
         admin.setNombre("Administrador");
         admin.setApellido("Sistema");
 

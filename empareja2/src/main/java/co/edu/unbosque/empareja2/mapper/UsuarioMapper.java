@@ -33,8 +33,6 @@ public class UsuarioMapper {
         usuario.setCorreo(dto.correo());
         usuario.setContrasenaHash(contrasenaHash);
         usuario.setRol(Rol.ESTUDIANTE);
-        usuario.setTipoDocumento(dto.tipoDocumento());
-        usuario.setDocumento(dto.documento());
         usuario.setGenero(dto.genero());
         usuario.setNombre(dto.nombre());
         usuario.setApellido(dto.apellido());
@@ -55,8 +53,6 @@ public class UsuarioMapper {
 
     /** Aplica los campos escalares editables por un administrador (no toca correo, rol ni contrasena). */
     public void aplicarCamposAdmin(Usuario usuario, AdminUsuarioRequestDTO dto) {
-        usuario.setTipoDocumento(dto.tipoDocumento());
-        usuario.setDocumento(dto.documento());
         usuario.setGenero(dto.genero());
         usuario.setNombre(dto.nombre());
         usuario.setApellido(dto.apellido());
@@ -81,11 +77,10 @@ public class UsuarioMapper {
     }
 
     public UsuarioPerfilDTO toPerfilDTO(Usuario usuario) {
-        return new UsuarioPerfilDTO(usuario.getId(), usuario.getTipoDocumento(), usuario.getDocumento(),
-                usuario.getCorreo(), usuario.getRol(), usuario.getGenero(), usuario.getNombre(),
+        return new UsuarioPerfilDTO(usuario.getId(), usuario.getCorreo(), usuario.getRol(), usuario.getGenero(), usuario.getNombre(),
                 usuario.getApellido(), usuario.getNombreCompleto(), usuario.getEdad(),
                 usuario.getFechaNacimiento(), usuario.getFotoPerfil(), interesesOrdenados(usuario),
-                estudiosDTO(usuario), redesDTO(usuario), usuario.getFechaCreacion());
+                estudiosDTO(usuario), redesDTO(usuario));
     }
 
     public EstudioDTO toEstudioDTO(Estudio estudio) {
@@ -96,7 +91,7 @@ public class UsuarioMapper {
 
     public RedPerfilDTO toRedPerfilDTO(Tiene tiene) {
         return new RedPerfilDTO(tiene.getRedSocial().getIdRedSocial(), tiene.getRedSocial().getNombreRedSocial(),
-                tiene.getUrlPerfil(), tiene.getAlias());
+                tiene.getNombreUsuario());
     }
 
     private List<String> interesesOrdenados(Usuario usuario) {

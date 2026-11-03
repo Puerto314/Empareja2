@@ -24,7 +24,6 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/LoginRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/OfreceRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/RedPerfilRequestDTO.java
-/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/RedSocialRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/RegistroRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/ReporteRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/request/UniversidadRequestDTO.java
@@ -57,7 +56,6 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Reporte.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Rol.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Tiene.java
-/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/TipoDocumento.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/TipoReaccion.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/TipoReporte.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Universidad.java

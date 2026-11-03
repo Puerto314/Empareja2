@@ -14,12 +14,10 @@ import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CarreraRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RedSocialRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.CarreraDTO;
 import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
 import co.edu.unbosque.empareja2.dto.response.OfreceDTO;
-import co.edu.unbosque.empareja2.dto.response.RedSocialDTO;
 import co.edu.unbosque.empareja2.dto.response.UniversidadDTO;
 import co.edu.unbosque.empareja2.service.CatalogoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -108,38 +106,16 @@ public class AdminCatalogoController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---- Redes sociales ----
-
-    @PostMapping("/redes-sociales")
-    @Operation(summary = "Crea una red social")
-    public ResponseEntity<RedSocialDTO> crearRedSocial(@Valid @RequestBody RedSocialRequestDTO request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(catalogoService.crearRedSocial(request));
-    }
-
-    @PutMapping("/redes-sociales/{id}")
-    @Operation(summary = "Edita una red social")
-    public ResponseEntity<RedSocialDTO> actualizarRedSocial(@PathVariable Long id,
-            @Valid @RequestBody RedSocialRequestDTO request) {
-        return ResponseEntity.ok(catalogoService.actualizarRedSocial(id, request));
-    }
-
-    @DeleteMapping("/redes-sociales/{id}")
-    @Operation(summary = "Elimina una red social (409 si algun usuario la tiene en su perfil)")
-    public ResponseEntity<Void> eliminarRedSocial(@PathVariable Long id) {
-        catalogoService.eliminarRedSocial(id);
-        return ResponseEntity.noContent().build();
-    }
-
     // ---- Oferta academica (universidad - carrera - facultad) ----
 
     @PostMapping("/oferta")
-    @Operation(summary = "Registra que una universidad ofrece una carrera (con su facultad)")
+    @Operation(summary = "Registra que una universidad ofrece una carrera")
     public ResponseEntity<OfreceDTO> crearOferta(@Valid @RequestBody OfreceRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalogoService.crearOferta(request));
     }
 
     @PutMapping("/oferta/{idCarrera}/{idUniversidad}")
-    @Operation(summary = "Corrige la facultad de una oferta")
+    @Operation(summary = "Corrige la facultad de la carrera de una oferta (la facultad es de la carrera)")
     public ResponseEntity<OfreceDTO> actualizarOferta(@PathVariable Long idCarrera, @PathVariable Long idUniversidad,
             @Valid @RequestBody ActualizarOfertaRequestDTO request) {
         return ResponseEntity.ok(catalogoService.actualizarOferta(idCarrera, idUniversidad, request));

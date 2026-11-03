@@ -20,7 +20,7 @@ describe('EstudiantesComponent', () => {
 
   const universidadMock: any = {
     obtener: (id: number) => of(id === 5
-      ? { idUniversidad: 5, nombre: 'Universidad Uno', sigla: 'UU', calle: null, barrio: null, numeroDireccion: null, ciudad: null }
+      ? { idUniversidad: 5, nombre: 'Universidad Uno', sigla: 'UU', calle: 'c', barrio: 'b', ciudad: null }
       : undefined)
   };
   const estudianteMock: any = {};

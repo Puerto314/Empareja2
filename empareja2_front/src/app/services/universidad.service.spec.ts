@@ -7,7 +7,7 @@ import { API_URL } from '../config/api.config';
 import { ResumenUniversidadesModel, UniversidadModel } from '../models/universidad.model';
 
 const uni = (idUniversidad: number, nombre: string): UniversidadModel => ({
-  idUniversidad, nombre, sigla: nombre.slice(0, 3).toUpperCase(), calle: null, barrio: null, numeroDireccion: null, ciudad: null
+  idUniversidad, nombre, sigla: nombre.slice(0, 3).toUpperCase(), calle: 'c', barrio: 'b', ciudad: null
 });
 const est = (id: number, ...unis: number[]) => ({
   id, nombreCompleto: 'E' + id,

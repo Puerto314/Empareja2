@@ -42,9 +42,9 @@
         <article class="box">
           <h2>Redes sociales</h2>
           @for (r of st.redes; track r.idRedSocial) {
-            <a class="mini-row red" [href]="r.urlPerfil" target="_blank" rel="noopener noreferrer">
-              <span><strong>{{ r.redSocial }}</strong><small>{{ r.alias || r.urlPerfil }}</small></span>
-            </a>
+            <div class="mini-row red">
+              <span><strong>{{ r.redSocial }}</strong><small>&#64;{{ r.nombreUsuario }}</small></span>
+            </div>
           } @empty { <p class="ph">Aún no ha agregado sus redes sociales.</p> }
         </article>
         <article class="box">

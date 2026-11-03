@@ -161,9 +161,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuarioRepository.existsByCorreo(request.correo())) {
             throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
         }
-        if (usuarioRepository.existsByTipoDocumentoAndDocumento(request.tipoDocumento(), request.documento())) {
-            throw new DuplicateResourceException("Ya existe un usuario con ese documento");
-        }
         if (request.contrasena() == null || request.contrasena().isBlank()) {
             throw new IllegalArgumentException("La contrasena es obligatoria al crear un usuario");
         }
@@ -184,10 +181,6 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         if (usuarioRepository.existsByCorreoAndIdNot(request.correo(), id)) {
             throw new DuplicateResourceException("Ya existe un usuario con ese correo/usuario");
-        }
-        if (usuarioRepository.existsByTipoDocumentoAndDocumentoAndIdNot(request.tipoDocumento(), request.documento(),
-                id)) {
-            throw new DuplicateResourceException("Ya existe un usuario con ese documento");
         }
         Rol rolFinal = request.rol() != null ? request.rol() : usuario.getRol();
         if (usuario.getRol() == Rol.ADMIN && rolFinal != Rol.ADMIN) {
@@ -217,7 +210,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     private void validarSegunRol(Rol rol, AdminUsuarioRequestDTO request) {
         if (rol == Rol.ESTUDIANTE) {
             perfilAssembler.validarCorreo(request.correo());
-            perfilAssembler.validarDocumento(request.tipoDocumento(), request.documento());
             perfilAssembler.exigirDatosDeEstudiante(request.fechaNacimiento(), request.estudios());
         }
         perfilAssembler.validarEdadMinima(request.fechaNacimiento());

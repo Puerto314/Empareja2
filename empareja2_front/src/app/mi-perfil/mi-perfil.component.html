@@ -21,9 +21,8 @@
       <section class="panel">
         <h2>Datos privados</h2>
         <dl>
-          <dt>Documento</dt><dd>{{ p.tipoDocumento }} {{ p.documento }}</dd>
+          <dt>Correo</dt><dd>{{ p.correo }}</dd>
           <dt>Fecha de nacimiento</dt><dd>{{ p.fechaNacimiento || '—' }}</dd>
-          <dt>Miembro desde</dt><dd>{{ p.fechaCreacion | date: 'dd/MM/yyyy' }}</dd>
         </dl>
       </section>
       <section class="panel">
@@ -32,7 +31,7 @@
           <dt>Edad</dt><dd>{{ p.edad ?? '—' }}</dd>
           <dt>Gustos</dt><dd>{{ p.intereses.length ? p.intereses.join(', ') : '—' }}</dd>
           @for (e of p.estudios; track e.idCarrera) { <dt>Estudios</dt><dd>{{ e.carrera }} · semestre {{ e.semestre }} · {{ e.universidad }}</dd> }
-          @for (r of p.redes; track r.idRedSocial) { <dt>{{ r.redSocial }}</dt><dd><a class="link" [href]="r.urlPerfil" target="_blank" rel="noopener noreferrer">{{ r.alias || r.urlPerfil }}</a></dd> }
+          @for (r of p.redes; track r.idRedSocial) { <dt>{{ r.redSocial }}</dt><dd>&#64;{{ r.nombreUsuario }}</dd> }
         </dl>
       </section>
       <section class="panel zona-peligro">

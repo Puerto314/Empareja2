@@ -6,7 +6,6 @@ import { ActualizarPerfilRequestModel, AdminUsuarioRequestModel } from '../model
 import { PerfilModel } from '../models/perfil.model';
 import { RegistroRequestModel } from '../models/registro-request.model';
 import { RolEnum } from '../models/rol.enum';
-import { TipoDocumentoEnum } from '../models/tipo-documento.enum';
 import { UniversidadModel } from '../models/universidad.model';
 import { CatalogoService } from '../services/catalogo.service';
 import { UniversidadService } from '../services/universidad.service';
@@ -15,7 +14,7 @@ export type ModoPerfilForm = 'registro' | 'edicion' | 'admin';
 export type PerfilFormValor = RegistroRequestModel | ActualizarPerfilRequestModel | AdminUsuarioRequestModel;
 
 interface FilaEstudio { idUniversidad: number | null; idCarrera: number | null; semestre: number | null; }
-interface FilaRed { idRedSocial: number | null; urlPerfil: string; alias: string; }
+interface FilaRed { idRedSocial: number | null; nombreUsuario: string; }
 
 const EDAD_MINIMA = 18; // igual a Usuario.EDAD_MINIMA del backend
 
@@ -53,9 +52,7 @@ export class PerfilFormComponent implements OnInit, OnChanges {
   correo = '';
   contrasena = '';
   rol: RolEnum = RolEnum.ESTUDIANTE;
-  tipoDocumento: TipoDocumentoEnum = TipoDocumentoEnum.CC;
-  documento = '';
-  genero: GeneroEnum | '' = '';
+  genero: GeneroEnum | '' = GeneroEnum.NO_ESPECIFICA;
   nombre = '';
   apellido = '';
   fechaNacimiento = '';
@@ -67,12 +64,6 @@ export class PerfilFormComponent implements OnInit, OnChanges {
   get esEstudiante(): boolean { return this.modo !== 'admin' || this.rol === RolEnum.ESTUDIANTE; }
   get pideCuenta(): boolean { return this.modo !== 'edicion'; }
   get editandoExistente(): boolean { return this.inicial !== null; }
-  // TI es de menores de edad: el backend la rechaza para estudiantes (se deja solo para cuentas de admin).
-  get tiposDocumento(): TipoDocumentoEnum[] {
-    return this.modo === 'admin' && this.rol === RolEnum.ADMIN
-      ? [TipoDocumentoEnum.CC, TipoDocumentoEnum.CE, TipoDocumentoEnum.PASAPORTE, TipoDocumentoEnum.TI]
-      : [TipoDocumentoEnum.CC, TipoDocumentoEnum.CE, TipoDocumentoEnum.PASAPORTE];
-  }
 
   ngOnInit(): void {
     forkJoin({
@@ -100,16 +91,14 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     this.correo = p.correo;
     this.contrasena = '';
     this.rol = p.rol;
-    this.tipoDocumento = p.tipoDocumento ?? TipoDocumentoEnum.CC;
-    this.documento = p.documento ?? '';
-    this.genero = p.genero ?? '';
+    this.genero = p.genero ?? GeneroEnum.NO_ESPECIFICA;
     this.nombre = p.nombre;
     this.apellido = p.apellido;
     this.fechaNacimiento = p.fechaNacimiento ?? '';
     this.fotoPerfil = p.fotoPerfil ?? '';
     this.interesesTexto = p.intereses.join(', ');
     this.estudios = p.estudios.map(e => ({ idUniversidad: e.idUniversidad, idCarrera: e.idCarrera, semestre: e.semestre }));
-    this.redes = p.redes.map(r => ({ idRedSocial: r.idRedSocial, urlPerfil: r.urlPerfil, alias: r.alias ?? '' }));
+    this.redes = p.redes.map(r => ({ idRedSocial: r.idRedSocial, nombreUsuario: r.nombreUsuario }));
   }
 
   carrerasDe(idUniversidad: number | null): OfertaModel[] {
@@ -118,8 +107,7 @@ export class PerfilFormComponent implements OnInit, OnChanges {
 
   cambiarUniversidad(fila: FilaEstudio): void { fila.idCarrera = null; }
   agregarEstudio(): void { this.estudios.push({ idUniversidad: null, idCarrera: null, semestre: null }); }
-  quitarEstudio(i: number): void { this.estudios.splice(i, 1); }
-  agregarRed(): void { this.redes.push({ idRedSocial: null, urlPerfil: '', alias: '' }); }
+  agregarRed(): void { this.redes.push({ idRedSocial: null, nombreUsuario: '' }); }
   quitarRed(i: number): void { this.redes.splice(i, 1); }
 
   private intereses(): string[] {
@@ -151,15 +139,6 @@ export class PerfilFormComponent implements OnInit, OnChanges {
       if (!sinClave && (this.contrasena.length < 8 || this.contrasena.length > 72)) {
         return 'La contraseña debe tener entre 8 y 72 caracteres.';
       }
-      const doc = this.documento.trim();
-      if (!doc) { return 'Escribe el número de documento.'; }
-      if (this.esEstudiante) {
-        if (this.tipoDocumento === TipoDocumentoEnum.PASAPORTE ? !/^[A-Za-z0-9]{6,15}$/.test(doc) : !/^\d{5,15}$/.test(doc)) {
-          return this.tipoDocumento === TipoDocumentoEnum.PASAPORTE
-            ? 'El pasaporte debe tener entre 6 y 15 letras o números.'
-            : 'El documento debe tener entre 5 y 15 dígitos.';
-        }
-      }
     }
     if (!this.nombre.trim()) { return 'Escribe tu nombre.'; }
     if (!this.apellido.trim()) { return 'Escribe tu apellido.'; }
@@ -172,22 +151,19 @@ export class PerfilFormComponent implements OnInit, OnChanges {
       return 'La foto de perfil debe ser un enlace que empiece por http:// o https://.';
     }
     if (this.esEstudiante) {
-      if (this.estudios.length === 0) { return 'Agrega al menos una carrera y universidad.'; }
-      const carreras = new Set<number>();
-      for (const e of this.estudios) {
-        if (e.idUniversidad === null || e.idCarrera === null || e.semestre === null) {
-          return 'Completa universidad, carrera y semestre en cada estudio.';
-        }
-        if (e.semestre < 1 || e.semestre > 20) { return 'El semestre debe estar entre 1 y 20.'; }
-        if (carreras.has(e.idCarrera)) { return 'No repitas la misma carrera.'; }
-        carreras.add(e.idCarrera);
+      if (this.estudios.length !== 1) { return 'Indica tu universidad, carrera y semestre.'; }
+      const e = this.estudios[0];
+      if (e.idUniversidad === null || e.idCarrera === null || e.semestre === null) {
+        return 'Completa universidad, carrera y semestre.';
       }
+      if (e.semestre < 1 || e.semestre > 20) { return 'El semestre debe estar entre 1 y 20.'; }
     }
     const idsRed = new Set<number>();
     for (const r of this.redes) {
-      if (r.idRedSocial === null || !/^https?:\/\/\S+$/.test(r.urlPerfil.trim())) {
-        return 'Cada red social necesita la red y un enlace que empiece por http:// o https://.';
+      if (r.idRedSocial === null || !r.nombreUsuario.trim()) {
+        return 'Cada red social necesita la red y tu nombre de usuario en ella.';
       }
+      if (r.nombreUsuario.trim().length > 50) { return 'El nombre de usuario de una red social admite máximo 50 caracteres.'; }
       if (idsRed.has(r.idRedSocial)) { return 'No repitas la misma red social.'; }
       idsRed.add(r.idRedSocial);
     }
@@ -199,11 +175,11 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     this.errorLocal.set(problema);
     if (problema) { return; }
     const estudios = this.estudios.map(e => ({ idCarrera: e.idCarrera as number, idUniversidad: e.idUniversidad as number, semestre: e.semestre as number }));
-    const redes = this.redes.map(r => ({ idRedSocial: r.idRedSocial as number, urlPerfil: r.urlPerfil.trim(), ...(r.alias.trim() ? { alias: r.alias.trim() } : {}) }));
+    const redes = this.redes.map(r => ({ idRedSocial: r.idRedSocial as number, nombreUsuario: r.nombreUsuario.trim() }));
     const comun = {
       nombre: this.nombre.trim(),
       apellido: this.apellido.trim(),
-      genero: this.genero || undefined,
+      genero: (this.genero || GeneroEnum.NO_ESPECIFICA) as GeneroEnum,
       fechaNacimiento: this.fechaNacimiento || undefined,
       fotoPerfil: this.fotoPerfil.trim(),
       intereses: this.intereses(),
@@ -215,13 +191,12 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     } else if (this.modo === 'registro') {
       this.enviar.emit({
         ...comun, correo: this.correo.trim(), contrasena: this.contrasena,
-        tipoDocumento: this.tipoDocumento, documento: this.documento.trim(), fechaNacimiento: this.fechaNacimiento
+        fechaNacimiento: this.fechaNacimiento
       } as RegistroRequestModel);
     } else {
       this.enviar.emit({
         ...comun, correo: this.correo.trim(), rol: this.rol,
-        ...(this.contrasena ? { contrasena: this.contrasena } : {}),
-        tipoDocumento: this.tipoDocumento, documento: this.documento.trim()
+        ...(this.contrasena ? { contrasena: this.contrasena } : {})
       } as AdminUsuarioRequestModel);
     }
   }

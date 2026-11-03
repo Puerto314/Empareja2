@@ -35,7 +35,6 @@ import co.edu.unbosque.empareja2.dto.request.RegistroRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.AuthResponseDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.mapper.UsuarioMapper;
@@ -71,12 +70,11 @@ class AuthServiceImplTest {
         service = new AuthServiceImpl(usuarioRepository, new UsuarioMapper(), perfilAssembler, passwordEncoder,
                 jwtService, authenticationManager, userDetailsService);
 
-        registro = new RegistroRequestDTO("ana@mail.com", "secreto123", TipoDocumento.CC, "123", Genero.FEMENINO,
+        registro = new RegistroRequestDTO("ana@mail.com", "secreto123", Genero.FEMENINO,
                 "Ana", "Garcia", LocalDate.now().minusYears(21), null, Set.of("cine"),
                 List.of(new EstudioRequestDTO(1L, 10L, 3)), List.of());
 
         when(usuarioRepository.existsByCorreo(any())).thenReturn(false);
-        when(usuarioRepository.existsByTipoDocumentoAndDocumento(any(), any())).thenReturn(false);
         when(passwordEncoder.encode("secreto123")).thenReturn("ENC");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
             Usuario u = inv.getArgument(0);
@@ -126,11 +124,15 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void registroConDocumentoRepetidoLanzaConflicto() {
-        when(usuarioRepository.existsByTipoDocumentoAndDocumento(TipoDocumento.CC, "123")).thenReturn(true);
+    void registroConMasDeUnEstudioSeRechazaYNoGuarda() {
+        RegistroRequestDTO dos = new RegistroRequestDTO("ana@mail.com", "secreto123", Genero.FEMENINO, "Ana", "Garcia",
+                LocalDate.now().minusYears(21), null, Set.of("cine"),
+                List.of(new EstudioRequestDTO(1L, 10L, 3), new EstudioRequestDTO(2L, 10L, 3)), List.of());
+        doThrow(new IllegalArgumentException("Debes indicar exactamente una carrera y universidad"))
+                .when(perfilAssembler).exigirDatosDeEstudiante(any(), any());
 
-        assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(DuplicateResourceException.class)
-                .hasMessageContaining("documento");
+        assertThatThrownBy(() -> service.registrar(dos)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exactamente una");
         verify(usuarioRepository, never()).save(any());
     }
 

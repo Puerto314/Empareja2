@@ -54,7 +54,6 @@ co/edu/unbosque/empareja2/service/ReaccionService.class
 co/edu/unbosque/empareja2/entity/Reporte.class
 co/edu/unbosque/empareja2/security/CustomUserDetailsService.class
 co/edu/unbosque/empareja2/repository/UsuarioRepository.class
-co/edu/unbosque/empareja2/dto/request/RedSocialRequestDTO.class
 co/edu/unbosque/empareja2/service/AuthService.class
 co/edu/unbosque/empareja2/dto/request/OfreceRequestDTO.class
 co/edu/unbosque/empareja2/repository/ConteoReacciones.class
@@ -71,7 +70,6 @@ co/edu/unbosque/empareja2/mapper/InteraccionMapper.class
 co/edu/unbosque/empareja2/service/impl/ComentarioServiceImpl.class
 co/edu/unbosque/empareja2/entity/Genero.class
 co/edu/unbosque/empareja2/dto/response/OfreceDTO.class
-co/edu/unbosque/empareja2/entity/TipoDocumento.class
 co/edu/unbosque/empareja2/dto/response/AuthResponseDTO.class
 co/edu/unbosque/empareja2/controller/ReporteController.class
 co/edu/unbosque/empareja2/mapper/UsuarioMapper.class

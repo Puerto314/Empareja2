@@ -6,7 +6,6 @@ import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CarreraRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RedSocialRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.CarreraDTO;
 import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
@@ -37,7 +36,6 @@ public interface CatalogoService {
 
     CarreraDTO crearCarrera(CarreraRequestDTO request);
 
-    RedSocialDTO crearRedSocial(RedSocialRequestDTO request);
 
     OfreceDTO crearOferta(OfreceRequestDTO request);
 
@@ -55,7 +53,6 @@ public interface CatalogoService {
 
     CarreraDTO actualizarCarrera(Long id, CarreraRequestDTO request);
 
-    RedSocialDTO actualizarRedSocial(Long id, RedSocialRequestDTO request);
 
     /** Cambia solo la facultad: la carrera y la universidad forman la llave. */
     OfreceDTO actualizarOferta(Long idCarrera, Long idUniversidad, ActualizarOfertaRequestDTO request);
@@ -70,7 +67,6 @@ public interface CatalogoService {
     void eliminarCarrera(Long id);
 
     /** No se puede eliminar una red social que algun usuario tiene en su perfil. */
-    void eliminarRedSocial(Long id);
 
     /** No se puede eliminar una oferta que algun estudiante esta cursando. */
     void eliminarOferta(Long idCarrera, Long idUniversidad);

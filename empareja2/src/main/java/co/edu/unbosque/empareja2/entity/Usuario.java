@@ -1,7 +1,6 @@
 package co.edu.unbosque.empareja2.entity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -9,18 +8,16 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * USUARIO. Atributos del modelo: tipo_documento, documento, correo,
- * contrasena_hash, genero, rol, nombre_completo (compuesto: nombre + apellido),
- * foto_perfil, edad (derivado de fecha_nacimiento), intereses (multivaluado) y
- * fecha_nacimiento.
+ * USUARIO. Atributos del modelo: correo, contrasena_hash, genero, rol (se
+ * deduce de la tabla administrador), nombre_completo (compuesto: nombre +
+ * apellido), foto_perfil, edad (derivado de fecha_nacimiento), intereses
+ * (multivaluado) y fecha_nacimiento.
  *
  * Notas de implementacion:
  * - "nombre_completo" y "edad" NO se guardan: se calculan (getNombreCompleto y
  * getEdad).
- * - "intereses" (multivaluado) se guarda en la tabla aparte usuario_interes.
- * - (tipo_documento, documento) es unico y es el identificador natural; se usa
- * ademas una llave sustituta "id_usuario" para simplificar las llaves foraneas
- * de las relaciones.
+ * - "intereses" (multivaluado) se guarda en la tabla aparte interes_estudiante.
+ * - El estudio (carrera + universidad + semestre) es UNO por estudiante.
  */
 public class Usuario {
 
@@ -29,9 +26,7 @@ public class Usuario {
 
     private Long id;
 
-    private TipoDocumento tipoDocumento;
 
-    private String documento;
 
     private String correo;
 
@@ -55,7 +50,6 @@ public class Usuario {
 
     private List<Tiene> redes = new ArrayList<>();
 
-    private LocalDateTime fechaCreacion;
 
     public Usuario() {
     }
@@ -87,21 +81,9 @@ public class Usuario {
         this.id = id;
     }
 
-    public TipoDocumento getTipoDocumento() {
-        return tipoDocumento;
-    }
 
-    public void setTipoDocumento(TipoDocumento tipoDocumento) {
-        this.tipoDocumento = tipoDocumento;
-    }
 
-    public String getDocumento() {
-        return documento;
-    }
 
-    public void setDocumento(String documento) {
-        this.documento = documento;
-    }
 
     public String getCorreo() {
         return correo;
@@ -191,11 +173,5 @@ public class Usuario {
         this.redes = redes;
     }
 
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
 }

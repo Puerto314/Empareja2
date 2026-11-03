@@ -6,8 +6,8 @@ import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Ciudad;
 import co.edu.unbosque.empareja2.entity.Direccion;
 import co.edu.unbosque.empareja2.entity.RedSocial;
+import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.TipoDocumento;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.entity.Usuario;
 
@@ -25,8 +25,7 @@ public final class TestData {
         u.setCorreo(correo);
         u.setContrasenaHash("hash-" + id);
         u.setRol(Rol.ESTUDIANTE);
-        u.setTipoDocumento(TipoDocumento.CC);
-        u.setDocumento("100" + id);
+        u.setGenero(Genero.NO_ESPECIFICA);
         u.setNombre(nombre);
         u.setApellido(apellido);
         u.setFechaNacimiento(LocalDate.now().minusYears(22));
@@ -40,14 +39,14 @@ public final class TestData {
     }
 
     public static Universidad universidad(Long id, String nombre, String sigla) {
-        Universidad u = new Universidad(nombre, sigla, new Direccion("Calle 1", "Centro", "10-20"),
+        Universidad u = new Universidad(nombre, sigla, new Direccion("Calle 1", "Centro"),
                 ciudad(1L, "Bogota"));
         u.setIdUniversidad(id);
         return u;
     }
 
     public static Carrera carrera(Long id, String nombre) {
-        Carrera c = new Carrera(nombre);
+        Carrera c = new Carrera(nombre, "Facultad de " + nombre);
         c.setIdCarrera(id);
         return c;
     }

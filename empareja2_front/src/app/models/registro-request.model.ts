@@ -1,5 +1,4 @@
 import { GeneroEnum } from './genero.enum';
-import { TipoDocumentoEnum } from './tipo-documento.enum';
 
 export interface EstudioRequestModel {
   idCarrera: number;
@@ -9,18 +8,15 @@ export interface EstudioRequestModel {
 
 export interface RedPerfilRequestModel {
   idRedSocial: number;
-  urlPerfil: string;
-  alias?: string;
+  nombreUsuario: string;
 }
 
 // Refleja RegistroRequestDTO. La contraseña debe tener entre 8 y 72 caracteres y
-// se requiere al menos un estudio (carrera + universidad + semestre).
+// se requiere EXACTAMENTE un estudio (carrera + universidad + semestre).
 export interface RegistroRequestModel {
   correo: string;
   contrasena: string;
-  tipoDocumento: TipoDocumentoEnum;
-  documento: string;
-  genero?: GeneroEnum;
+  genero: GeneroEnum;
   nombre: string;
   apellido: string;
   fechaNacimiento: string; // AAAA-MM-DD

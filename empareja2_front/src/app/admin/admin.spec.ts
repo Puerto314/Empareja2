@@ -158,16 +158,16 @@ describe('Admin · catálogos', () => {
   beforeEach(() => {
     llamadas.length = 0;
     cat.ciudades = () => of([{ idCiudad: 1, nombre: 'Bogota', departamento: 'Cundinamarca' }]);
-    cat.carreras = () => of([{ idCarrera: 5, nombre: 'Medicina' }]);
+    cat.carreras = () => of([{ idCarrera: 5, nombre: 'Medicina', facultad: 'Salud' }]);
     cat.redesSociales = () => of([{ idRedSocial: 3, nombreRedSocial: 'X', url: 'https://x.com' }]);
     cat.oferta = () => of([{ idCarrera: 5, carrera: 'Medicina', idUniversidad: 2, universidad: 'Uni', facultad: 'Salud' }]);
     cat.ciudad = (id: number) => of({ idCiudad: id, nombre: 'Fresca', departamento: 'D' });
-    cat.carrera = (id: number) => of({ idCarrera: id, nombre: 'Fresca' });
+    cat.carrera = (id: number) => of({ idCarrera: id, nombre: 'Fresca', facultad: 'F' });
     cat.redSocial = (id: number) => of({ idRedSocial: id, nombreRedSocial: 'Fresca', url: 'https://f.co' });
-    uni.listar = (n?: string) => { llamadas.push('listar ' + (n ?? '')); return of([{ idUniversidad: 2, nombre: 'Uni', sigla: 'U', calle: null, barrio: null, numeroDireccion: null, ciudad: { idCiudad: 1, nombre: 'Bogota', departamento: 'C' } }]); };
-    uni.obtener = (id: number) => of({ idUniversidad: id, nombre: 'Fresca', sigla: 'F', calle: 'c', barrio: 'b', numeroDireccion: '1', ciudad: { idCiudad: 1, nombre: 'Bogota', departamento: 'C' } });
+    uni.listar = (n?: string) => { llamadas.push('listar ' + (n ?? '')); return of([{ idUniversidad: 2, nombre: 'Uni', sigla: 'U', calle: null, barrio: null, ciudad: { idCiudad: 1, nombre: 'Bogota', departamento: 'C' } }]); };
+    uni.obtener = (id: number) => of({ idUniversidad: id, nombre: 'Fresca', sigla: 'F', calle: 'c', barrio: 'b', ciudad: { idCiudad: 1, nombre: 'Bogota', departamento: 'C' } });
     for (const m of ['crearCiudad', 'actualizarCiudad', 'eliminarCiudad', 'crearUniversidad', 'actualizarUniversidad', 'eliminarUniversidad', 'crearCarrera', 'actualizarCarrera',
-      'eliminarCarrera', 'crearRedSocial', 'actualizarRedSocial', 'eliminarRedSocial', 'crearOferta', 'actualizarOferta', 'eliminarOferta']) {
+      'eliminarCarrera', 'crearOferta', 'actualizarOferta', 'eliminarOferta']) {
       a[m] = (...args: unknown[]) => { llamadas.push(m + ' ' + JSON.stringify(args)); return of({}); };
     }
   });
@@ -196,28 +196,25 @@ describe('Admin · catálogos', () => {
     c.busquedaUni = 'bosque';
     c.cargar();
     expect(llamadas).toContain('listar bosque');
-    c.fUni = { id: null, nombre: 'Nueva', sigla: 'N', calle: '', barrio: '', numeroDireccion: '', idCiudad: 1 };
+    c.fUni = { id: null, nombre: 'Nueva', sigla: 'N', calle: 'Cra 1', barrio: 'Centro', idCiudad: 1 };
     c.guardarUniversidad();
     c.editarUniversidad(c.universidades()[0]);
     expect(c.fUni.id).toBe(2);
     c.guardarUniversidad();
     c.eliminarUniversidad(c.universidades()[0]);
     const m = llamadas.filter(l => /Universidad/.test(l));
-    expect(m[0]).toBe('crearUniversidad [{"nombre":"Nueva","sigla":"N","idCiudad":1}]');
+    expect(m[0]).toBe('crearUniversidad [{"nombre":"Nueva","sigla":"N","idCiudad":1,"calle":"Cra 1","barrio":"Centro"}]');
     expect(m[1]).toContain('actualizarUniversidad [2,');
     expect(m[2]).toBe('eliminarUniversidad [2]');
   });
 
-  it('carreras y redes sociales: crean, editan y eliminan', async () => {
+  it('carreras: crean (con facultad), editan y eliminan', async () => {
     const c = (await crear()).componentInstance as AdminCatalogosComponent;
-    c.fCarrera = { id: null, nombre: 'Derecho' }; c.guardarCarrera();
-    c.editarCarrera({ idCarrera: 5, nombre: 'Medicina' }); c.guardarCarrera();
-    c.eliminarCarrera({ idCarrera: 5, nombre: 'Medicina' });
-    c.fRed = { id: null, nombreRedSocial: 'Threads', url: 'https://threads.net' }; c.guardarRed();
-    c.editarRed({ idRedSocial: 3, nombreRedSocial: 'X', url: 'https://x.com' }); c.guardarRed();
-    c.eliminarRed({ idRedSocial: 3, nombreRedSocial: 'X', url: 'https://x.com' });
+    c.fCarrera = { id: null, nombre: 'Derecho', facultad: 'Leyes' }; c.guardarCarrera();
+    c.editarCarrera({ idCarrera: 5, nombre: 'Medicina', facultad: 'Salud' }); c.guardarCarrera();
+    c.eliminarCarrera({ idCarrera: 5, nombre: 'Medicina', facultad: 'Salud' });
     const m = llamadas.filter(l => !l.startsWith('listar'));
-    expect(m.map(x => x.split(' ')[0])).toEqual(['crearCarrera', 'actualizarCarrera', 'eliminarCarrera', 'crearRedSocial', 'actualizarRedSocial', 'eliminarRedSocial']);
+    expect(m.map(x => x.split(' ')[0])).toEqual(['crearCarrera', 'actualizarCarrera', 'eliminarCarrera']);
   });
 
   it('oferta: crea, corrige la facultad y elimina por (carrera, universidad)', async () => {
@@ -227,12 +224,12 @@ describe('Admin · catálogos', () => {
     c.fOferta.facultad = 'Ciencias de la Salud'; c.guardarOferta();
     c.eliminarOferta(c.oferta()[0]);
     const m = llamadas.filter(l => !l.startsWith('listar'));
-    expect(m).toEqual(['crearOferta [{"idCarrera":5,"idUniversidad":2,"facultad":"Salud"}]', 'actualizarOferta [5,2,"Ciencias de la Salud"]', 'eliminarOferta [5,2]']);
+    expect(m).toEqual(['crearOferta [{"idCarrera":5,"idUniversidad":2}]', 'actualizarOferta [5,2,"Ciencias de la Salud"]', 'eliminarOferta [5,2]']);
   });
 
   it('valida campos vacíos sin llamar al back', async () => {
     const c = (await crear()).componentInstance as AdminCatalogosComponent;
-    c.guardarCiudad(); c.guardarUniversidad(); c.guardarCarrera(); c.guardarRed(); c.guardarOferta();
+    c.guardarCiudad(); c.guardarUniversidad(); c.guardarCarrera(); c.guardarOferta();
     expect(llamadas.filter(l => !l.startsWith('listar'))).toEqual([]);
     expect(c.error()).not.toBe('');
   });

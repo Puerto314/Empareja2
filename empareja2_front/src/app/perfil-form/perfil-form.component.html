@@ -18,14 +18,6 @@
             </select>
           </label>
         }
-        <label class="field">Tipo de documento
-          <select name="tipoDocumento" [(ngModel)]="tipoDocumento">
-            @for (t of tiposDocumento; track t) { <option [ngValue]="t">{{ t }}</option> }
-          </select>
-        </label>
-        <label class="field">Número de documento
-          <input type="text" name="documento" [(ngModel)]="documento" inputmode="numeric">
-        </label>
       </div>
     </fieldset>
   }
@@ -44,7 +36,6 @@
       </label>
       <label class="field">Género
         <select name="genero" [(ngModel)]="genero">
-          <option value="">Sin indicar</option>
           @for (g of generos; track g.v) { <option [value]="g.v">{{ g.t }}</option> }
         </select>
       </label>
@@ -59,7 +50,7 @@
 
   @if (esEstudiante) {
     <fieldset class="grupo">
-      <legend>Dónde estudias</legend>
+      <legend>Dónde estudias <small>(una carrera)</small></legend>
       @for (e of estudios; track $index; let i = $index) {
         <div class="subbox row-fields">
           <label class="field">Universidad
@@ -77,10 +68,8 @@
           <label class="field">Semestre
             <input type="number" [name]="'sem' + i" min="1" max="20" [(ngModel)]="e.semestre">
           </label>
-          <button type="button" class="btn sec sm" (click)="quitarEstudio(i)" [disabled]="estudios.length === 1 && modo !== 'edicion'" aria-label="Quitar carrera">Quitar</button>
         </div>
       }
-      <div class="btn-row"><button type="button" class="btn sec sm" (click)="agregarEstudio()">+ Agregar otra carrera</button></div>
     </fieldset>
   }
 
@@ -94,11 +83,8 @@
             @for (d of redesDisponibles(); track d.idRedSocial) { <option [ngValue]="d.idRedSocial">{{ d.nombreRedSocial }}</option> }
           </select>
         </label>
-        <label class="field">Enlace a tu perfil
-          <input type="text" [name]="'url' + i" [(ngModel)]="r.urlPerfil" placeholder="https://...">
-        </label>
-        <label class="field">Alias <small>(opcional)</small>
-          <input type="text" [name]="'ali' + i" [(ngModel)]="r.alias" placeholder="@usuario">
+        <label class="field">Tu nombre de usuario en esa red
+          <input type="text" [name]="'usr' + i" [(ngModel)]="r.nombreUsuario" maxlength="50" placeholder="@usuario">
         </label>
         <button type="button" class="btn sec sm" (click)="quitarRed(i)" aria-label="Quitar red social">Quitar</button>
       </div>

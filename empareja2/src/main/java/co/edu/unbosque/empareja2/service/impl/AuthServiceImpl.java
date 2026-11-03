@@ -51,10 +51,7 @@ public class AuthServiceImpl implements AuthService {
         if (usuarioRepository.existsByCorreo(request.correo())) {
             throw new DuplicateResourceException("Ya existe un usuario registrado con ese correo");
         }
-        if (usuarioRepository.existsByTipoDocumentoAndDocumento(request.tipoDocumento(), request.documento())) {
-            throw new DuplicateResourceException("Ya existe un usuario registrado con ese documento");
-        }
-        perfilAssembler.validarDocumento(request.tipoDocumento(), request.documento());
+        perfilAssembler.exigirDatosDeEstudiante(request.fechaNacimiento(), request.estudios());
         perfilAssembler.validarEdadMinima(request.fechaNacimiento());
 
         Usuario usuario = usuarioMapper.toEntity(request, passwordEncoder.encode(request.contrasena()));

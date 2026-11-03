@@ -23,7 +23,6 @@ import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CarreraRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RedSocialRequestDTO;
 import co.edu.unbosque.empareja2.dto.request.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
 import co.edu.unbosque.empareja2.dto.response.OfreceDTO;
@@ -31,7 +30,6 @@ import co.edu.unbosque.empareja2.dto.response.UniversidadDTO;
 import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Ciudad;
 import co.edu.unbosque.empareja2.entity.Ofrece;
-import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
@@ -94,16 +92,15 @@ class CatalogoServiceImplTest {
         when(universidadRepository.save(any(Universidad.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UniversidadDTO dto = service
-                .crearUniversidad(new UniversidadRequestDTO("Uni Nueva", "UN", "Av 1", "Usaquen", "9-9", 1L));
+                .crearUniversidad(new UniversidadRequestDTO("Uni Nueva", "UN", "Av 1", "Usaquen", 1L));
 
         assertThat(dto.calle()).isEqualTo("Av 1");
         assertThat(dto.barrio()).isEqualTo("Usaquen");
-        assertThat(dto.numeroDireccion()).isEqualTo("9-9");
     }
 
     @Test
     void crearUniversidadRechazaNombreSiglaRepetidosOCiudadInexistente() {
-        UniversidadRequestDTO req = new UniversidadRequestDTO("Uni", "UN", null, null, null, 1L);
+        UniversidadRequestDTO req = new UniversidadRequestDTO("Uni", "UN", "Calle 1", "Centro", 1L);
 
         when(universidadRepository.existsByNombreIgnoreCase("Uni")).thenReturn(true);
         assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(DuplicateResourceException.class);
@@ -122,12 +119,23 @@ class CatalogoServiceImplTest {
     void crearCarreraRechazaRepetida() {
         when(carreraRepository.existsByNombreIgnoreCase("Medicina")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.crearCarrera(new CarreraRequestDTO("Medicina")))
+        assertThatThrownBy(() -> service.crearCarrera(new CarreraRequestDTO("Medicina", "Facultad de Medicina")))
                 .isInstanceOf(DuplicateResourceException.class);
     }
 
     @Test
-    void crearOfertaRegistraLaFacultad() {
+    void crearCarreraGuardaLaFacultad() {
+        when(carreraRepository.existsByNombreIgnoreCase("Fisica")).thenReturn(false);
+        when(carreraRepository.save(any(Carrera.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var dto = service.crearCarrera(new CarreraRequestDTO(" Fisica ", " Facultad de Ciencias "));
+
+        assertThat(dto.nombre()).isEqualTo("Fisica");
+        assertThat(dto.facultad()).isEqualTo("Facultad de Ciencias");
+    }
+
+    @Test
+    void crearOfertaTomaLaFacultadDeLaCarrera() {
         Carrera carrera = TestData.carrera(1L, "Medicina");
         Universidad uni = TestData.universidad(10L, "Universidad El Bosque", "UNBOSQUE");
         when(carreraRepository.findById(1L)).thenReturn(Optional.of(carrera));
@@ -135,7 +143,7 @@ class CatalogoServiceImplTest {
         when(ofreceRepository.existsByCarreraAndUniversidad(1L, 10L)).thenReturn(false);
         when(ofreceRepository.save(any(Ofrece.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        OfreceDTO dto = service.crearOferta(new OfreceRequestDTO(1L, 10L, " Facultad de Medicina "));
+        OfreceDTO dto = service.crearOferta(new OfreceRequestDTO(1L, 10L));
 
         assertThat(dto.facultad()).isEqualTo("Facultad de Medicina");
         assertThat(dto.carrera()).isEqualTo("Medicina");
@@ -148,12 +156,12 @@ class CatalogoServiceImplTest {
         when(universidadRepository.findById(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "U")));
         when(ofreceRepository.existsByCarreraAndUniversidad(1L, 10L)).thenReturn(true);
-        assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 10L, "F")))
+        assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 10L)))
                 .isInstanceOf(DuplicateResourceException.class);
 
-        assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(9L, 10L, "F")))
+        assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(9L, 10L)))
                 .isInstanceOf(ResourceNotFoundException.class);
-        assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 9L, "F")))
+        assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 9L)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -188,7 +196,7 @@ class CatalogoServiceImplTest {
         when(ciudadRepository.findById(2L)).thenReturn(Optional.of(TestData.ciudad(2L, "Medellin")));
 
         UniversidadDTO dto = service
-                .actualizarUniversidad(10L, new UniversidadRequestDTO("Uni Nueva", "UNN", "Av 9", "Centro", "1-2", 2L));
+                .actualizarUniversidad(10L, new UniversidadRequestDTO("Uni Nueva", "UNN", "Av 9", "Centro", 2L));
 
         assertThat(dto.nombre()).isEqualTo("Uni Nueva");
         assertThat(dto.calle()).isEqualTo("Av 9");
@@ -200,7 +208,7 @@ class CatalogoServiceImplTest {
     void actualizarUniversidadRechazaNombreOSiglaDeOtra() {
         when(universidadRepository.findById(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "UN")));
-        UniversidadRequestDTO req = new UniversidadRequestDTO("Otra", "OT", null, null, null, 1L);
+        UniversidadRequestDTO req = new UniversidadRequestDTO("Otra", "OT", "Calle 1", "Centro", 1L);
 
         when(universidadRepository.existsByNombreAndIdNot("Otra", 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.actualizarUniversidad(10L, req))
@@ -214,20 +222,18 @@ class CatalogoServiceImplTest {
     }
 
     @Test
-    void actualizarCarreraYRedSocial() {
+    void actualizarCarreraCambiaNombreYFacultad() {
         when(carreraRepository.findById(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
-        when(redSocialRepository.findById(5L)).thenReturn(Optional.of(TestData.redSocial(5L, "Instagram")));
 
-        assertThat(service.actualizarCarrera(1L, new CarreraRequestDTO(" Medicina General ")).nombre())
-                .isEqualTo("Medicina General");
-        assertThat(service.actualizarRedSocial(5L, new RedSocialRequestDTO("Insta", "https://insta.com")).url())
-                .isEqualTo("https://insta.com");
+        var dto = service.actualizarCarrera(1L, new CarreraRequestDTO(" Medicina General ", " Ciencias de la Salud "));
+
+        assertThat(dto.nombre()).isEqualTo("Medicina General");
+        assertThat(dto.facultad()).isEqualTo("Ciencias de la Salud");
         verify(carreraRepository).update(any(Carrera.class));
-        verify(redSocialRepository).update(any(RedSocial.class));
     }
 
     @Test
-    void actualizarOfertaCambiaSoloLaFacultad() {
+    void actualizarOfertaCambiaLaFacultadDeLaCarrera() {
         Ofrece oferta = new Ofrece(TestData.carrera(1L, "Medicina"),
                 TestData.universidad(10L, "Uni", "UN"), "Vieja");
         when(ofreceRepository.findByIds(1L, 10L)).thenReturn(Optional.of(oferta));
@@ -235,7 +241,8 @@ class CatalogoServiceImplTest {
         OfreceDTO dto = service.actualizarOferta(1L, 10L, new ActualizarOfertaRequestDTO(" Ciencias de la Salud "));
 
         assertThat(dto.facultad()).isEqualTo("Ciencias de la Salud");
-        verify(ofreceRepository).update(oferta);
+        assertThat(oferta.getCarrera().getFacultad()).isEqualTo("Ciencias de la Salud");
+        verify(carreraRepository).update(oferta.getCarrera());
     }
 
     // ---- eliminacion ----
@@ -290,19 +297,6 @@ class CatalogoServiceImplTest {
         service.eliminarCarrera(1L);
         verify(ofreceRepository).eliminarPorCarrera(1L);
         verify(carreraRepository).deleteById(1L);
-    }
-
-    @Test
-    void eliminarRedSocialEnUsoDa409() {
-        when(redSocialRepository.findById(5L)).thenReturn(Optional.of(TestData.redSocial(5L, "Instagram")));
-        when(redSocialRepository.contarUsos(5L)).thenReturn(4L);
-
-        assertThatThrownBy(() -> service.eliminarRedSocial(5L)).isInstanceOf(OperationNotAllowedException.class);
-        verify(redSocialRepository, never()).deleteById(any());
-
-        when(redSocialRepository.contarUsos(5L)).thenReturn(0L);
-        service.eliminarRedSocial(5L);
-        verify(redSocialRepository).deleteById(5L);
     }
 
     @Test

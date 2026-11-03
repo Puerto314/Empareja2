@@ -12,9 +12,8 @@ export interface UniversidadModel {
   idUniversidad: number;
   nombre: string;
   sigla: string;
-  calle: string | null;
-  barrio: string | null;
-  numeroDireccion: string | null;
+  calle: string;
+  barrio: string;
   ciudad: CiudadModel | null;
 }
 

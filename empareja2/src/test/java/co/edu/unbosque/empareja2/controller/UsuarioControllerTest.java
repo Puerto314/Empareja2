@@ -97,7 +97,6 @@ class UsuarioControllerTest extends ControllerTestSupport {
         when(usuarioService.listarCatalogo("ana@mail.com", null)).thenReturn(List.of(publico(2, "Luis")));
 
         mvc.perform(get("/api/usuarios").principal(ANA)).andExpect(jsonPath("0.correo").doesNotExist())
-                .andExpect(jsonPath("0.documento").doesNotExist())
                 .andExpect(jsonPath("0.fechaNacimiento").doesNotExist())
                 .andExpect(jsonPath("0.contrasenaHash").doesNotExist());
     }
@@ -124,7 +123,7 @@ class UsuarioControllerTest extends ControllerTestSupport {
 
     @Test
     void actualizarPerfilConDatosInvalidosDa400ConDetalle() throws Exception {
-        ActualizarPerfilRequestDTO invalido = new ActualizarPerfilRequestDTO(" ", "Gomez", null,
+        ActualizarPerfilRequestDTO invalido = new ActualizarPerfilRequestDTO(" ", "Gomez", Genero.FEMENINO,
                 LocalDate.now().plusDays(1), null, Set.of(), List.of(), null);
 
         mvc.perform(put("/api/usuarios/me").principal(ANA).contentType(MediaType.APPLICATION_JSON)
