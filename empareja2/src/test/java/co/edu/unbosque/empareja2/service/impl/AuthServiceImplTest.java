@@ -29,10 +29,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.LoginRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RegistroRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.AuthResponseDTO;
+import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
+import co.edu.unbosque.empareja2.dto.LoginRequestDTO;
+import co.edu.unbosque.empareja2.dto.RegistroRequestDTO;
+import co.edu.unbosque.empareja2.dto.AuthResponseDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.Usuario;
@@ -74,9 +74,9 @@ class AuthServiceImplTest {
                 "Ana", "Garcia", LocalDate.now().minusYears(21), null, Set.of("cine"),
                 List.of(new EstudioRequestDTO(1L, 10L, 3)), List.of());
 
-        when(usuarioRepository.existsByCorreo(any())).thenReturn(false);
+        when(usuarioRepository.existePorCorreo(any())).thenReturn(false);
         when(passwordEncoder.encode("secreto123")).thenReturn("ENC");
-        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+        when(usuarioRepository.guardar(any(Usuario.class))).thenAnswer(inv -> {
             Usuario u = inv.getArgument(0);
             u.setId(1L);
             return u;
@@ -91,24 +91,24 @@ class AuthServiceImplTest {
         AuthResponseDTO respuesta = service.registrar(registro);
 
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
+        verify(usuarioRepository).guardar(captor.capture());
         Usuario guardado = captor.getValue();
         assertThat(guardado.getContrasenaHash()).isEqualTo("ENC");
         assertThat(guardado.getRol()).isEqualTo(Rol.ESTUDIANTE);
         assertThat(guardado.getCorreo()).isEqualTo("ana@mail.com");
 
-        assertThat(respuesta.token()).isEqualTo("token-jwt");
-        assertThat(respuesta.tokenType()).isEqualTo("Bearer");
-        assertThat(respuesta.expiresInMs()).isEqualTo(86_400_000L);
-        assertThat(respuesta.usuario().correo()).isEqualTo("ana@mail.com");
-        assertThat(respuesta.usuario().nombreCompleto()).isEqualTo("Ana Garcia");
+        assertThat(respuesta.getToken()).isEqualTo("token-jwt");
+        assertThat(respuesta.getTokenType()).isEqualTo("Bearer");
+        assertThat(respuesta.getExpiresInMs()).isEqualTo(86_400_000L);
+        assertThat(respuesta.getUsuario().getCorreo()).isEqualTo("ana@mail.com");
+        assertThat(respuesta.getUsuario().getNombreCompleto()).isEqualTo("Ana Garcia");
     }
 
     @Test
     void registroDelegaLasColeccionesAlEnsamblador() {
         service.registrar(registro);
 
-        verify(perfilAssembler).validarEdadMinima(registro.fechaNacimiento());
+        verify(perfilAssembler).validarEdadMinima(registro.getFechaNacimiento());
         verify(perfilAssembler).aplicarIntereses(any(Usuario.class), any());
         verify(perfilAssembler).sincronizarEstudios(any(Usuario.class), any());
         verify(perfilAssembler).sincronizarRedes(any(Usuario.class), any());
@@ -116,11 +116,11 @@ class AuthServiceImplTest {
 
     @Test
     void registroConCorreoRepetidoLanzaConflicto() {
-        when(usuarioRepository.existsByCorreo("ana@mail.com")).thenReturn(true);
+        when(usuarioRepository.existePorCorreo("ana@mail.com")).thenReturn(true);
 
         assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("correo");
-        verify(usuarioRepository, never()).save(any());
+        verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
@@ -133,7 +133,7 @@ class AuthServiceImplTest {
 
         assertThatThrownBy(() -> service.registrar(dos)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("exactamente una");
-        verify(usuarioRepository, never()).save(any());
+        verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
@@ -142,19 +142,19 @@ class AuthServiceImplTest {
                 .validarEdadMinima(any());
 
         assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(IllegalArgumentException.class);
-        verify(usuarioRepository, never()).save(any());
+        verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
     void loginExitosoAutenticaYDevuelveToken() {
         Usuario existente = TestData.usuario(1L, "ana@mail.com", "Ana", "Garcia");
-        when(usuarioRepository.findByCorreo("ana@mail.com")).thenReturn(Optional.of(existente));
+        when(usuarioRepository.buscarPorCorreo("ana@mail.com")).thenReturn(Optional.of(existente));
 
         AuthResponseDTO respuesta = service.iniciarSesion(new LoginRequestDTO("ana@mail.com", "secreto123"));
 
         verify(authenticationManager).authenticate(new UsernamePasswordAuthenticationToken("ana@mail.com", "secreto123"));
-        assertThat(respuesta.token()).isEqualTo("token-jwt");
-        assertThat(respuesta.usuario().id()).isEqualTo(1L);
+        assertThat(respuesta.getToken()).isEqualTo("token-jwt");
+        assertThat(respuesta.getUsuario().getId()).isEqualTo(1L);
     }
 
     @Test

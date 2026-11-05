@@ -21,8 +21,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RedPerfilRequestDTO;
+import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
+import co.edu.unbosque.empareja2.dto.RedPerfilRequestDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Tiene;
 import co.edu.unbosque.empareja2.entity.Usuario;
@@ -54,16 +54,16 @@ class PerfilAssemblerTest {
     void preparar() {
         usuario = TestData.usuario(1L, "ana@mail.com", "Ana", "Garcia");
 
-        when(carreraRepository.findById(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
-        when(carreraRepository.findById(2L)).thenReturn(Optional.of(TestData.carrera(2L, "Derecho")));
-        when(universidadRepository.findById(10L))
+        when(carreraRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
+        when(carreraRepository.buscarPorId(2L)).thenReturn(Optional.of(TestData.carrera(2L, "Derecho")));
+        when(universidadRepository.buscarPorId(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Universidad El Bosque", "UNBOSQUE")));
-        when(universidadRepository.findById(20L))
+        when(universidadRepository.buscarPorId(20L))
                 .thenReturn(Optional.of(TestData.universidad(20L, "Universidad Nacional", "UNAL")));
-        when(ofreceRepository.existsByCarreraAndUniversidad(anyLong(), anyLong())).thenReturn(true);
+        when(ofreceRepository.existePorCarreraYUniversidad(anyLong(), anyLong())).thenReturn(true);
 
-        when(redSocialRepository.findById(5L)).thenReturn(Optional.of(TestData.redSocial(5L, "Instagram")));
-        when(redSocialRepository.findById(6L)).thenReturn(Optional.of(TestData.redSocial(6L, "Facebook")));
+        when(redSocialRepository.buscarPorId(5L)).thenReturn(Optional.of(TestData.redSocial(5L, "Instagram")));
+        when(redSocialRepository.buscarPorId(6L)).thenReturn(Optional.of(TestData.redSocial(6L, "Facebook")));
     }
 
     // ---- edad minima ----
@@ -159,7 +159,7 @@ class PerfilAssemblerTest {
 
     @Test
     void rechazaUniversidadQueNoOfreceLaCarrera() {
-        when(ofreceRepository.existsByCarreraAndUniversidad(1L, 10L)).thenReturn(false);
+        when(ofreceRepository.existePorCarreraYUniversidad(1L, 10L)).thenReturn(false);
         List<EstudioRequestDTO> lista = List.of(new EstudioRequestDTO(1L, 10L, 4));
 
         assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, lista))

@@ -1,11 +1,12 @@
 package co.edu.unbosque.empareja2.repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
@@ -17,55 +18,115 @@ import co.edu.unbosque.empareja2.entity.Ciudad;
 @Repository
 public class CiudadRepository {
 
-    private static final RowMapper<Ciudad> MAPPER = (rs, i) -> {
-        Ciudad c = new Ciudad(rs.getString("nombre_ciudad"), rs.getString("departamento"));
-        c.setIdCiudad(rs.getLong("id_ciudad"));
-        return c;
-    };
+    /** Consulta base: las columnas de la tabla ciudad. */
+    private static final String SELECT = "SELECT id_ciudad, nombre, departamento FROM ciudad ";
 
+    /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
-    private final SimpleJdbcInsert insert;
 
+    /** Inserta en la tabla ciudad y devuelve el id que genera la base de datos. */
+    private final SimpleJdbcInsert insertar;
+
+    /**
+     * Crea el repositorio.
+     *
+     * @param jdbc el JdbcTemplate conectado a la base de datos
+     */
     public CiudadRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.insert = new SimpleJdbcInsert(jdbc).withTableName("ciudad").usingGeneratedKeyColumns("id_ciudad");
+        this.insertar = new SimpleJdbcInsert(jdbc).withTableName("ciudad").usingGeneratedKeyColumns("id_ciudad");
     }
 
-    public Optional<Ciudad> findById(Long id) {
-        return jdbc.query("SELECT id_ciudad, nombre_ciudad, departamento FROM ciudad WHERE id_ciudad = ?", MAPPER, id)
-                .stream().findFirst();
+    /**
+     * Convierte la fila actual del resultado en una Ciudad.
+     *
+     * @param rs   el resultado de la consulta, posicionado en una fila
+     * @param fila el numero de la fila
+     * @return la ciudad de esa fila
+     * @throws SQLException si falla la lectura de una columna
+     */
+    private Ciudad mapear(ResultSet rs, int fila) throws SQLException {
+        Ciudad ciudad = new Ciudad(rs.getString("nombre"), rs.getString("departamento"));
+        ciudad.setIdCiudad(rs.getLong("id_ciudad"));
+        return ciudad;
     }
 
-    public boolean existsByNombreIgnoreCaseAndDepartamentoIgnoreCase(String nombre, String departamento) {
-        Integer n = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre_ciudad) = LOWER(?) AND LOWER(departamento) = LOWER(?)",
-                Integer.class, nombre, departamento);
-        return n != null && n > 0;
+    /**
+     * Busca una ciudad por su id.
+     *
+     * @param id el identificador de la ciudad
+     * @return la ciudad, o vacio si no existe
+     */
+    public Optional<Ciudad> buscarPorId(Long id) {
+        return jdbc.query(SELECT + "WHERE id_ciudad = ?", this::mapear, id).stream().findFirst();
     }
 
-    public List<Ciudad> findAllByOrderByNombreAsc() {
-        return jdbc.query("SELECT id_ciudad, nombre_ciudad, departamento FROM ciudad ORDER BY nombre_ciudad", MAPPER);
+    /**
+     * Lista todas las ciudades ordenadas por nombre.
+     *
+     * @return las ciudades
+     */
+    public List<Ciudad> listarTodas() {
+        return jdbc.query(SELECT + "ORDER BY nombre", this::mapear);
     }
 
-    public Ciudad save(Ciudad ciudad) {
-        Number id = insert.executeAndReturnKey(
-                Map.of("nombre_ciudad", ciudad.getNombre(), "departamento", ciudad.getDepartamento()));
+    /**
+     * Indica si ya existe una ciudad con ese nombre en ese departamento (sin
+     * distinguir mayusculas).
+     *
+     * @param nombre       el nombre de la ciudad
+     * @param departamento el departamento de la ciudad
+     * @return true si ya existe
+     */
+    public boolean existePorNombreYDepartamento(String nombre, String departamento) {
+        return Sql.contar(jdbc,
+                "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) AND LOWER(departamento) = LOWER(?)",
+                nombre, departamento) > 0;
+    }
+
+    /**
+     * Igual que existePorNombreYDepartamento pero ignorando una ciudad (para
+     * editar sin falso duplicado).
+     *
+     * @param nombre       el nombre de la ciudad
+     * @param departamento el departamento de la ciudad
+     * @param id           el id de la ciudad que se ignora
+     * @return true si existe otra ciudad igual
+     */
+    public boolean existePorNombreYDepartamentoExceptoId(String nombre, String departamento, Long id) {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) "
+                + "AND LOWER(departamento) = LOWER(?) AND id_ciudad <> ?", nombre, departamento, id) > 0;
+    }
+
+    /**
+     * Inserta una ciudad nueva y le asigna el id que genero la base de datos.
+     *
+     * @param ciudad la ciudad a guardar
+     * @return la misma ciudad, ya con su id
+     */
+    public Ciudad guardar(Ciudad ciudad) {
+        Number id = insertar
+                .executeAndReturnKey(Map.of("nombre", ciudad.getNombre(), "departamento", ciudad.getDepartamento()));
         ciudad.setIdCiudad(id.longValue());
         return ciudad;
     }
 
-    public boolean existsByNombreAndDepartamentoAndIdNot(String nombre, String departamento, Long id) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre_ciudad) = LOWER(?) "
-                + "AND LOWER(departamento) = LOWER(?) AND id_ciudad <> ?", Integer.class, nombre, departamento, id);
-        return n != null && n > 0;
-    }
-
-    public void update(Ciudad ciudad) {
-        jdbc.update("UPDATE ciudad SET nombre_ciudad = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
+    /**
+     * Actualiza el nombre y el departamento de una ciudad existente.
+     *
+     * @param ciudad la ciudad con los datos nuevos
+     */
+    public void actualizar(Ciudad ciudad) {
+        jdbc.update("UPDATE ciudad SET nombre = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
                 ciudad.getDepartamento(), ciudad.getIdCiudad());
     }
 
-    public void deleteById(Long id) {
+    /**
+     * Elimina una ciudad.
+     *
+     * @param id el identificador de la ciudad
+     */
+    public void eliminar(Long id) {
         jdbc.update("DELETE FROM ciudad WHERE id_ciudad = ?", id);
     }
 }

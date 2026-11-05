@@ -1,14 +1,17 @@
 package co.edu.unbosque.empareja2.repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import co.edu.unbosque.empareja2.dto.ConteoReaccionesDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
@@ -20,123 +23,209 @@ import co.edu.unbosque.empareja2.entity.Usuario;
 @Repository
 public class ReaccionRepository {
 
-    private static final String SELECT = "SELECT r.estudiante_id_usuario AS id_autor, r.numero_reaccion, r.estudiante_id_usuario1 AS id_destinatario, "
-            + "r.tipo_reaccion, r.fecha_hora_reaccion AS fecha_hora, a.nombre AS autor_nombre, "
+    /** Consulta base: la reaccion con el nombre y la foto de su autor. */
+    private static final String SELECT = "SELECT r.id_autor, r.numero AS numero_reaccion, r.id_destinatario, "
+            + "r.tipo AS tipo_reaccion, r.fecha_hora, a.nombre AS autor_nombre, "
             + "a.apellido AS autor_apellido, a.foto_perfil AS autor_foto "
-            + "FROM reaccion r JOIN usuario a ON a.id_usuario = r.estudiante_id_usuario ";
+            + "FROM reaccion r JOIN usuario a ON a.id_usuario = r.id_autor ";
 
-    private static final RowMapper<Reaccion> MAPPER = (rs, i) -> {
+    /** Consulta para administradores: ademas incluye el nombre del destinatario. */
+    private static final String SELECT_ADMIN = "SELECT r.id_autor, r.numero AS numero_reaccion, r.id_destinatario, "
+            + "r.tipo AS tipo_reaccion, r.fecha_hora, a.nombre AS autor_nombre, "
+            + "a.apellido AS autor_apellido, a.foto_perfil AS autor_foto, d.nombre AS dest_nombre, "
+            + "d.apellido AS dest_apellido FROM reaccion r "
+            + "JOIN usuario a ON a.id_usuario = r.id_autor "
+            + "JOIN usuario d ON d.id_usuario = r.id_destinatario ";
+
+    /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
+    private final JdbcTemplate jdbc;
+
+    /**
+     * Crea el repositorio.
+     *
+     * @param jdbc el JdbcTemplate conectado a la base de datos
+     */
+    public ReaccionRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    /**
+     * Convierte la fila actual del resultado en una Reaccion (con el autor completo
+     * y solo el id del destinatario).
+     *
+     * @param rs   el resultado de la consulta, posicionado en una fila
+     * @param fila el numero de la fila
+     * @return la reaccion de esa fila
+     * @throws SQLException si falla la lectura de una columna
+     */
+    private Reaccion mapear(ResultSet rs, int fila) throws SQLException {
         Usuario autor = new Usuario();
         autor.setId(rs.getLong("id_autor"));
         autor.setNombre(rs.getString("autor_nombre"));
         autor.setApellido(rs.getString("autor_apellido"));
         autor.setFotoPerfil(rs.getString("autor_foto"));
+
         Usuario destinatario = new Usuario();
         destinatario.setId(rs.getLong("id_destinatario"));
 
-        Reaccion r = new Reaccion(autor, destinatario, rs.getInt("numero_reaccion"),
+        Reaccion reaccion = new Reaccion(autor, destinatario, rs.getInt("numero_reaccion"),
                 TipoReaccion.valueOf(rs.getString("tipo_reaccion")));
-        r.setFechaHora(rs.getObject("fecha_hora", LocalDateTime.class));
-        return r;
-    };
-
-    private static final String SELECT_ADMIN = "SELECT r.estudiante_id_usuario AS id_autor, r.numero_reaccion, r.estudiante_id_usuario1 AS id_destinatario, "
-            + "r.tipo_reaccion, r.fecha_hora_reaccion AS fecha_hora, a.nombre AS autor_nombre, "
-            + "a.apellido AS autor_apellido, a.foto_perfil AS autor_foto, d.nombre AS dest_nombre, "
-            + "d.apellido AS dest_apellido FROM reaccion r "
-            + "JOIN usuario a ON a.id_usuario = r.estudiante_id_usuario "
-            + "JOIN usuario d ON d.id_usuario = r.estudiante_id_usuario1 ";
-
-    private static final RowMapper<Reaccion> MAPPER_ADMIN = (rs, i) -> {
-        Reaccion r = MAPPER.mapRow(rs, i);
-        r.getDestinatario().setNombre(rs.getString("dest_nombre"));
-        r.getDestinatario().setApellido(rs.getString("dest_apellido"));
-        return r;
-    };
-
-    private final JdbcTemplate jdbc;
-
-    public ReaccionRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+        reaccion.setFechaHora(rs.getObject("fecha_hora", LocalDateTime.class));
+        return reaccion;
     }
 
+    /**
+     * Igual que mapear, pero ademas lee el nombre del destinatario (consulta de
+     * administradores).
+     *
+     * @param rs   el resultado de la consulta, posicionado en una fila
+     * @param fila el numero de la fila
+     * @return la reaccion de esa fila, con el nombre del destinatario
+     * @throws SQLException si falla la lectura de una columna
+     */
+    private Reaccion mapearParaAdmin(ResultSet rs, int fila) throws SQLException {
+        Reaccion reaccion = mapear(rs, fila);
+        reaccion.getDestinatario().setNombre(rs.getString("dest_nombre"));
+        reaccion.getDestinatario().setApellido(rs.getString("dest_apellido"));
+        return reaccion;
+    }
+
+    /**
+     * Convierte la fila actual del resultado en un conteo de reacciones.
+     *
+     * @param rs   el resultado de la consulta, posicionado en una fila
+     * @param fila el numero de la fila
+     * @return el conteo de esa fila
+     * @throws SQLException si falla la lectura de una columna
+     */
+    private ConteoReaccionesDTO mapearConteo(ResultSet rs, int fila) throws SQLException {
+        return new ConteoReaccionesDTO(rs.getLong("id_destinatario"), rs.getLong("total"));
+    }
+
+    /**
+     * Busca la reaccion de un tipo que un autor dio a un destinatario.
+     *
+     * @param idAutor        el identificador del autor
+     * @param idDestinatario el identificador del destinatario
+     * @param tipo           el tipo de reaccion
+     * @return la reaccion, o vacio si no existe
+     */
     public Optional<Reaccion> buscar(Long idAutor, Long idDestinatario, TipoReaccion tipo) {
-        return jdbc.query(SELECT + "WHERE r.estudiante_id_usuario = ? AND r.estudiante_id_usuario1 = ? AND r.tipo_reaccion = ?", MAPPER,
+        return jdbc.query(SELECT + "WHERE r.id_autor = ? AND r.id_destinatario = ? AND r.tipo = ?", this::mapear,
                 idAutor, idDestinatario, tipo.name()).stream().findFirst();
     }
 
+    /**
+     * Cuenta las reacciones de un tipo que recibio un usuario.
+     *
+     * @param idDestinatario el identificador del destinatario
+     * @param tipo           el tipo de reaccion
+     * @return el total de reacciones
+     */
     public long contar(Long idDestinatario, TipoReaccion tipo) {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM reaccion WHERE estudiante_id_usuario1 = ? AND tipo_reaccion = ?",
-                Long.class, idDestinatario, tipo.name());
-        return n == null ? 0 : n;
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM reaccion WHERE id_destinatario = ? AND tipo = ?",
+                idDestinatario, tipo.name());
     }
 
-    /** Quienes dieron la reaccion al perfil, la mas reciente primero (con nombre y foto del autor). */
+    /**
+     * Quienes dieron la reaccion al perfil, la mas reciente primero (con nombre y
+     * foto del autor).
+     *
+     * @param idDestinatario el identificador del perfil
+     * @param tipo           el tipo de reaccion
+     * @return las reacciones recibidas
+     */
     public List<Reaccion> listarPorDestinatario(Long idDestinatario, TipoReaccion tipo) {
-        return jdbc.query(SELECT + "WHERE r.estudiante_id_usuario1 = ? AND r.tipo_reaccion = ? "
-                + "ORDER BY r.fecha_hora_reaccion DESC, r.numero_reaccion DESC", MAPPER, idDestinatario, tipo.name());
+        return jdbc.query(SELECT + "WHERE r.id_destinatario = ? AND r.tipo = ? "
+                + "ORDER BY r.fecha_hora DESC, r.numero DESC", this::mapear, idDestinatario, tipo.name());
     }
 
-    /** Mayor numero_reaccion usado por el autor (0 si no tiene ninguna). */
+    /**
+     * Todas las reacciones con el nombre de autor y destinatario (solo para
+     * administradores).
+     *
+     * @return todas las reacciones, de la mas reciente a la mas antigua
+     */
+    public List<Reaccion> listarTodas() {
+        return jdbc.query(SELECT_ADMIN + "ORDER BY r.fecha_hora DESC, r.id_autor, r.numero DESC",
+                this::mapearParaAdmin);
+    }
+
+    /**
+     * Mayor numero de reaccion usado por el autor.
+     *
+     * @param idAutor el identificador del autor
+     * @return el mayor numero (0 si no tiene ninguna)
+     */
     public Integer maximoNumero(Long idAutor) {
-        return jdbc.queryForObject("SELECT COALESCE(MAX(numero_reaccion), 0) FROM reaccion WHERE estudiante_id_usuario = ?",
+        return jdbc.queryForObject("SELECT COALESCE(MAX(numero), 0) FROM reaccion WHERE id_autor = ?",
                 Integer.class, idAutor);
     }
 
-    /** Cuantas reacciones recibio cada uno de los usuarios indicados (los que tienen 0 no aparecen). */
-    public List<ConteoReacciones> contarPorDestinatarios(Collection<Long> ids, TipoReaccion tipo) {
+    /**
+     * Cuantas reacciones recibio cada uno de los usuarios indicados (los que
+     * tienen 0 no aparecen).
+     *
+     * @param ids  los identificadores de los usuarios
+     * @param tipo el tipo de reaccion
+     * @return un conteo por cada usuario que recibio al menos una reaccion
+     */
+    public List<ConteoReaccionesDTO> contarPorDestinatarios(Collection<Long> ids, TipoReaccion tipo) {
         if (ids.isEmpty()) {
             return List.of();
         }
-        Object[] args = new Object[ids.size() + 1];
-        args[0] = tipo.name();
-        int k = 1;
-        for (Long id : ids) {
-            args[k++] = id;
-        }
-        return jdbc.query("SELECT estudiante_id_usuario1 AS id_destinatario, COUNT(*) AS total FROM reaccion "
-                + "WHERE tipo_reaccion = ? AND estudiante_id_usuario1 IN (" + Sql.placeholders(ids.size()) + ") GROUP BY estudiante_id_usuario1",
-                (rs, i) -> new ConteoReacciones(rs.getLong("id_destinatario"), rs.getLong("total")), args);
+        List<Object> argumentos = new ArrayList<>();
+        argumentos.add(tipo.name());
+        argumentos.addAll(ids);
+
+        return jdbc.query("SELECT id_destinatario, COUNT(*) AS total FROM reaccion WHERE tipo = ? "
+                + "AND id_destinatario IN (" + Sql.placeholders(ids.size()) + ") GROUP BY id_destinatario",
+                this::mapearConteo, argumentos.toArray());
     }
 
-    /** De los usuarios indicados, a cuales les dio la reaccion este autor. */
+    /**
+     * De los usuarios indicados, a cuales les dio la reaccion este autor.
+     *
+     * @param idAutor el identificador del autor
+     * @param tipo    el tipo de reaccion
+     * @param ids     los identificadores de los usuarios a revisar
+     * @return los identificadores de los usuarios a los que el autor reacciono
+     */
     public List<Long> destinatariosReaccionados(Long idAutor, TipoReaccion tipo, Collection<Long> ids) {
         if (ids.isEmpty()) {
             return List.of();
         }
-        Object[] args = new Object[ids.size() + 2];
-        args[0] = idAutor;
-        args[1] = tipo.name();
-        int k = 2;
-        for (Long id : ids) {
-            args[k++] = id;
-        }
-        return jdbc.query("SELECT estudiante_id_usuario1 AS id_destinatario FROM reaccion WHERE estudiante_id_usuario = ? "
-                + "AND tipo_reaccion = ? AND estudiante_id_usuario1 IN (" + Sql.placeholders(ids.size()) + ")",
-                (rs, i) -> rs.getLong("id_destinatario"), args);
+        List<Object> argumentos = new ArrayList<>();
+        argumentos.add(idAutor);
+        argumentos.add(tipo.name());
+        argumentos.addAll(ids);
+
+        return jdbc.query("SELECT id_destinatario FROM reaccion WHERE id_autor = ? AND tipo = ? "
+                + "AND id_destinatario IN (" + Sql.placeholders(ids.size()) + ")",
+                (rs, fila) -> rs.getLong("id_destinatario"), argumentos.toArray());
     }
 
-    /** Todas las reacciones con el nombre de autor y destinatario (solo para administradores). */
-    public List<Reaccion> listarTodas() {
-        return jdbc.query(SELECT_ADMIN + "ORDER BY r.fecha_hora_reaccion DESC, r.estudiante_id_usuario, r.numero_reaccion DESC",
-                MAPPER_ADMIN);
+    /**
+     * Inserta una reaccion nueva.
+     *
+     * @param reaccion la reaccion a guardar
+     * @return la misma reaccion
+     */
+    public Reaccion guardar(Reaccion reaccion) {
+        jdbc.update("INSERT INTO reaccion (id_autor, numero, id_destinatario, tipo, fecha_hora) "
+                + "VALUES (?, ?, ?, ?, ?)", reaccion.getAutor().getId(), reaccion.getNumeroReaccion(),
+                reaccion.getDestinatario().getId(), reaccion.getTipoReaccion().name(), reaccion.getFechaHora());
+        return reaccion;
     }
 
-    /** Elimina una reaccion por su llave (id_autor, numero_reaccion); devuelve cuantas filas borro (0 o 1). */
+    /**
+     * Elimina una reaccion por su llave (id_autor, numero_reaccion).
+     *
+     * @param idAutor el identificador del autor
+     * @param numero  el numero de la reaccion
+     * @return cuantas filas borro (0 o 1)
+     */
     public int eliminar(Long idAutor, Integer numero) {
-        return jdbc.update("DELETE FROM reaccion WHERE estudiante_id_usuario = ? AND numero_reaccion = ?", idAutor, numero);
-    }
-
-    public Reaccion save(Reaccion r) {
-        jdbc.update("INSERT INTO reaccion (estudiante_id_usuario, numero_reaccion, estudiante_id_usuario1, tipo_reaccion, "
-                + "fecha_hora_reaccion) "
-                + "VALUES (?, ?, ?, ?, ?)", r.getAutor().getId(), r.getNumeroReaccion(),
-                r.getDestinatario().getId(), r.getTipoReaccion().name(), r.getFechaHora());
-        return r;
-    }
-
-    public void delete(Reaccion r) {
-        jdbc.update("DELETE FROM reaccion WHERE estudiante_id_usuario = ? AND numero_reaccion = ?", r.getAutor().getId(),
-                r.getNumeroReaccion());
+        return jdbc.update("DELETE FROM reaccion WHERE id_autor = ? AND numero = ?", idAutor, numero);
     }
 }

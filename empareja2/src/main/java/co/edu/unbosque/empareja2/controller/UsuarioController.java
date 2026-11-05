@@ -14,12 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import co.edu.unbosque.empareja2.dto.request.ActualizarPerfilRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.UsuarioPerfilDTO;
-import co.edu.unbosque.empareja2.dto.response.UsuarioPublicoDTO;
+import co.edu.unbosque.empareja2.dto.ActualizarPerfilRequestDTO;
+import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
+import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.service.UsuarioService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
@@ -29,53 +27,93 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/usuarios")
-@Tag(name = "Usuarios", description = "Catalogo de usuarios y perfil propio")
 public class UsuarioController {
 
+    /** Servicio de usuarios. */
     private final UsuarioService usuarioService;
 
+    /**
+     * Crea el controlador.
+     *
+     * @param usuarioService el servicio de usuarios
+     */
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
+    /**
+     * Lista los demas usuarios registrados (solo informacion publica); con
+     * ?universidadId=N filtra por universidad.
+     *
+     * @param authentication el usuario autenticado
+     * @param universidadId  la universidad a filtrar (opcional)
+     * @return los usuarios del catalogo
+     */
     @GetMapping
-    @Operation(summary = "Lista los demas usuarios registrados (solo informacion publica); "
-            + "con ?universidadId=N filtra por universidad")
     public ResponseEntity<List<UsuarioPublicoDTO>> listarCatalogo(Authentication authentication,
             @RequestParam(required = false) Long universidadId) {
         return ResponseEntity.ok(usuarioService.listarCatalogo(authentication.getName(), universidadId));
     }
 
+    /**
+     * Ranking de usuarios con mas me gusta (por defecto los 20 primeros); con
+     * ?universidadId=N solo los de esa universidad.
+     *
+     * @param authentication el usuario autenticado
+     * @param universidadId  la universidad a filtrar (opcional)
+     * @param limite         cuantos usuarios devolver (por defecto 20)
+     * @return los usuarios del ranking
+     */
     @GetMapping("/ranking")
-    @Operation(summary = "Ranking de usuarios con mas me gusta (por defecto los 20 primeros); "
-            + "con ?universidadId=N solo los de esa universidad")
     public ResponseEntity<List<UsuarioPublicoDTO>> ranking(Authentication authentication,
             @RequestParam(required = false) Long universidadId, @RequestParam(defaultValue = "20") int limite) {
         return ResponseEntity.ok(usuarioService.rankingMeGusta(authentication.getName(), universidadId, limite));
     }
 
+    /**
+     * Obtiene la informacion publica de un usuario por id.
+     *
+     * @param authentication el usuario autenticado
+     * @param id             el identificador del usuario
+     * @return la informacion publica del usuario
+     */
     @GetMapping("/{id}")
-    @Operation(summary = "Obtiene la informacion publica de un usuario por id")
     public ResponseEntity<UsuarioPublicoDTO> obtenerPerfilPublico(Authentication authentication,
             @PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerPerfilPublico(authentication.getName(), id));
     }
 
+    /**
+     * Obtiene el perfil completo del usuario autenticado.
+     *
+     * @param authentication el usuario autenticado
+     * @return su perfil completo
+     */
     @GetMapping("/me")
-    @Operation(summary = "Obtiene el perfil completo del usuario autenticado")
     public ResponseEntity<UsuarioPerfilDTO> obtenerPerfilPropio(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.obtenerPerfilPropio(authentication.getName()));
     }
 
+    /**
+     * Actualiza el perfil del usuario autenticado.
+     *
+     * @param authentication el usuario autenticado
+     * @param request        los datos nuevos
+     * @return su perfil actualizado
+     */
     @PutMapping("/me")
-    @Operation(summary = "Actualiza el perfil del usuario autenticado")
     public ResponseEntity<UsuarioPerfilDTO> actualizarPerfilPropio(Authentication authentication,
             @Valid @RequestBody ActualizarPerfilRequestDTO request) {
         return ResponseEntity.ok(usuarioService.actualizarPerfilPropio(authentication.getName(), request));
     }
 
+    /**
+     * Elimina la cuenta del usuario autenticado.
+     *
+     * @param authentication el usuario autenticado
+     * @return respuesta vacia (204)
+     */
     @DeleteMapping("/me")
-    @Operation(summary = "Elimina la cuenta del usuario autenticado")
     public ResponseEntity<Void> eliminarCuentaPropia(Authentication authentication) {
         usuarioService.eliminarCuentaPropia(authentication.getName());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

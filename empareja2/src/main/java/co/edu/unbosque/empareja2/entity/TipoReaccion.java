@@ -5,5 +5,7 @@ package co.edu.unbosque.empareja2.entity;
  * "me gusta"; el enum deja abierta la puerta a otros tipos sin cambiar el modelo.
  */
 public enum TipoReaccion {
+
+    /** Reaccion "me gusta" a un perfil. */
     ME_GUSTA
 }

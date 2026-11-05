@@ -16,8 +16,14 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 @Configuration
 public class OpenApiConfig {
 
+    /** Nombre del esquema de seguridad que muestra Swagger UI. */
     private static final String SCHEME_NAME = "bearerAuth";
 
+    /**
+     * Define la informacion de la API y el esquema de seguridad con token Bearer.
+     *
+     * @return la configuracion de OpenAPI
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()

@@ -7,7 +7,15 @@ package co.edu.unbosque.empareja2.exception;
  */
 public class OperationNotAllowedException extends RuntimeException {
 
-    public OperationNotAllowedException(String message) {
-        super(message);
+    /** Version de serializacion de la excepcion. */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Crea la excepcion con el mensaje que se enviara al cliente.
+     *
+     * @param mensaje el mensaje que explica por que no se permite la operacion
+     */
+    public OperationNotAllowedException(String mensaje) {
+        super(mensaje);
     }
 }

@@ -21,9 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import co.edu.unbosque.empareja2.dto.request.ActualizarPerfilRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.UsuarioPublicoDTO;
+import co.edu.unbosque.empareja2.dto.ActualizarPerfilRequestDTO;
+import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
+import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.service.UsuarioService;

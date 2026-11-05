@@ -5,25 +5,23 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.CarreraRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.UniversidadRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.CarreraDTO;
-import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
-import co.edu.unbosque.empareja2.dto.response.OfreceDTO;
-import co.edu.unbosque.empareja2.dto.response.RedSocialDTO;
-import co.edu.unbosque.empareja2.dto.response.UniversidadDTO;
+import co.edu.unbosque.empareja2.dto.ActualizarOfertaRequestDTO;
+import co.edu.unbosque.empareja2.dto.CarreraDTO;
+import co.edu.unbosque.empareja2.dto.CarreraRequestDTO;
+import co.edu.unbosque.empareja2.dto.CiudadDTO;
+import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
+import co.edu.unbosque.empareja2.dto.OfreceDTO;
+import co.edu.unbosque.empareja2.dto.OfreceRequestDTO;
+import co.edu.unbosque.empareja2.dto.RedSocialDTO;
+import co.edu.unbosque.empareja2.dto.UniversidadDTO;
+import co.edu.unbosque.empareja2.dto.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Ciudad;
 import co.edu.unbosque.empareja2.entity.Direccion;
 import co.edu.unbosque.empareja2.entity.Ofrece;
 import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Universidad;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
-import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.LanzadorException;
 import co.edu.unbosque.empareja2.mapper.CatalogoMapper;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.CiudadRepository;
@@ -40,13 +38,34 @@ import co.edu.unbosque.empareja2.service.CatalogoService;
 @Transactional(readOnly = true)
 public class CatalogoServiceImpl implements CatalogoService {
 
+    /** Acceso a los datos de las ciudades. */
     private final CiudadRepository ciudadRepository;
+
+    /** Acceso a los datos de las universidades. */
     private final UniversidadRepository universidadRepository;
+
+    /** Acceso a los datos de las carreras. */
     private final CarreraRepository carreraRepository;
+
+    /** Acceso a los datos de las redes sociales. */
     private final RedSocialRepository redSocialRepository;
+
+    /** Acceso a los datos de la oferta academica. */
     private final OfreceRepository ofreceRepository;
+
+    /** Convierte los datos de referencia en DTOs. */
     private final CatalogoMapper mapper;
 
+    /**
+     * Crea el servicio.
+     *
+     * @param ciudadRepository      el repositorio de ciudades
+     * @param universidadRepository el repositorio de universidades
+     * @param carreraRepository     el repositorio de carreras
+     * @param redSocialRepository   el repositorio de redes sociales
+     * @param ofreceRepository      el repositorio de la oferta academica
+     * @param mapper                el convertidor de datos de referencia
+     */
     public CatalogoServiceImpl(CiudadRepository ciudadRepository, UniversidadRepository universidadRepository,
             CarreraRepository carreraRepository, RedSocialRepository redSocialRepository,
             OfreceRepository ofreceRepository, CatalogoMapper mapper) {
@@ -58,104 +77,194 @@ public class CatalogoServiceImpl implements CatalogoService {
         this.mapper = mapper;
     }
 
+    // ------------------------------------------------------------------
+    // Listados
+    // ------------------------------------------------------------------
+
+    /**
+     * Lista las ciudades ordenadas por nombre.
+     *
+     * @return las ciudades
+     */
     @Override
     public List<CiudadDTO> listarCiudades() {
-        return ciudadRepository.findAllByOrderByNombreAsc().stream().map(mapper::toDTO).toList();
+        return ciudadRepository.listarTodas().stream().map(mapper::toDTO).toList();
     }
 
+    /**
+     * Lista las universidades; si hay texto, busca por nombre o sigla.
+     *
+     * @param texto el texto a buscar (puede ser null o vacio)
+     * @return las universidades
+     */
     @Override
     public List<UniversidadDTO> listarUniversidades(String texto) {
-        List<Universidad> universidades = (texto == null || texto.isBlank()) ? universidadRepository.listarTodas()
-                : universidadRepository.buscar(texto.trim());
+        List<Universidad> universidades;
+        if (texto == null || texto.isBlank()) {
+            universidades = universidadRepository.listarTodas();
+        } else {
+            universidades = universidadRepository.listarPorTexto(texto.trim());
+        }
         return universidades.stream().map(mapper::toDTO).toList();
     }
 
+    /**
+     * Lista las carreras ordenadas por nombre.
+     *
+     * @return las carreras
+     */
     @Override
     public List<CarreraDTO> listarCarreras() {
-        return carreraRepository.findAllByOrderByNombreAsc().stream().map(mapper::toDTO).toList();
+        return carreraRepository.listarTodas().stream().map(mapper::toDTO).toList();
     }
 
+    /**
+     * Lista las redes sociales ordenadas por nombre.
+     *
+     * @return las redes sociales
+     */
     @Override
     public List<RedSocialDTO> listarRedesSociales() {
-        return redSocialRepository.findAllByOrderByNombreRedSocialAsc().stream().map(mapper::toDTO).toList();
+        return redSocialRepository.listarTodas().stream().map(mapper::toDTO).toList();
     }
 
+    /**
+     * Lista la oferta academica, de todas las universidades o de una sola.
+     *
+     * @param idUniversidad la universidad a filtrar (null para todas)
+     * @return las ofertas
+     */
     @Override
     public List<OfreceDTO> listarOferta(Long idUniversidad) {
-        List<Ofrece> oferta = idUniversidad == null ? ofreceRepository.listarTodas()
-                : ofreceRepository.listarPorUniversidad(idUniversidad);
+        List<Ofrece> oferta;
+        if (idUniversidad == null) {
+            oferta = ofreceRepository.listarTodas();
+        } else {
+            oferta = ofreceRepository.listarPorUniversidad(idUniversidad);
+        }
         return oferta.stream().map(mapper::toDTO).toList();
     }
 
+    // ------------------------------------------------------------------
+    // Creacion
+    // ------------------------------------------------------------------
+
+    /**
+     * Crea una ciudad (no se admite repetirla en el mismo departamento).
+     *
+     * @param request los datos de la ciudad
+     * @return la ciudad creada
+     */
     @Override
     @Transactional
     public CiudadDTO crearCiudad(CiudadRequestDTO request) {
-        if (ciudadRepository.existsByNombreIgnoreCaseAndDepartamentoIgnoreCase(request.nombre(),
-                request.departamento())) {
-            throw new DuplicateResourceException("Ya existe esa ciudad en ese departamento");
+        if (ciudadRepository.existePorNombreYDepartamento(request.getNombre(), request.getDepartamento())) {
+            LanzadorException.ciudadYaExiste();
         }
-        return mapper.toDTO(ciudadRepository.save(new Ciudad(request.nombre().trim(), request.departamento().trim())));
+        Ciudad ciudad = new Ciudad(request.getNombre().trim(), request.getDepartamento().trim());
+        return mapper.toDTO(ciudadRepository.guardar(ciudad));
     }
 
+    /**
+     * Crea una universidad (nombre y sigla unicos, en una ciudad que exista).
+     *
+     * @param request los datos de la universidad
+     * @return la universidad creada
+     */
     @Override
     @Transactional
     public UniversidadDTO crearUniversidad(UniversidadRequestDTO request) {
-        if (universidadRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new DuplicateResourceException("Ya existe una universidad con ese nombre");
+        if (universidadRepository.existePorNombre(request.getNombre())) {
+            LanzadorException.universidadNombreYaExiste();
         }
-        if (universidadRepository.existsBySiglaIgnoreCase(request.sigla())) {
-            throw new DuplicateResourceException("Ya existe una universidad con esa sigla");
+        if (universidadRepository.existePorSigla(request.getSigla())) {
+            LanzadorException.universidadSiglaYaExiste();
         }
-        Ciudad ciudad = ciudadRepository.findById(request.idCiudad())
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la ciudad con id " + request.idCiudad()));
+        Ciudad ciudad = buscarCiudad(request.getIdCiudad());
 
-        Direccion direccion = new Direccion(request.calle().trim(), request.barrio().trim());
-        Universidad universidad = new Universidad(request.nombre().trim(), request.sigla().trim(), direccion, ciudad);
-        return mapper.toDTO(universidadRepository.save(universidad));
+        Direccion direccion = new Direccion(request.getCalle().trim(), request.getBarrio().trim());
+        Universidad universidad = new Universidad(request.getNombre().trim(), request.getSigla().trim(), direccion,
+                ciudad);
+        return mapper.toDTO(universidadRepository.guardar(universidad));
     }
 
+    /**
+     * Crea una carrera (nombre unico).
+     *
+     * @param request los datos de la carrera
+     * @return la carrera creada
+     */
     @Override
     @Transactional
     public CarreraDTO crearCarrera(CarreraRequestDTO request) {
-        if (carreraRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new DuplicateResourceException("Ya existe una carrera con ese nombre");
+        if (carreraRepository.existePorNombre(request.getNombre())) {
+            LanzadorException.carreraYaExiste();
         }
-        return mapper.toDTO(carreraRepository.save(new Carrera(request.nombre().trim(), request.facultad().trim())));
+        Carrera carrera = new Carrera(request.getNombre().trim(), request.getFacultad().trim());
+        return mapper.toDTO(carreraRepository.guardar(carrera));
     }
 
+    /**
+     * Registra que una universidad ofrece una carrera (la pareja debe ser nueva).
+     *
+     * @param request la carrera y la universidad
+     * @return la oferta creada
+     */
     @Override
     @Transactional
     public OfreceDTO crearOferta(OfreceRequestDTO request) {
-        Carrera carrera = carreraRepository.findById(request.idCarrera())
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la carrera con id " + request.idCarrera()));
-        Universidad universidad = universidadRepository.findById(request.idUniversidad()).orElseThrow(
-                () -> new ResourceNotFoundException("No existe la universidad con id " + request.idUniversidad()));
+        Carrera carrera = buscarCarrera(request.getIdCarrera());
+        Universidad universidad = buscarUniversidad(request.getIdUniversidad());
 
-        if (ofreceRepository.existsByCarreraAndUniversidad(carrera.getIdCarrera(), universidad.getIdUniversidad())) {
-            throw new DuplicateResourceException("Esa universidad ya ofrece esa carrera");
+        if (ofreceRepository.existePorCarreraYUniversidad(carrera.getIdCarrera(), universidad.getIdUniversidad())) {
+            LanzadorException.ofertaYaExiste();
         }
-        return mapper.toDTO(ofreceRepository.save(new Ofrece(carrera, universidad, carrera.getFacultad())));
+        return mapper.toDTO(ofreceRepository.guardar(new Ofrece(carrera, universidad, carrera.getFacultad())));
     }
 
     // ------------------------------------------------------------------
     // Consulta por id
     // ------------------------------------------------------------------
 
+    /**
+     * Obtiene una ciudad por id.
+     *
+     * @param id el identificador de la ciudad
+     * @return la ciudad
+     */
     @Override
     public CiudadDTO obtenerCiudad(Long id) {
         return mapper.toDTO(buscarCiudad(id));
     }
 
+    /**
+     * Obtiene una universidad por id.
+     *
+     * @param id el identificador de la universidad
+     * @return la universidad
+     */
     @Override
     public UniversidadDTO obtenerUniversidad(Long id) {
         return mapper.toDTO(buscarUniversidad(id));
     }
 
+    /**
+     * Obtiene una carrera por id.
+     *
+     * @param id el identificador de la carrera
+     * @return la carrera
+     */
     @Override
     public CarreraDTO obtenerCarrera(Long id) {
         return mapper.toDTO(buscarCarrera(id));
     }
 
+    /**
+     * Obtiene una red social por id.
+     *
+     * @param id el identificador de la red social
+     * @return la red social
+     */
     @Override
     public RedSocialDTO obtenerRedSocial(Long id) {
         return mapper.toDTO(buscarRedSocial(id));
@@ -165,66 +274,95 @@ public class CatalogoServiceImpl implements CatalogoService {
     // Edicion
     // ------------------------------------------------------------------
 
+    /**
+     * Edita una ciudad (no se admite repetirla en el mismo departamento).
+     *
+     * @param id      el identificador de la ciudad
+     * @param request los datos nuevos
+     * @return la ciudad editada
+     */
     @Override
     @Transactional
     public CiudadDTO actualizarCiudad(Long id, CiudadRequestDTO request) {
         Ciudad ciudad = buscarCiudad(id);
-        String nombre = request.nombre().trim();
-        String departamento = request.departamento().trim();
-        if (ciudadRepository.existsByNombreAndDepartamentoAndIdNot(nombre, departamento, id)) {
-            throw new DuplicateResourceException("Ya existe esa ciudad en ese departamento");
+        String nombre = request.getNombre().trim();
+        String departamento = request.getDepartamento().trim();
+        if (ciudadRepository.existePorNombreYDepartamentoExceptoId(nombre, departamento, id)) {
+            LanzadorException.ciudadYaExiste();
         }
         ciudad.setNombre(nombre);
         ciudad.setDepartamento(departamento);
-        ciudadRepository.update(ciudad);
+        ciudadRepository.actualizar(ciudad);
         return mapper.toDTO(ciudad);
     }
 
+    /**
+     * Edita una universidad (nombre y sigla unicos, en una ciudad que exista).
+     *
+     * @param id      el identificador de la universidad
+     * @param request los datos nuevos
+     * @return la universidad editada
+     */
     @Override
     @Transactional
     public UniversidadDTO actualizarUniversidad(Long id, UniversidadRequestDTO request) {
         Universidad universidad = buscarUniversidad(id);
-        String nombre = request.nombre().trim();
-        String sigla = request.sigla().trim();
-        if (universidadRepository.existsByNombreAndIdNot(nombre, id)) {
-            throw new DuplicateResourceException("Ya existe una universidad con ese nombre");
+        String nombre = request.getNombre().trim();
+        String sigla = request.getSigla().trim();
+        if (universidadRepository.existePorNombreExceptoId(nombre, id)) {
+            LanzadorException.universidadNombreYaExiste();
         }
-        if (universidadRepository.existsBySiglaAndIdNot(sigla, id)) {
-            throw new DuplicateResourceException("Ya existe una universidad con esa sigla");
+        if (universidadRepository.existePorSiglaExceptoId(sigla, id)) {
+            LanzadorException.universidadSiglaYaExiste();
         }
-        Ciudad ciudad = buscarCiudad(request.idCiudad());
+        Ciudad ciudad = buscarCiudad(request.getIdCiudad());
 
         universidad.setNombre(nombre);
         universidad.setSigla(sigla);
-        universidad.setDireccion(new Direccion(request.calle().trim(), request.barrio().trim()));
+        universidad.setDireccion(new Direccion(request.getCalle().trim(), request.getBarrio().trim()));
         universidad.setCiudad(ciudad);
-        universidadRepository.update(universidad);
+        universidadRepository.actualizar(universidad);
         return mapper.toDTO(universidad);
     }
 
+    /**
+     * Edita una carrera (nombre unico).
+     *
+     * @param id      el identificador de la carrera
+     * @param request los datos nuevos
+     * @return la carrera editada
+     */
     @Override
     @Transactional
     public CarreraDTO actualizarCarrera(Long id, CarreraRequestDTO request) {
         Carrera carrera = buscarCarrera(id);
-        String nombre = request.nombre().trim();
-        if (carreraRepository.existsByNombreAndIdNot(nombre, id)) {
-            throw new DuplicateResourceException("Ya existe una carrera con ese nombre");
+        String nombre = request.getNombre().trim();
+        if (carreraRepository.existePorNombreExceptoId(nombre, id)) {
+            LanzadorException.carreraYaExiste();
         }
         carrera.setNombre(nombre);
-        carrera.setFacultad(request.facultad().trim());
-        carreraRepository.update(carrera);
+        carrera.setFacultad(request.getFacultad().trim());
+        carreraRepository.actualizar(carrera);
         return mapper.toDTO(carrera);
     }
 
+    /**
+     * Cambia la facultad de una oferta. En el modelo la facultad es un atributo de
+     * la CARRERA: cambiarla la cambia en todas las universidades.
+     *
+     * @param idCarrera     el identificador de la carrera
+     * @param idUniversidad el identificador de la universidad
+     * @param request       la facultad nueva
+     * @return la oferta editada
+     */
     @Override
     @Transactional
     public OfreceDTO actualizarOferta(Long idCarrera, Long idUniversidad, ActualizarOfertaRequestDTO request) {
         Ofrece oferta = buscarOferta(idCarrera, idUniversidad);
-        // En el modelo la facultad es un atributo de la CARRERA: cambiarla la cambia en todas las universidades.
-        String facultad = request.facultad().trim();
+        String facultad = request.getFacultad().trim();
         oferta.setFacultad(facultad);
         oferta.getCarrera().setFacultad(facultad);
-        carreraRepository.update(oferta.getCarrera());
+        carreraRepository.actualizar(oferta.getCarrera());
         return mapper.toDTO(oferta);
     }
 
@@ -232,77 +370,142 @@ public class CatalogoServiceImpl implements CatalogoService {
     // Eliminacion
     // ------------------------------------------------------------------
 
+    /**
+     * Elimina una ciudad si no tiene universidades.
+     *
+     * @param id el identificador de la ciudad
+     */
     @Override
     @Transactional
     public void eliminarCiudad(Long id) {
         buscarCiudad(id);
         if (universidadRepository.contarPorCiudad(id) > 0) {
-            throw new OperationNotAllowedException(
-                    "No se puede eliminar la ciudad: todavia tiene universidades registradas");
+            LanzadorException.ciudadConUniversidades();
         }
-        ciudadRepository.deleteById(id);
+        ciudadRepository.eliminar(id);
     }
 
+    /**
+     * Elimina una universidad si no tiene estudiantes; sus ofertas se eliminan con
+     * ella.
+     *
+     * @param id el identificador de la universidad
+     */
     @Override
     @Transactional
     public void eliminarUniversidad(Long id) {
         buscarUniversidad(id);
         if (universidadRepository.contarEstudiantes(id) > 0) {
-            throw new OperationNotAllowedException(
-                    "No se puede eliminar la universidad: hay usuarios que estudian en ella");
+            LanzadorException.universidadConEstudiantes();
         }
         ofreceRepository.eliminarPorUniversidad(id);
-        universidadRepository.deleteById(id);
+        universidadRepository.eliminar(id);
     }
 
+    /**
+     * Elimina una carrera si no tiene estudiantes; sus ofertas se eliminan con ella.
+     *
+     * @param id el identificador de la carrera
+     */
     @Override
     @Transactional
     public void eliminarCarrera(Long id) {
         buscarCarrera(id);
         if (carreraRepository.contarEstudiantes(id) > 0) {
-            throw new OperationNotAllowedException("No se puede eliminar la carrera: hay usuarios que la estudian");
+            LanzadorException.carreraConEstudiantes();
         }
         ofreceRepository.eliminarPorCarrera(id);
-        carreraRepository.deleteById(id);
+        carreraRepository.eliminar(id);
     }
 
+    /**
+     * Elimina una oferta si ningun estudiante la esta cursando.
+     *
+     * @param idCarrera     el identificador de la carrera
+     * @param idUniversidad el identificador de la universidad
+     */
     @Override
     @Transactional
     public void eliminarOferta(Long idCarrera, Long idUniversidad) {
         buscarOferta(idCarrera, idUniversidad);
         if (ofreceRepository.contarEstudiantes(idCarrera, idUniversidad) > 0) {
-            throw new OperationNotAllowedException(
-                    "No se puede eliminar la oferta: hay usuarios que cursan esa carrera en esa universidad");
+            LanzadorException.ofertaConEstudiantes();
         }
-        ofreceRepository.delete(idCarrera, idUniversidad);
+        ofreceRepository.eliminar(idCarrera, idUniversidad);
     }
 
     // ------------------------------------------------------------------
     // Busquedas con 404
     // ------------------------------------------------------------------
 
+    /**
+     * Busca una ciudad y lanza 404 si no existe.
+     *
+     * @param id el identificador de la ciudad
+     * @return la ciudad
+     */
     private Ciudad buscarCiudad(Long id) {
-        return ciudadRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la ciudad con id " + id));
+        Ciudad ciudad = ciudadRepository.buscarPorId(id).orElse(null);
+        if (ciudad == null) {
+            LanzadorException.ciudadNoEncontrada(id);
+        }
+        return ciudad;
     }
 
+    /**
+     * Busca una universidad y lanza 404 si no existe.
+     *
+     * @param id el identificador de la universidad
+     * @return la universidad
+     */
     private Universidad buscarUniversidad(Long id) {
-        return universidadRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la universidad con id " + id));
+        Universidad universidad = universidadRepository.buscarPorId(id).orElse(null);
+        if (universidad == null) {
+            LanzadorException.universidadNoEncontrada(id);
+        }
+        return universidad;
     }
 
+    /**
+     * Busca una carrera y lanza 404 si no existe.
+     *
+     * @param id el identificador de la carrera
+     * @return la carrera
+     */
     private Carrera buscarCarrera(Long id) {
-        return carreraRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la carrera con id " + id));
+        Carrera carrera = carreraRepository.buscarPorId(id).orElse(null);
+        if (carrera == null) {
+            LanzadorException.carreraNoEncontrada(id);
+        }
+        return carrera;
     }
 
+    /**
+     * Busca una red social y lanza 404 si no existe.
+     *
+     * @param id el identificador de la red social
+     * @return la red social
+     */
     private RedSocial buscarRedSocial(Long id) {
-        return redSocialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la red social con id " + id));
+        RedSocial red = redSocialRepository.buscarPorId(id).orElse(null);
+        if (red == null) {
+            LanzadorException.redSocialNoEncontrada(id);
+        }
+        return red;
     }
 
+    /**
+     * Busca una oferta y lanza 404 si no existe.
+     *
+     * @param idCarrera     el identificador de la carrera
+     * @param idUniversidad el identificador de la universidad
+     * @return la oferta
+     */
     private Ofrece buscarOferta(Long idCarrera, Long idUniversidad) {
-        return ofreceRepository.findByIds(idCarrera, idUniversidad).orElseThrow(() -> new ResourceNotFoundException(
-                "La universidad " + idUniversidad + " no ofrece la carrera " + idCarrera));
+        Ofrece oferta = ofreceRepository.buscarPorIds(idCarrera, idUniversidad).orElse(null);
+        if (oferta == null) {
+            LanzadorException.ofertaNoEncontrada(idCarrera, idUniversidad);
+        }
+        return oferta;
     }
 }

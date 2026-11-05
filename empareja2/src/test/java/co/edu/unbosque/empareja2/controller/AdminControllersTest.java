@@ -22,11 +22,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
-import co.edu.unbosque.empareja2.dto.response.OfreceDTO;
-import co.edu.unbosque.empareja2.dto.response.ReporteDTO;
+import co.edu.unbosque.empareja2.dto.ActualizarOfertaRequestDTO;
+import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
+import co.edu.unbosque.empareja2.dto.CiudadDTO;
+import co.edu.unbosque.empareja2.dto.OfreceDTO;
+import co.edu.unbosque.empareja2.dto.ReporteDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
 import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;

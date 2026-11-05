@@ -12,15 +12,35 @@ import java.time.LocalDateTime;
  */
 public class Reaccion {
 
+    /** El usuario que da la reaccion. */
     private Usuario autor;
+
+    /** El numero de la reaccion dentro de las de su autor. */
     private Integer numeroReaccion;
+
+    /** El usuario que recibe la reaccion. */
     private Usuario destinatario;
+
+    /** El tipo de reaccion (hoy solo ME_GUSTA). */
     private TipoReaccion tipoReaccion = TipoReaccion.ME_GUSTA;
+
+    /** La fecha y hora en que se dio la reaccion. */
     private LocalDateTime fechaHora;
 
+    /**
+     * Crea un objeto Reaccion vacio; los datos se asignan con los metodos set.
+     */
     public Reaccion() {
     }
 
+    /**
+     * Crea una reaccion nueva; la fecha y hora se asignan con el momento actual.
+     *
+     * @param autor          el usuario que da la reaccion
+     * @param destinatario   el usuario que recibe la reaccion
+     * @param numeroReaccion el numero de la reaccion dentro de las de su autor
+     * @param tipoReaccion   el tipo de reaccion
+     */
     public Reaccion(Usuario autor, Usuario destinatario, Integer numeroReaccion, TipoReaccion tipoReaccion) {
         this.autor = autor;
         this.destinatario = destinatario;
@@ -29,43 +49,108 @@ public class Reaccion {
         this.fechaHora = LocalDateTime.now();
     }
 
+    /**
+     * Obtiene el usuario que da la reaccion.
+     *
+     * @return el usuario que da la reaccion
+     */
     public Usuario getAutor() {
         return autor;
     }
 
+    /**
+     * Establece el usuario que da la reaccion.
+     *
+     * @param autor el usuario que da la reaccion
+     */
     public void setAutor(Usuario autor) {
         this.autor = autor;
     }
 
+    /**
+     * Obtiene el numero de la reaccion dentro de las de su autor.
+     *
+     * @return el numero de la reaccion dentro de las de su autor
+     */
     public Integer getNumeroReaccion() {
         return numeroReaccion;
     }
 
+    /**
+     * Establece el numero de la reaccion dentro de las de su autor.
+     *
+     * @param numeroReaccion el numero de la reaccion dentro de las de su autor
+     */
     public void setNumeroReaccion(Integer numeroReaccion) {
         this.numeroReaccion = numeroReaccion;
     }
 
+    /**
+     * Obtiene el usuario que recibe la reaccion.
+     *
+     * @return el usuario que recibe la reaccion
+     */
     public Usuario getDestinatario() {
         return destinatario;
     }
 
+    /**
+     * Establece el usuario que recibe la reaccion.
+     *
+     * @param destinatario el usuario que recibe la reaccion
+     */
     public void setDestinatario(Usuario destinatario) {
         this.destinatario = destinatario;
     }
 
+    /**
+     * Obtiene el tipo de reaccion (hoy solo ME_GUSTA).
+     *
+     * @return el tipo de reaccion (hoy solo ME_GUSTA)
+     */
     public TipoReaccion getTipoReaccion() {
         return tipoReaccion;
     }
 
+    /**
+     * Establece el tipo de reaccion (hoy solo ME_GUSTA).
+     *
+     * @param tipoReaccion el tipo de reaccion (hoy solo ME_GUSTA)
+     */
     public void setTipoReaccion(TipoReaccion tipoReaccion) {
         this.tipoReaccion = tipoReaccion;
     }
 
+    /**
+     * Obtiene la fecha y hora en que se dio la reaccion.
+     *
+     * @return la fecha y hora en que se dio la reaccion
+     */
     public LocalDateTime getFechaHora() {
         return fechaHora;
     }
 
+    /**
+     * Establece la fecha y hora en que se dio la reaccion.
+     *
+     * @param fechaHora la fecha y hora en que se dio la reaccion
+     */
     public void setFechaHora(LocalDateTime fechaHora) {
         this.fechaHora = fechaHora;
+    }
+
+    /**
+     * Devuelve una representacion en texto de este objeto para depuracion.
+     *
+     * @return el objeto como texto
+     */
+    @Override
+    public String toString() {
+        return "Reaccion [idAutor=" + (autor == null ? null : autor.getId())
+                + ", numeroReaccion=" + numeroReaccion
+                + ", idDestinatario=" + (destinatario == null ? null : destinatario.getId())
+                + ", tipoReaccion=" + tipoReaccion
+                + ", fechaHora=" + fechaHora
+                + "]";
     }
 }
