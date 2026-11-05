@@ -21,9 +21,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
-import co.edu.unbosque.empareja2.dto.response.ReaccionAdminDTO;
-import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
+import co.edu.unbosque.empareja2.dto.MeGustaDTO;
+import co.edu.unbosque.empareja2.dto.ReaccionAdminDTO;
+import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
@@ -65,19 +65,21 @@ class ReaccionServiceImplTest {
         MeGustaDTO dto = service.darMeGusta("ana@mail.com", 2L);
 
         ArgumentCaptor<Reaccion> captor = ArgumentCaptor.forClass(Reaccion.class);
-        verify(reaccionRepository).save(captor.capture());
+        verify(reaccionRepository).guardar(captor.capture());
         Reaccion guardada = captor.getValue();
         assertThat(guardada.getAutor().getId()).isEqualTo(1L);
         assertThat(guardada.getNumeroReaccion()).isEqualTo(4);
         assertThat(guardada.getDestinatario()).isSameAs(luis);
         assertThat(guardada.getTipoReaccion()).isEqualTo(TipoReaccion.ME_GUSTA);
-        assertThat(dto).isEqualTo(new MeGustaDTO(2L, 1L, true));
+        assertThat(dto.getIdUsuario()).isEqualTo(2L);
+        assertThat(dto.getTotalMeGusta()).isEqualTo(1L);
+        assertThat(dto.isMeGusta()).isEqualTo(true);
     }
 
     @Test
     void noSePuedeDarMeGustaAUnoMismo() {
         assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 1L)).isInstanceOf(IllegalArgumentException.class);
-        verify(reaccionRepository, never()).save(any());
+        verify(reaccionRepository, never()).guardar(any());
     }
 
     @Test
@@ -87,7 +89,7 @@ class ReaccionServiceImplTest {
 
         assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 2L))
                 .isInstanceOf(DuplicateResourceException.class);
-        verify(reaccionRepository, never()).save(any());
+        verify(reaccionRepository, never()).guardar(any());
     }
 
     @Test
@@ -96,7 +98,7 @@ class ReaccionServiceImplTest {
 
         assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 99L))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(reaccionRepository, never()).save(any());
+        verify(reaccionRepository, never()).guardar(any());
     }
 
     @Test
@@ -107,8 +109,10 @@ class ReaccionServiceImplTest {
 
         MeGustaDTO dto = service.quitarMeGusta("ana@mail.com", 2L);
 
-        verify(reaccionRepository).delete(existente);
-        assertThat(dto).isEqualTo(new MeGustaDTO(2L, 0L, false));
+        verify(reaccionRepository).eliminar(1L, 1);
+        assertThat(dto.getIdUsuario()).isEqualTo(2L);
+        assertThat(dto.getTotalMeGusta()).isEqualTo(0L);
+        assertThat(dto.isMeGusta()).isEqualTo(false);
     }
 
     @Test
@@ -117,7 +121,7 @@ class ReaccionServiceImplTest {
 
         assertThatThrownBy(() -> service.quitarMeGusta("ana@mail.com", 2L))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(reaccionRepository, never()).delete(any(Reaccion.class));
+        verify(reaccionRepository, never()).eliminar(any(), any());
     }
 
     @Test
@@ -129,9 +133,9 @@ class ReaccionServiceImplTest {
         List<ReaccionDTO> lista = service.listarMeGusta(2L);
 
         assertThat(lista).hasSize(1);
-        assertThat(lista.get(0).idAutor()).isEqualTo(1L);
-        assertThat(lista.get(0).nombreAutor()).isEqualTo("Ana Garcia");
-        assertThat(lista.get(0).fechaHora()).isEqualTo(LocalDateTime.of(2026, 10, 1, 12, 0));
+        assertThat(lista.get(0).getIdAutor()).isEqualTo(1L);
+        assertThat(lista.get(0).getNombreAutor()).isEqualTo("Ana Garcia");
+        assertThat(lista.get(0).getFechaHora()).isEqualTo(LocalDateTime.of(2026, 10, 1, 12, 0));
     }
 
     @Test
@@ -142,9 +146,9 @@ class ReaccionServiceImplTest {
         List<ReaccionAdminDTO> lista = service.listarTodasParaAdmin();
 
         assertThat(lista).hasSize(1);
-        assertThat(lista.get(0).nombreAutor()).isEqualTo("Ana Garcia");
-        assertThat(lista.get(0).nombreDestinatario()).isEqualTo("Luis Perez");
-        assertThat(lista.get(0).numeroReaccion()).isEqualTo(1);
+        assertThat(lista.get(0).getNombreAutor()).isEqualTo("Ana Garcia");
+        assertThat(lista.get(0).getNombreDestinatario()).isEqualTo("Luis Perez");
+        assertThat(lista.get(0).getNumeroReaccion()).isEqualTo(1);
     }
 
     @Test

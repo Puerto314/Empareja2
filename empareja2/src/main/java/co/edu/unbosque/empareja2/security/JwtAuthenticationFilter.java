@@ -2,7 +2,6 @@ package co.edu.unbosque.empareja2.security;
 
 import java.io.IOException;
 
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Filtro ejecutado una vez por peticion. Busca el header "Authorization: Bearer
- * <token>", lo valida y, si es correcto, autentica al usuario para esa
+ * token", lo valida y, si es correcto, autentica al usuario para esa
  * peticion. Un token invalido, vencido o de un usuario que ya no existe NO
  * rompe la peticion: simplemente queda sin autenticar (y Spring Security
  * respondera 401 si el endpoint lo exige).
@@ -27,20 +26,42 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /** Nombre del header donde viaja el token. */
     private static final String HEADER_NAME = "Authorization";
+
+    /** Texto con el que empieza el valor del header. */
     private static final String BEARER_PREFIX = "Bearer ";
 
+    /** Lee y valida los tokens JWT. */
     private final JwtService jwtService;
+
+    /** Carga los datos de acceso de un usuario. */
     private final CustomUserDetailsService userDetailsService;
 
+    /**
+     * Crea el filtro.
+     *
+     * @param jwtService         el servicio de tokens JWT
+     * @param userDetailsService el cargador de datos de acceso
+     */
     public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Autentica la peticion si trae un token valido y continua con la cadena de
+     * filtros.
+     *
+     * @param request     la peticion recibida
+     * @param response    la respuesta que se enviara
+     * @param filterChain la cadena de filtros
+     * @throws ServletException si falla algun filtro
+     * @throws IOException      si falla la lectura o escritura
+     */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader(HEADER_NAME);
 

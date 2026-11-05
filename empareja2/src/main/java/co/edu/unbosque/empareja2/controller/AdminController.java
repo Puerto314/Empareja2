@@ -13,11 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import co.edu.unbosque.empareja2.dto.request.AdminUsuarioRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.UsuarioPerfilDTO;
+import co.edu.unbosque.empareja2.dto.AdminUsuarioRequestDTO;
+import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
 import co.edu.unbosque.empareja2.service.UsuarioService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
@@ -27,44 +25,72 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/admin")
-@Tag(name = "Administracion - Usuarios", description = "CRUD de usuarios (solo ADMIN)")
 public class AdminController {
 
+    /** Servicio de usuarios. */
     private final UsuarioService usuarioService;
 
+    /**
+     * Crea el controlador.
+     *
+     * @param usuarioService el servicio de usuarios
+     */
     public AdminController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
-    // ---- Usuarios ----
-
+    /**
+     * Lista todos los usuarios con su perfil completo.
+     *
+     * @return los usuarios
+     */
     @GetMapping("/usuarios")
-    @Operation(summary = "Lista todos los usuarios con su perfil completo")
     public ResponseEntity<List<UsuarioPerfilDTO>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.listarParaAdmin());
     }
 
+    /**
+     * Obtiene el perfil completo de cualquier usuario.
+     *
+     * @param id el identificador del usuario
+     * @return su perfil completo
+     */
     @GetMapping("/usuarios/{id}")
-    @Operation(summary = "Obtiene el perfil completo de cualquier usuario")
     public ResponseEntity<UsuarioPerfilDTO> obtenerUsuario(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerParaAdmin(id));
     }
 
+    /**
+     * Crea un usuario (estudiante o administrador).
+     *
+     * @param request los datos del usuario
+     * @return el usuario creado (201)
+     */
     @PostMapping("/usuarios")
-    @Operation(summary = "Crea un usuario (estudiante o administrador)")
     public ResponseEntity<UsuarioPerfilDTO> crearUsuario(@Valid @RequestBody AdminUsuarioRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.crearPorAdmin(request));
     }
 
+    /**
+     * Edita cualquier usuario.
+     *
+     * @param id      el identificador del usuario
+     * @param request los datos nuevos
+     * @return el usuario editado
+     */
     @PutMapping("/usuarios/{id}")
-    @Operation(summary = "Edita cualquier usuario")
     public ResponseEntity<UsuarioPerfilDTO> actualizarUsuario(@PathVariable Long id,
             @Valid @RequestBody AdminUsuarioRequestDTO request) {
         return ResponseEntity.ok(usuarioService.actualizarPorAdmin(id, request));
     }
 
+    /**
+     * Elimina cualquier usuario.
+     *
+     * @param id el identificador del usuario
+     * @return respuesta vacia (204)
+     */
     @DeleteMapping("/usuarios/{id}")
-    @Operation(summary = "Elimina cualquier usuario")
     public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
         usuarioService.eliminarPorAdmin(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

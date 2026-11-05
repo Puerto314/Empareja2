@@ -26,13 +26,29 @@ import co.edu.unbosque.empareja2.repository.UsuarioRepository;
 @Component
 public class AdminSeeder implements CommandLineRunner {
 
+    /** Registro de eventos de la clase. */
     private static final Logger log = LoggerFactory.getLogger(AdminSeeder.class);
 
+    /** Acceso a los datos de los usuarios. */
     private final UsuarioRepository usuarioRepository;
+
+    /** Cifra la contrasena del administrador. */
     private final PasswordEncoder passwordEncoder;
+
+    /** Correo (nombre de usuario) del administrador semilla. */
     private final String adminCorreo;
+
+    /** Contrasena del administrador semilla (vacia si se debe generar una). */
     private final String adminContrasena;
 
+    /**
+     * Crea el sembrador.
+     *
+     * @param usuarioRepository el repositorio de usuarios
+     * @param passwordEncoder   el cifrador de contrasenas
+     * @param adminCorreo       el correo del administrador semilla
+     * @param adminContrasena   la contrasena del administrador semilla (puede estar vacia)
+     */
     public AdminSeeder(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
             @Value("${app.admin.correo:${ADMIN_CORREO:Puerto314}}") String adminCorreo,
             @Value("${app.admin.contrasena:${ADMIN_CONTRASENA:}}") String adminContrasena) {
@@ -42,9 +58,14 @@ public class AdminSeeder implements CommandLineRunner {
         this.adminContrasena = adminContrasena;
     }
 
+    /**
+     * Crea el administrador semilla si no existe.
+     *
+     * @param args los argumentos de arranque (no se usan)
+     */
     @Override
     public void run(String... args) {
-        if (usuarioRepository.existsByCorreo(adminCorreo)) {
+        if (usuarioRepository.existePorCorreo(adminCorreo)) {
             return;
         }
 
@@ -65,7 +86,7 @@ public class AdminSeeder implements CommandLineRunner {
         admin.setNombre("Administrador");
         admin.setApellido("Sistema");
 
-        usuarioRepository.save(admin);
+        usuarioRepository.guardar(admin);
         log.info("Usuario administrador semilla creado: {}", adminCorreo);
         if (generada) {
             log.warn("Contrasena generada para '{}': {}  (cambiala o define ADMIN_CONTRASENA)", adminCorreo,
@@ -73,6 +94,11 @@ public class AdminSeeder implements CommandLineRunner {
         }
     }
 
+    /**
+     * Genera una contrasena aleatoria.
+     *
+     * @return una contrasena aleatoria de 24 caracteres
+     */
     private static String generarContrasena() {
         byte[] bytes = new byte[18];
         new SecureRandom().nextBytes(bytes);

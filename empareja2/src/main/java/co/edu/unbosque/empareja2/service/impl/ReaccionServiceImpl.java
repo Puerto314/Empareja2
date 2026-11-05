@@ -5,14 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
-import co.edu.unbosque.empareja2.dto.response.ReaccionAdminDTO;
-import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
+import co.edu.unbosque.empareja2.dto.MeGustaDTO;
+import co.edu.unbosque.empareja2.dto.ReaccionAdminDTO;
+import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.LanzadorException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
 import co.edu.unbosque.empareja2.repository.ReaccionRepository;
 import co.edu.unbosque.empareja2.service.ReaccionService;
@@ -25,10 +24,22 @@ import co.edu.unbosque.empareja2.service.ReaccionService;
 @Transactional(readOnly = true)
 public class ReaccionServiceImpl implements ReaccionService {
 
+    /** Acceso a los datos de las reacciones. */
     private final ReaccionRepository reaccionRepository;
+
+    /** Busca usuarios con el error 404 si no existen. */
     private final UsuarioFinder usuarioFinder;
+
+    /** Convierte reacciones en DTOs. */
     private final InteraccionMapper interaccionMapper;
 
+    /**
+     * Crea el servicio.
+     *
+     * @param reaccionRepository el repositorio de reacciones
+     * @param usuarioFinder      el buscador de usuarios
+     * @param interaccionMapper  el convertidor de reacciones
+     */
     public ReaccionServiceImpl(ReaccionRepository reaccionRepository, UsuarioFinder usuarioFinder,
             InteraccionMapper interaccionMapper) {
         this.reaccionRepository = reaccionRepository;
@@ -36,6 +47,13 @@ public class ReaccionServiceImpl implements ReaccionService {
         this.interaccionMapper = interaccionMapper;
     }
 
+    /**
+     * Da me gusta a un perfil (no al propio y una sola vez).
+     *
+     * @param correoActual el correo del usuario que da el me gusta
+     * @param idPerfil     el identificador del perfil
+     * @return el estado de los me gusta del perfil
+     */
     @Override
     @Transactional
     public MeGustaDTO darMeGusta(String correoActual, Long idPerfil) {
@@ -43,19 +61,26 @@ public class ReaccionServiceImpl implements ReaccionService {
         Usuario destinatario = usuarioFinder.estudianteVisible(idPerfil);
 
         if (autor.getId().equals(destinatario.getId())) {
-            throw new IllegalArgumentException("No puedes darte me gusta a ti mismo");
+            LanzadorException.meGustaAUnoMismo();
         }
         if (reaccionRepository.buscar(autor.getId(), destinatario.getId(), TipoReaccion.ME_GUSTA).isPresent()) {
-            throw new DuplicateResourceException("Ya le diste me gusta a este perfil");
+            LanzadorException.meGustaYaDado();
         }
 
         int numero = reaccionRepository.maximoNumero(autor.getId()) + 1;
-        reaccionRepository.save(new Reaccion(autor, destinatario, numero, TipoReaccion.ME_GUSTA));
+        reaccionRepository.guardar(new Reaccion(autor, destinatario, numero, TipoReaccion.ME_GUSTA));
 
         return new MeGustaDTO(destinatario.getId(),
                 reaccionRepository.contar(destinatario.getId(), TipoReaccion.ME_GUSTA), true);
     }
 
+    /**
+     * Quita el me gusta dado a un perfil.
+     *
+     * @param correoActual el correo del usuario que quita el me gusta
+     * @param idPerfil     el identificador del perfil
+     * @return el estado de los me gusta del perfil
+     */
     @Override
     @Transactional
     public MeGustaDTO quitarMeGusta(String correoActual, Long idPerfil) {
@@ -63,13 +88,22 @@ public class ReaccionServiceImpl implements ReaccionService {
         Usuario destinatario = usuarioFinder.estudianteVisible(idPerfil);
 
         Reaccion reaccion = reaccionRepository.buscar(autor.getId(), destinatario.getId(), TipoReaccion.ME_GUSTA)
-                .orElseThrow(() -> new ResourceNotFoundException("No le has dado me gusta a este perfil"));
-        reaccionRepository.delete(reaccion);
+                .orElse(null);
+        if (reaccion == null) {
+            LanzadorException.meGustaNoEncontrado();
+        }
+        reaccionRepository.eliminar(reaccion.getAutor().getId(), reaccion.getNumeroReaccion());
 
         return new MeGustaDTO(destinatario.getId(),
                 reaccionRepository.contar(destinatario.getId(), TipoReaccion.ME_GUSTA), false);
     }
 
+    /**
+     * Lista publica de quienes dieron me gusta a un perfil.
+     *
+     * @param idPerfil el identificador del perfil
+     * @return las reacciones recibidas
+     */
     @Override
     public List<ReaccionDTO> listarMeGusta(Long idPerfil) {
         Usuario destinatario = usuarioFinder.estudianteVisible(idPerfil);
@@ -77,17 +111,27 @@ public class ReaccionServiceImpl implements ReaccionService {
                 .map(interaccionMapper::toReaccionDTO).toList();
     }
 
+    /**
+     * Moderacion (solo ADMIN): todas las reacciones del sistema.
+     *
+     * @return todas las reacciones
+     */
     @Override
     public List<ReaccionAdminDTO> listarTodasParaAdmin() {
         return reaccionRepository.listarTodas().stream().map(interaccionMapper::toReaccionAdminDTO).toList();
     }
 
+    /**
+     * Moderacion (solo ADMIN): elimina una reaccion por su llave.
+     *
+     * @param idAutor        el identificador del autor
+     * @param numeroReaccion el numero de la reaccion
+     */
     @Override
     @Transactional
     public void eliminarPorAdmin(Long idAutor, Integer numeroReaccion) {
         if (reaccionRepository.eliminar(idAutor, numeroReaccion) == 0) {
-            throw new ResourceNotFoundException(
-                    "No existe la reaccion " + numeroReaccion + " del usuario " + idAutor);
+            LanzadorException.reaccionNoEncontrada(idAutor, numeroReaccion);
         }
     }
 }

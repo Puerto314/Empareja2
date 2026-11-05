@@ -21,8 +21,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.request.ComentarioRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.ComentarioDTO;
+import co.edu.unbosque.empareja2.dto.ComentarioRequestDTO;
+import co.edu.unbosque.empareja2.dto.ComentarioDTO;
 import co.edu.unbosque.empareja2.entity.Comentario;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
@@ -52,7 +52,7 @@ class ComentarioServiceImplTest {
         when(usuarioFinder.porCorreo("luis@mail.com")).thenReturn(luis);
         when(usuarioFinder.estudianteVisible(2L)).thenReturn(luis);
         when(usuarioFinder.estudianteVisible(1L)).thenReturn(ana);
-        when(comentarioRepository.save(any(Comentario.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(comentarioRepository.guardar(any(Comentario.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
@@ -62,17 +62,17 @@ class ComentarioServiceImplTest {
         ComentarioDTO dto = service.enviar("ana@mail.com", 2L, new ComentarioRequestDTO("  Hola, me gusto tu perfil  "));
 
         ArgumentCaptor<Comentario> captor = ArgumentCaptor.forClass(Comentario.class);
-        verify(comentarioRepository).save(captor.capture());
+        verify(comentarioRepository).guardar(captor.capture());
         Comentario c = captor.getValue();
         assertThat(c.getAutor().getId()).isEqualTo(1L);
         assertThat(c.getNumeroComentario()).isEqualTo(1);
         assertThat(c.getAutor()).isSameAs(ana);
         assertThat(c.getDestinatario()).isSameAs(luis);
 
-        assertThat(dto.contenido()).isEqualTo("Hola, me gusto tu perfil");
-        assertThat(dto.idAutor()).isEqualTo(1L);
-        assertThat(dto.idDestinatario()).isEqualTo(2L);
-        assertThat(dto.nombreAutor()).isEqualTo("Ana Garcia");
+        assertThat(dto.getContenido()).isEqualTo("Hola, me gusto tu perfil");
+        assertThat(dto.getIdAutor()).isEqualTo(1L);
+        assertThat(dto.getIdDestinatario()).isEqualTo(2L);
+        assertThat(dto.getNombreAutor()).isEqualTo("Ana Garcia");
     }
 
     @Test
@@ -81,14 +81,14 @@ class ComentarioServiceImplTest {
 
         ComentarioDTO dto = service.enviar("ana@mail.com", 2L, new ComentarioRequestDTO("otro"));
 
-        assertThat(dto.numeroComentario()).isEqualTo(8);
+        assertThat(dto.getNumeroComentario()).isEqualTo(8);
     }
 
     @Test
     void noSePuedeComentarUnoMismo() {
         assertThatThrownBy(() -> service.enviar("ana@mail.com", 1L, new ComentarioRequestDTO("hola")))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(comentarioRepository, never()).save(any());
+        verify(comentarioRepository, never()).guardar(any());
     }
 
     @Test
@@ -97,7 +97,7 @@ class ComentarioServiceImplTest {
 
         assertThatThrownBy(() -> service.enviar("ana@mail.com", 99L, new ComentarioRequestDTO("hola")))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(comentarioRepository, never()).save(any());
+        verify(comentarioRepository, never()).guardar(any());
     }
 
     @Test
@@ -110,7 +110,7 @@ class ComentarioServiceImplTest {
         // Luis (el destinatario) lo ve...
         List<ComentarioDTO> deLuis = service.listarRecibidos("luis@mail.com");
         assertThat(deLuis).hasSize(1);
-        assertThat(deLuis.get(0).contenido()).isEqualTo("hola luis");
+        assertThat(deLuis.get(0).getContenido()).isEqualTo("hola luis");
 
         // ...Ana (otra persona) no ve nada, y el servicio solo consulto por su propio id
         assertThat(service.listarRecibidos("ana@mail.com")).isEmpty();

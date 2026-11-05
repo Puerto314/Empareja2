@@ -1,5 +1,7 @@
 package co.edu.unbosque.empareja2.repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
@@ -21,123 +22,217 @@ import co.edu.unbosque.empareja2.entity.Universidad;
 @Repository
 public class UniversidadRepository {
 
-    private static final String SELECT = "SELECT u.id_universidad, u.nombre_universidad, u.sigla, u.calle, u.barrio, "
-            + "c.id_ciudad, c.nombre_ciudad, c.departamento "
-            + "FROM universidad u JOIN ciudad c ON c.id_ciudad = u.ciudad_id_ciudad ";
+    /** Consulta base: la universidad con los datos de su ciudad. */
+    private static final String SELECT = "SELECT u.id_universidad, u.nombre AS nombre_universidad, u.sigla, "
+            + "u.calle, u.barrio, c.id_ciudad, c.nombre AS nombre_ciudad, c.departamento "
+            + "FROM universidad u JOIN ciudad c ON c.id_ciudad = u.id_ciudad ";
 
-    private static final RowMapper<Universidad> MAPPER = (rs, i) -> {
-        Ciudad ciudad = new Ciudad(rs.getString("nombre_ciudad"), rs.getString("departamento"));
-        ciudad.setIdCiudad(rs.getLong("id_ciudad"));
-        Universidad u = new Universidad(rs.getString("nombre_universidad"), rs.getString("sigla"),
-                new Direccion(rs.getString("calle"), rs.getString("barrio")),
-                ciudad);
-        u.setIdUniversidad(rs.getLong("id_universidad"));
-        return u;
-    };
-
+    /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
-    private final SimpleJdbcInsert insert;
 
+    /** Inserta en la tabla universidad y devuelve el id que genera la base de datos. */
+    private final SimpleJdbcInsert insertar;
+
+    /**
+     * Crea el repositorio.
+     *
+     * @param jdbc el JdbcTemplate conectado a la base de datos
+     */
     public UniversidadRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.insert = new SimpleJdbcInsert(jdbc).withTableName("universidad")
+        this.insertar = new SimpleJdbcInsert(jdbc).withTableName("universidad")
                 .usingGeneratedKeyColumns("id_universidad");
     }
 
-    public Optional<Universidad> findById(Long id) {
-        return jdbc.query(SELECT + "WHERE u.id_universidad = ?", MAPPER, id).stream().findFirst();
+    /**
+     * Convierte la fila actual del resultado en una Universidad.
+     *
+     * @param rs   el resultado de la consulta, posicionado en una fila
+     * @param fila el numero de la fila
+     * @return la universidad de esa fila, con su direccion y su ciudad
+     * @throws SQLException si falla la lectura de una columna
+     */
+    private Universidad mapear(ResultSet rs, int fila) throws SQLException {
+        Ciudad ciudad = new Ciudad(rs.getString("nombre_ciudad"), rs.getString("departamento"));
+        ciudad.setIdCiudad(rs.getLong("id_ciudad"));
+
+        Direccion direccion = new Direccion(rs.getString("calle"), rs.getString("barrio"));
+        Universidad universidad = new Universidad(rs.getString("nombre_universidad"), rs.getString("sigla"),
+                direccion, ciudad);
+        universidad.setIdUniversidad(rs.getLong("id_universidad"));
+        return universidad;
     }
 
-    public boolean existsById(Long id) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM universidad WHERE id_universidad = ?", Integer.class,
-                id);
-        return n != null && n > 0;
+    /**
+     * Busca una universidad por su id.
+     *
+     * @param id el identificador de la universidad
+     * @return la universidad, o vacio si no existe
+     */
+    public Optional<Universidad> buscarPorId(Long id) {
+        return jdbc.query(SELECT + "WHERE u.id_universidad = ?", this::mapear, id).stream().findFirst();
     }
 
-    public long count() {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM universidad", Long.class);
-        return n == null ? 0 : n;
-    }
-
-    public boolean existsByNombreIgnoreCase(String nombre) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM universidad WHERE LOWER(nombre_universidad) = LOWER(?)",
-                Integer.class, nombre);
-        return n != null && n > 0;
-    }
-
-    public boolean existsBySiglaIgnoreCase(String sigla) {
-        Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM universidad WHERE LOWER(sigla) = LOWER(?)",
-                Integer.class, sigla);
-        return n != null && n > 0;
-    }
-
+    /**
+     * Lista todas las universidades ordenadas por nombre.
+     *
+     * @return las universidades
+     */
     public List<Universidad> listarTodas() {
-        return jdbc.query(SELECT + "ORDER BY u.nombre_universidad", MAPPER);
+        return jdbc.query(SELECT + "ORDER BY u.nombre", this::mapear);
     }
 
-    /** Busca por nombre o sigla (contiene el texto, sin distinguir mayusculas). */
-    public List<Universidad> buscar(String texto) {
+    /**
+     * Busca por nombre o sigla (contiene el texto, sin distinguir mayusculas).
+     *
+     * @param texto el texto a buscar
+     * @return las universidades que coinciden
+     */
+    public List<Universidad> listarPorTexto(String texto) {
         String patron = "%" + texto.toLowerCase() + "%";
-        return jdbc.query(SELECT + "WHERE LOWER(u.nombre_universidad) LIKE ? OR LOWER(u.sigla) LIKE ? ORDER BY u.nombre_universidad", MAPPER,
-                patron, patron);
+        return jdbc.query(SELECT + "WHERE LOWER(u.nombre) LIKE ? OR LOWER(u.sigla) LIKE ? ORDER BY u.nombre",
+                this::mapear, patron, patron);
     }
 
-    public Universidad save(Universidad u) {
-        Direccion d = u.getDireccion() != null ? u.getDireccion() : new Direccion();
+    /**
+     * Indica si existe una universidad con ese id.
+     *
+     * @param id el identificador de la universidad
+     * @return true si existe
+     */
+    public boolean existePorId(Long id) {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad WHERE id_universidad = ?", id) > 0;
+    }
+
+    /**
+     * Indica si ya existe una universidad con ese nombre (sin distinguir mayusculas).
+     *
+     * @param nombre el nombre de la universidad
+     * @return true si ya existe
+     */
+    public boolean existePorNombre(String nombre) {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre) = LOWER(?)", nombre) > 0;
+    }
+
+    /**
+     * Indica si ya existe una universidad con esa sigla (sin distinguir mayusculas).
+     *
+     * @param sigla la sigla de la universidad
+     * @return true si ya existe
+     */
+    public boolean existePorSigla(String sigla) {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad WHERE LOWER(sigla) = LOWER(?)", sigla) > 0;
+    }
+
+    /**
+     * Igual que existePorNombre pero ignorando una universidad (para editar sin
+     * falso duplicado).
+     *
+     * @param nombre el nombre de la universidad
+     * @param id     el id de la universidad que se ignora
+     * @return true si existe otra universidad con ese nombre
+     */
+    public boolean existePorNombreExceptoId(String nombre, Long id) {
+        return Sql.contar(jdbc,
+                "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre) = LOWER(?) AND id_universidad <> ?", nombre,
+                id) > 0;
+    }
+
+    /**
+     * Igual que existePorSigla pero ignorando una universidad (para editar sin
+     * falso duplicado).
+     *
+     * @param sigla la sigla de la universidad
+     * @param id    el id de la universidad que se ignora
+     * @return true si existe otra universidad con esa sigla
+     */
+    public boolean existePorSiglaExceptoId(String sigla, Long id) {
+        return Sql.contar(jdbc,
+                "SELECT COUNT(*) FROM universidad WHERE LOWER(sigla) = LOWER(?) AND id_universidad <> ?", sigla,
+                id) > 0;
+    }
+
+    /**
+     * Cuenta todas las universidades.
+     *
+     * @return el numero de universidades
+     */
+    public long contar() {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad");
+    }
+
+    /**
+     * Cuantas universidades hay en la ciudad.
+     *
+     * @param idCiudad el identificador de la ciudad
+     * @return el numero de universidades
+     */
+    public long contarPorCiudad(Long idCiudad) {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad WHERE id_ciudad = ?", idCiudad);
+    }
+
+    /**
+     * Cuantos usuarios estudian en la universidad.
+     *
+     * @param idUniversidad el identificador de la universidad
+     * @return el numero de estudiantes
+     */
+    public long contarEstudiantes(Long idUniversidad) {
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM estudiante WHERE id_universidad = ?", idUniversidad);
+    }
+
+    /**
+     * Inserta una universidad nueva y le asigna el id que genero la base de datos.
+     *
+     * @param universidad la universidad a guardar
+     * @return la misma universidad, ya con su id
+     */
+    public Universidad guardar(Universidad universidad) {
+        Direccion direccion = universidad.getDireccion() != null ? universidad.getDireccion() : new Direccion();
         Map<String, Object> valores = new HashMap<>();
-        valores.put("nombre_universidad", u.getNombre());
-        valores.put("sigla", u.getSigla());
-        valores.put("calle", d.getCalle());
-        valores.put("barrio", d.getBarrio());
-        valores.put("ciudad_id_ciudad", u.getCiudad().getIdCiudad());
-        Number id = insert.executeAndReturnKey(valores);
-        u.setIdUniversidad(id.longValue());
-        return u;
+        valores.put("nombre", universidad.getNombre());
+        valores.put("sigla", universidad.getSigla());
+        valores.put("calle", direccion.getCalle());
+        valores.put("barrio", direccion.getBarrio());
+        valores.put("id_ciudad", universidad.getCiudad().getIdCiudad());
+        Number id = insertar.executeAndReturnKey(valores);
+        universidad.setIdUniversidad(id.longValue());
+        return universidad;
     }
 
-    public List<Universidad> saveAll(List<Universidad> universidades) {
+    /**
+     * Inserta varias universidades, una por una.
+     *
+     * @param universidades las universidades a guardar
+     * @return las universidades guardadas, ya con su id
+     */
+    public List<Universidad> guardarTodas(List<Universidad> universidades) {
         List<Universidad> guardadas = new ArrayList<>();
-        for (Universidad u : universidades) {
-            guardadas.add(save(u));
+        for (Universidad universidad : universidades) {
+            guardadas.add(guardar(universidad));
         }
         return guardadas;
     }
 
-    public boolean existsByNombreAndIdNot(String nombre, Long id) {
-        Integer n = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre_universidad) = LOWER(?) AND id_universidad <> ?",
-                Integer.class, nombre, id);
-        return n != null && n > 0;
+    /**
+     * Actualiza los datos de una universidad existente.
+     *
+     * @param universidad la universidad con los datos nuevos
+     */
+    public void actualizar(Universidad universidad) {
+        Direccion direccion = universidad.getDireccion() != null ? universidad.getDireccion() : new Direccion();
+        jdbc.update("UPDATE universidad SET nombre = ?, sigla = ?, calle = ?, barrio = ?, "
+                + "id_ciudad = ? WHERE id_universidad = ?", universidad.getNombre(), universidad.getSigla(),
+                direccion.getCalle(), direccion.getBarrio(), universidad.getCiudad().getIdCiudad(),
+                universidad.getIdUniversidad());
     }
 
-    public boolean existsBySiglaAndIdNot(String sigla, Long id) {
-        Integer n = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM universidad WHERE LOWER(sigla) = LOWER(?) AND id_universidad <> ?",
-                Integer.class, sigla, id);
-        return n != null && n > 0;
-    }
-
-    /** Cuantas universidades hay en la ciudad. */
-    public long contarPorCiudad(Long idCiudad) {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM universidad WHERE ciudad_id_ciudad = ?", Long.class, idCiudad);
-        return n == null ? 0 : n;
-    }
-
-    /** Cuantos usuarios estudian en la universidad. */
-    public long contarEstudiantes(Long idUniversidad) {
-        Long n = jdbc.queryForObject("SELECT COUNT(*) FROM estudiante WHERE universidad_id_universidad = ?", Long.class,
-                idUniversidad);
-        return n == null ? 0 : n;
-    }
-
-    public void update(Universidad u) {
-        Direccion d = u.getDireccion() != null ? u.getDireccion() : new Direccion();
-        jdbc.update("UPDATE universidad SET nombre_universidad = ?, sigla = ?, calle = ?, barrio = ?, "
-                + "ciudad_id_ciudad = ? WHERE id_universidad = ?", u.getNombre(), u.getSigla(), d.getCalle(), d.getBarrio(),
-                u.getCiudad().getIdCiudad(), u.getIdUniversidad());
-    }
-
-    public void deleteById(Long id) {
+    /**
+     * Elimina una universidad.
+     *
+     * @param id el identificador de la universidad
+     */
+    public void eliminar(Long id) {
         jdbc.update("DELETE FROM universidad WHERE id_universidad = ?", id);
     }
 }

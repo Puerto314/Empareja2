@@ -2,7 +2,7 @@ package co.edu.unbosque.empareja2.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -11,10 +11,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.request.AdminUsuarioRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RegistroRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.UsuarioPerfilDTO;
-import co.edu.unbosque.empareja2.dto.response.UsuarioPublicoDTO;
+import co.edu.unbosque.empareja2.dto.AdminUsuarioRequestDTO;
+import co.edu.unbosque.empareja2.dto.RegistroRequestDTO;
+import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
+import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
@@ -38,8 +38,8 @@ class UsuarioMapperTest {
 
     @Test
     void elDtoPublicoNoExponeDatosSensibles() {
-        List<String> componentes = Arrays.stream(UsuarioPublicoDTO.class.getRecordComponents())
-                .map(RecordComponent::getName).toList();
+        List<String> componentes = Arrays.stream(UsuarioPublicoDTO.class.getDeclaredFields())
+                .map(Field::getName).toList();
 
         assertThat(componentes).doesNotContain("correo", "contrasena", "contrasenaHash",
                 "fechaNacimiento", "rol");
@@ -49,31 +49,31 @@ class UsuarioMapperTest {
     void toPublicoDTOCopiaSoloInformacionPublica() {
         UsuarioPublicoDTO dto = mapper.toPublicoDTO(usuarioCompleto(), 3L, true);
 
-        assertThat(dto.id()).isEqualTo(7L);
-        assertThat(dto.nombreCompleto()).isEqualTo("Ana Garcia");
-        assertThat(dto.edad()).isEqualTo(22);
-        assertThat(dto.genero()).isEqualTo(Genero.FEMENINO);
-        assertThat(dto.totalMeGusta()).isEqualTo(3L);
-        assertThat(dto.meGustaDelUsuarioActual()).isTrue();
-        assertThat(dto.intereses()).containsExactly("Anime", "cine", "Musica");
-        assertThat(dto.estudios()).hasSize(1);
-        assertThat(dto.estudios().get(0).universidad()).isEqualTo("Universidad El Bosque");
-        assertThat(dto.estudios().get(0).semestre()).isEqualTo(5);
-        assertThat(dto.redes()).hasSize(1);
-        assertThat(dto.redes().get(0).redSocial()).isEqualTo("Instagram");
-        assertThat(dto.redes().get(0).nombreUsuario()).isEqualTo("ana.g");
+        assertThat(dto.getId()).isEqualTo(7L);
+        assertThat(dto.getNombreCompleto()).isEqualTo("Ana Garcia");
+        assertThat(dto.getEdad()).isEqualTo(22);
+        assertThat(dto.getGenero()).isEqualTo(Genero.FEMENINO);
+        assertThat(dto.getTotalMeGusta()).isEqualTo(3L);
+        assertThat(dto.isMeGustaDelUsuarioActual()).isTrue();
+        assertThat(dto.getIntereses()).containsExactly("Anime", "cine", "Musica");
+        assertThat(dto.getEstudios()).hasSize(1);
+        assertThat(dto.getEstudios().get(0).getUniversidad()).isEqualTo("Universidad El Bosque");
+        assertThat(dto.getEstudios().get(0).getSemestre()).isEqualTo(5);
+        assertThat(dto.getRedes()).hasSize(1);
+        assertThat(dto.getRedes().get(0).getRedSocial()).isEqualTo("Instagram");
+        assertThat(dto.getRedes().get(0).getNombreUsuario()).isEqualTo("ana.g");
     }
 
     @Test
     void toPerfilDTOIncluyeDatosPrivadosPeroNuncaElHash() {
         UsuarioPerfilDTO dto = mapper.toPerfilDTO(usuarioCompleto());
 
-        assertThat(dto.correo()).isEqualTo("ana@mail.com");
-        assertThat(dto.rol()).isEqualTo(Rol.ESTUDIANTE);
-        assertThat(dto.fechaNacimiento()).isNotNull();
+        assertThat(dto.getCorreo()).isEqualTo("ana@mail.com");
+        assertThat(dto.getRol()).isEqualTo(Rol.ESTUDIANTE);
+        assertThat(dto.getFechaNacimiento()).isNotNull();
 
-        List<String> componentes = Arrays.stream(UsuarioPerfilDTO.class.getRecordComponents())
-                .map(RecordComponent::getName).toList();
+        List<String> componentes = Arrays.stream(UsuarioPerfilDTO.class.getDeclaredFields())
+                .map(Field::getName).toList();
         assertThat(componentes).doesNotContain("contrasena", "contrasenaHash", "tipoDocumento", "documento");
     }
 

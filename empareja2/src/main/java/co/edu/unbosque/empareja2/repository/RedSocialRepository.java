@@ -1,42 +1,68 @@
 package co.edu.unbosque.empareja2.repository;
 
-import java.util.Comparator;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import co.edu.unbosque.empareja2.entity.RedSocial;
 
 /**
- * Catalogo ESTATICO de redes sociales. El modelo relacional no tiene un catalogo
- * de redes: la tabla red_social guarda, por estudiante, la red y su nombre de
- * usuario. Los ids de esta lista son los que se guardan en red_social.id_red_social.
+ * Acceso a datos (JDBC) del catalogo red_social(id_red_social, nombre, url_base).
+ * Las redes de cada estudiante (con su nombre de usuario) viven en la tabla de union
+ * estudiante_red_social, que maneja UsuarioRepository.
  */
 @Repository
 public class RedSocialRepository {
 
-    private static final List<RedSocial> REDES = List.of(
-            red(1L, "Instagram", "https://www.instagram.com"),
-            red(2L, "Facebook", "https://www.facebook.com"),
-            red(3L, "X", "https://x.com"),
-            red(4L, "TikTok", "https://www.tiktok.com"),
-            red(5L, "LinkedIn", "https://www.linkedin.com"),
-            red(6L, "YouTube", "https://www.youtube.com"),
-            red(7L, "Twitch", "https://www.twitch.tv"));
+    /** Consulta base: las columnas de la tabla red_social. */
+    private static final String SELECT = "SELECT id_red_social, nombre, url_base FROM red_social ";
 
-    private static RedSocial red(Long id, String nombre, String url) {
-        RedSocial r = new RedSocial(nombre, url);
-        r.setIdRedSocial(id);
-        return r;
+    /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
+    private final JdbcTemplate jdbc;
+
+    /**
+     * Crea el repositorio.
+     *
+     * @param jdbc el JdbcTemplate conectado a la base de datos
+     */
+    public RedSocialRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
-    public Optional<RedSocial> findById(Long id) {
-        return REDES.stream().filter(r -> r.getIdRedSocial().equals(id)).findFirst();
+    /**
+     * Convierte la fila actual del resultado en una RedSocial.
+     *
+     * @param rs   el resultado de la consulta, posicionado en una fila
+     * @param fila el numero de la fila
+     * @return la red social de esa fila
+     * @throws SQLException si falla la lectura de una columna
+     */
+    private RedSocial mapear(ResultSet rs, int fila) throws SQLException {
+        RedSocial red = new RedSocial(rs.getString("nombre"), rs.getString("url_base"));
+        red.setIdRedSocial(rs.getLong("id_red_social"));
+        return red;
     }
 
-    public List<RedSocial> findAllByOrderByNombreRedSocialAsc() {
-        return REDES.stream().sorted(Comparator.comparing(RedSocial::getNombreRedSocial, String.CASE_INSENSITIVE_ORDER))
-                .toList();
+    /**
+     * Busca una red social por su id.
+     *
+     * @param id el identificador de la red social
+     * @return la red social, o vacio si no existe
+     */
+    public Optional<RedSocial> buscarPorId(Long id) {
+        return jdbc.query(SELECT + "WHERE id_red_social = ?", this::mapear, id).stream().findFirst();
+    }
+
+    /**
+     * Lista todas las redes sociales ordenadas por nombre.
+     *
+     * @return las redes sociales
+     */
+    public List<RedSocial> listarTodas() {
+        return jdbc.query(SELECT + "ORDER BY nombre", this::mapear);
     }
 }

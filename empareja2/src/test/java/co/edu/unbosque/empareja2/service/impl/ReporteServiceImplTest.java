@@ -21,8 +21,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.request.ReporteRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.ReporteDTO;
+import co.edu.unbosque.empareja2.dto.ReporteRequestDTO;
+import co.edu.unbosque.empareja2.dto.ReporteDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.Reporte;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
@@ -54,7 +54,7 @@ class ReporteServiceImplTest {
         when(usuarioFinder.porCorreo("ana@mail.com")).thenReturn(ana);
         when(usuarioFinder.estudianteVisible(2L)).thenReturn(luis);
         when(usuarioFinder.estudianteVisible(1L)).thenReturn(ana);
-        when(reporteRepository.save(any(Reporte.class))).thenAnswer(inv -> {
+        when(reporteRepository.guardar(any(Reporte.class))).thenAnswer(inv -> {
             Reporte r = inv.getArgument(0);
             r.setIdReporte(10L);
             return r;
@@ -67,16 +67,16 @@ class ReporteServiceImplTest {
                 new ReporteRequestDTO(TipoReporte.PERFIL_FALSO, "  Usa fotos de otra persona "));
 
         ArgumentCaptor<Reporte> captor = ArgumentCaptor.forClass(Reporte.class);
-        verify(reporteRepository).save(captor.capture());
+        verify(reporteRepository).guardar(captor.capture());
         Reporte r = captor.getValue();
         assertThat(r.getRealizador()).isSameAs(ana);
         assertThat(r.getReportado()).isSameAs(luis);
         assertThat(r.getTipoReporte()).isEqualTo(TipoReporte.PERFIL_FALSO);
         assertThat(r.getDescripcion()).isEqualTo("Usa fotos de otra persona");
 
-        assertThat(dto.idReporte()).isEqualTo(10L);
-        assertThat(dto.idRealizador()).isEqualTo(1L);
-        assertThat(dto.idReportado()).isEqualTo(2L);
+        assertThat(dto.getIdReporte()).isEqualTo(10L);
+        assertThat(dto.getIdRealizador()).isEqualTo(1L);
+        assertThat(dto.getIdReportado()).isEqualTo(2L);
     }
 
     @Test
@@ -84,7 +84,7 @@ class ReporteServiceImplTest {
         service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.SPAM, null));
 
         ArgumentCaptor<Reporte> captor = ArgumentCaptor.forClass(Reporte.class);
-        verify(reporteRepository).save(captor.capture());
+        verify(reporteRepository).guardar(captor.capture());
         assertThat(captor.getValue().getDescripcion()).isNull();
     }
 
@@ -92,7 +92,7 @@ class ReporteServiceImplTest {
     void noSePuedeReportarElPropioPerfil() {
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 1L, new ReporteRequestDTO(TipoReporte.SPAM, null)))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(reporteRepository, never()).save(any());
+        verify(reporteRepository, never()).guardar(any());
     }
 
     @Test
@@ -101,7 +101,7 @@ class ReporteServiceImplTest {
 
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 99L, new ReporteRequestDTO(TipoReporte.ACOSO, "x")))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(reporteRepository, never()).save(any());
+        verify(reporteRepository, never()).guardar(any());
     }
 
     @Test
@@ -114,15 +114,15 @@ class ReporteServiceImplTest {
         List<ReporteDTO> lista = service.listarTodos();
 
         assertThat(lista).hasSize(1);
-        assertThat(lista.get(0).nombreReportado()).isEqualTo("Luis Perez");
-        assertThat(lista.get(0).tipoReporte()).isEqualTo(TipoReporte.ACOSO);
+        assertThat(lista.get(0).getNombreReportado()).isEqualTo("Luis Perez");
+        assertThat(lista.get(0).getTipoReporte()).isEqualTo(TipoReporte.ACOSO);
     }
 
     @Test
     void elTipoOtroExigeDescripcion() {
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.OTRO, "  ")))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("OTRO");
-        verify(reporteRepository, never()).save(any());
+        verify(reporteRepository, never()).guardar(any());
     }
 
     @Test
@@ -131,14 +131,14 @@ class ReporteServiceImplTest {
 
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.SPAM, null)))
                 .isInstanceOf(DuplicateResourceException.class);
-        verify(reporteRepository, never()).save(any());
+        verify(reporteRepository, never()).guardar(any());
     }
 
     @Test
     void unReporteNuevoEmpiezaPendiente() {
         ReporteDTO dto = service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.SPAM, null));
 
-        assertThat(dto.estado()).isEqualTo(EstadoReporte.PENDIENTE);
+        assertThat(dto.getEstado()).isEqualTo(EstadoReporte.PENDIENTE);
     }
 
     @Test
@@ -154,22 +154,22 @@ class ReporteServiceImplTest {
     void adminCambiaElEstadoDeUnReporte() {
         Reporte r = new Reporte(ana, luis, TipoReporte.ACOSO, "x");
         r.setIdReporte(5L);
-        when(reporteRepository.findById(5L)).thenReturn(Optional.of(r));
+        when(reporteRepository.buscarPorId(5L)).thenReturn(Optional.of(r));
 
         ReporteDTO dto = service.actualizarEstado(5L, EstadoReporte.EN_REVISION);
 
         verify(reporteRepository).actualizarEstado(5L, EstadoReporte.EN_REVISION);
-        assertThat(dto.estado()).isEqualTo(EstadoReporte.EN_REVISION);
+        assertThat(dto.getEstado()).isEqualTo(EstadoReporte.EN_REVISION);
     }
 
     @Test
     void adminEliminaUnReporteYSiNoExisteDa404() {
         Reporte r = new Reporte(ana, luis, TipoReporte.ACOSO, "x");
-        when(reporteRepository.findById(5L)).thenReturn(Optional.of(r));
-        when(reporteRepository.findById(6L)).thenReturn(Optional.empty());
+        when(reporteRepository.buscarPorId(5L)).thenReturn(Optional.of(r));
+        when(reporteRepository.buscarPorId(6L)).thenReturn(Optional.empty());
 
         service.eliminar(5L);
-        verify(reporteRepository).deleteById(5L);
+        verify(reporteRepository).eliminar(5L);
 
         assertThatThrownBy(() -> service.eliminar(6L)).isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> service.obtener(6L)).isInstanceOf(ResourceNotFoundException.class);

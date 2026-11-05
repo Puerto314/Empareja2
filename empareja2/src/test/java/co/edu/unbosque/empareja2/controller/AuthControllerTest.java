@@ -21,10 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
 
-import co.edu.unbosque.empareja2.dto.request.EstudioRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.LoginRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.RegistroRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.AuthResponseDTO;
+import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
+import co.edu.unbosque.empareja2.dto.LoginRequestDTO;
+import co.edu.unbosque.empareja2.dto.RegistroRequestDTO;
+import co.edu.unbosque.empareja2.dto.AuthResponseDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.service.AuthService;
@@ -49,7 +49,7 @@ class AuthControllerTest extends ControllerTestSupport {
 
     @Test
     void registroValidoDa201() throws Exception {
-        when(authService.registrar(any())).thenReturn(AuthResponseDTO.bearer("tok", 1000L, null));
+        when(authService.registrar(any())).thenReturn(new AuthResponseDTO("tok", "Bearer", 1000L, null));
 
         mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(
@@ -92,7 +92,7 @@ class AuthControllerTest extends ControllerTestSupport {
 
     @Test
     void loginValidoDa200() throws Exception {
-        when(authService.iniciarSesion(any())).thenReturn(AuthResponseDTO.bearer("tok", 1000L, null));
+        when(authService.iniciarSesion(any())).thenReturn(new AuthResponseDTO("tok", "Bearer", 1000L, null));
 
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(new LoginRequestDTO("ana@mail.com", "secreto123"))))

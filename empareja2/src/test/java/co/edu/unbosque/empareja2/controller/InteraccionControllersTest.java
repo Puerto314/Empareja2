@@ -21,12 +21,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import co.edu.unbosque.empareja2.dto.request.ComentarioRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.ReporteRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.ComentarioDTO;
-import co.edu.unbosque.empareja2.dto.response.MeGustaDTO;
-import co.edu.unbosque.empareja2.dto.response.ReaccionDTO;
-import co.edu.unbosque.empareja2.dto.response.ReporteDTO;
+import co.edu.unbosque.empareja2.dto.ComentarioRequestDTO;
+import co.edu.unbosque.empareja2.dto.ReporteRequestDTO;
+import co.edu.unbosque.empareja2.dto.ComentarioDTO;
+import co.edu.unbosque.empareja2.dto.MeGustaDTO;
+import co.edu.unbosque.empareja2.dto.ReaccionDTO;
+import co.edu.unbosque.empareja2.dto.ReporteDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.TipoReporte;

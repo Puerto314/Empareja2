@@ -5,5 +5,10 @@ package co.edu.unbosque.empareja2.entity;
  * un ADMIN administra el sistema y no aparece en el catalogo.
  */
 public enum Rol {
-    ESTUDIANTE, ADMIN
+
+    /** Usuario normal que aparece en el catalogo. */
+    ESTUDIANTE,
+
+    /** Usuario que administra el sistema y no aparece en el catalogo. */
+    ADMIN
 }

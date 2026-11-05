@@ -19,14 +19,14 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.request.ActualizarOfertaRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.CarreraRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.CiudadRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.request.UniversidadRequestDTO;
-import co.edu.unbosque.empareja2.dto.response.CiudadDTO;
-import co.edu.unbosque.empareja2.dto.response.OfreceDTO;
-import co.edu.unbosque.empareja2.dto.response.UniversidadDTO;
+import co.edu.unbosque.empareja2.dto.ActualizarOfertaRequestDTO;
+import co.edu.unbosque.empareja2.dto.CarreraRequestDTO;
+import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
+import co.edu.unbosque.empareja2.dto.OfreceRequestDTO;
+import co.edu.unbosque.empareja2.dto.UniversidadRequestDTO;
+import co.edu.unbosque.empareja2.dto.CiudadDTO;
+import co.edu.unbosque.empareja2.dto.OfreceDTO;
+import co.edu.unbosque.empareja2.dto.UniversidadDTO;
 import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Ciudad;
 import co.edu.unbosque.empareja2.entity.Ofrece;
@@ -72,15 +72,15 @@ class CatalogoServiceImplTest {
         List<UniversidadDTO> lista = service.listarUniversidades("  ");
 
         assertThat(lista).hasSize(1);
-        assertThat(lista.get(0).sigla()).isEqualTo("UNBOSQUE");
-        assertThat(lista.get(0).calle()).isEqualTo("Calle 1");
-        assertThat(lista.get(0).ciudad().nombre()).isEqualTo("Bogota");
-        verify(universidadRepository, never()).buscar(any());
+        assertThat(lista.get(0).getSigla()).isEqualTo("UNBOSQUE");
+        assertThat(lista.get(0).getCalle()).isEqualTo("Calle 1");
+        assertThat(lista.get(0).getCiudad().getNombre()).isEqualTo("Bogota");
+        verify(universidadRepository, never()).listarPorTexto(any());
     }
 
     @Test
     void listarUniversidadesConTextoBuscaSinEspacios() {
-        when(universidadRepository.buscar("bosque"))
+        when(universidadRepository.listarPorTexto("bosque"))
                 .thenReturn(List.of(TestData.universidad(1L, "Universidad El Bosque", "UNBOSQUE")));
 
         assertThat(service.listarUniversidades("  bosque ")).hasSize(1);
@@ -88,36 +88,36 @@ class CatalogoServiceImplTest {
 
     @Test
     void crearUniversidadGuardaLaDireccionCompuesta() {
-        when(ciudadRepository.findById(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
-        when(universidadRepository.save(any(Universidad.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
+        when(universidadRepository.guardar(any(Universidad.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UniversidadDTO dto = service
                 .crearUniversidad(new UniversidadRequestDTO("Uni Nueva", "UN", "Av 1", "Usaquen", 1L));
 
-        assertThat(dto.calle()).isEqualTo("Av 1");
-        assertThat(dto.barrio()).isEqualTo("Usaquen");
+        assertThat(dto.getCalle()).isEqualTo("Av 1");
+        assertThat(dto.getBarrio()).isEqualTo("Usaquen");
     }
 
     @Test
     void crearUniversidadRechazaNombreSiglaRepetidosOCiudadInexistente() {
         UniversidadRequestDTO req = new UniversidadRequestDTO("Uni", "UN", "Calle 1", "Centro", 1L);
 
-        when(universidadRepository.existsByNombreIgnoreCase("Uni")).thenReturn(true);
+        when(universidadRepository.existePorNombre("Uni")).thenReturn(true);
         assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(DuplicateResourceException.class);
 
-        when(universidadRepository.existsByNombreIgnoreCase("Uni")).thenReturn(false);
-        when(universidadRepository.existsBySiglaIgnoreCase("UN")).thenReturn(true);
+        when(universidadRepository.existePorNombre("Uni")).thenReturn(false);
+        when(universidadRepository.existePorSigla("UN")).thenReturn(true);
         assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(DuplicateResourceException.class);
 
-        when(universidadRepository.existsBySiglaIgnoreCase("UN")).thenReturn(false);
-        when(ciudadRepository.findById(1L)).thenReturn(Optional.empty());
+        when(universidadRepository.existePorSigla("UN")).thenReturn(false);
+        when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(ResourceNotFoundException.class);
-        verify(universidadRepository, never()).save(any());
+        verify(universidadRepository, never()).guardar(any());
     }
 
     @Test
     void crearCarreraRechazaRepetida() {
-        when(carreraRepository.existsByNombreIgnoreCase("Medicina")).thenReturn(true);
+        when(carreraRepository.existePorNombre("Medicina")).thenReturn(true);
 
         assertThatThrownBy(() -> service.crearCarrera(new CarreraRequestDTO("Medicina", "Facultad de Medicina")))
                 .isInstanceOf(DuplicateResourceException.class);
@@ -125,37 +125,37 @@ class CatalogoServiceImplTest {
 
     @Test
     void crearCarreraGuardaLaFacultad() {
-        when(carreraRepository.existsByNombreIgnoreCase("Fisica")).thenReturn(false);
-        when(carreraRepository.save(any(Carrera.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(carreraRepository.existePorNombre("Fisica")).thenReturn(false);
+        when(carreraRepository.guardar(any(Carrera.class))).thenAnswer(inv -> inv.getArgument(0));
 
         var dto = service.crearCarrera(new CarreraRequestDTO(" Fisica ", " Facultad de Ciencias "));
 
-        assertThat(dto.nombre()).isEqualTo("Fisica");
-        assertThat(dto.facultad()).isEqualTo("Facultad de Ciencias");
+        assertThat(dto.getNombre()).isEqualTo("Fisica");
+        assertThat(dto.getFacultad()).isEqualTo("Facultad de Ciencias");
     }
 
     @Test
     void crearOfertaTomaLaFacultadDeLaCarrera() {
         Carrera carrera = TestData.carrera(1L, "Medicina");
         Universidad uni = TestData.universidad(10L, "Universidad El Bosque", "UNBOSQUE");
-        when(carreraRepository.findById(1L)).thenReturn(Optional.of(carrera));
-        when(universidadRepository.findById(10L)).thenReturn(Optional.of(uni));
-        when(ofreceRepository.existsByCarreraAndUniversidad(1L, 10L)).thenReturn(false);
-        when(ofreceRepository.save(any(Ofrece.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(carreraRepository.buscarPorId(1L)).thenReturn(Optional.of(carrera));
+        when(universidadRepository.buscarPorId(10L)).thenReturn(Optional.of(uni));
+        when(ofreceRepository.existePorCarreraYUniversidad(1L, 10L)).thenReturn(false);
+        when(ofreceRepository.guardar(any(Ofrece.class))).thenAnswer(inv -> inv.getArgument(0));
 
         OfreceDTO dto = service.crearOferta(new OfreceRequestDTO(1L, 10L));
 
-        assertThat(dto.facultad()).isEqualTo("Facultad de Medicina");
-        assertThat(dto.carrera()).isEqualTo("Medicina");
-        assertThat(dto.universidad()).isEqualTo("Universidad El Bosque");
+        assertThat(dto.getFacultad()).isEqualTo("Facultad de Medicina");
+        assertThat(dto.getCarrera()).isEqualTo("Medicina");
+        assertThat(dto.getUniversidad()).isEqualTo("Universidad El Bosque");
     }
 
     @Test
     void crearOfertaRepetidaOConReferenciasInexistentesFalla() {
-        when(carreraRepository.findById(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
-        when(universidadRepository.findById(10L))
+        when(carreraRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
+        when(universidadRepository.buscarPorId(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "U")));
-        when(ofreceRepository.existsByCarreraAndUniversidad(1L, 10L)).thenReturn(true);
+        when(ofreceRepository.existePorCarreraYUniversidad(1L, 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 10L)))
                 .isInstanceOf(DuplicateResourceException.class);
 
@@ -169,147 +169,147 @@ class CatalogoServiceImplTest {
 
     @Test
     void actualizarCiudadPermiteConservarSuPropioNombre() {
-        when(ciudadRepository.findById(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
+        when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
 
         CiudadDTO dto = service.actualizarCiudad(1L, new CiudadRequestDTO(" Bogota D.C. ", "Cundinamarca"));
 
-        assertThat(dto.nombre()).isEqualTo("Bogota D.C.");
-        verify(ciudadRepository).update(any(Ciudad.class));
+        assertThat(dto.getNombre()).isEqualTo("Bogota D.C.");
+        verify(ciudadRepository).actualizar(any(Ciudad.class));
     }
 
     @Test
     void actualizarCiudadRechazaDuplicadaOInexistente() {
-        when(ciudadRepository.findById(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
-        when(ciudadRepository.existsByNombreAndDepartamentoAndIdNot("Cali", "Valle", 1L)).thenReturn(true);
+        when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
+        when(ciudadRepository.existePorNombreYDepartamentoExceptoId("Cali", "Valle", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.actualizarCiudad(1L, new CiudadRequestDTO("Cali", "Valle")))
                 .isInstanceOf(DuplicateResourceException.class);
         assertThatThrownBy(() -> service.actualizarCiudad(9L, new CiudadRequestDTO("Cali", "Valle")))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(ciudadRepository, never()).update(any());
+        verify(ciudadRepository, never()).actualizar(any());
     }
 
     @Test
     void actualizarUniversidadCambiaDireccionYCiudad() {
-        when(universidadRepository.findById(10L))
+        when(universidadRepository.buscarPorId(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "UN")));
-        when(ciudadRepository.findById(2L)).thenReturn(Optional.of(TestData.ciudad(2L, "Medellin")));
+        when(ciudadRepository.buscarPorId(2L)).thenReturn(Optional.of(TestData.ciudad(2L, "Medellin")));
 
         UniversidadDTO dto = service
                 .actualizarUniversidad(10L, new UniversidadRequestDTO("Uni Nueva", "UNN", "Av 9", "Centro", 2L));
 
-        assertThat(dto.nombre()).isEqualTo("Uni Nueva");
-        assertThat(dto.calle()).isEqualTo("Av 9");
-        assertThat(dto.ciudad().nombre()).isEqualTo("Medellin");
-        verify(universidadRepository).update(any(Universidad.class));
+        assertThat(dto.getNombre()).isEqualTo("Uni Nueva");
+        assertThat(dto.getCalle()).isEqualTo("Av 9");
+        assertThat(dto.getCiudad().getNombre()).isEqualTo("Medellin");
+        verify(universidadRepository).actualizar(any(Universidad.class));
     }
 
     @Test
     void actualizarUniversidadRechazaNombreOSiglaDeOtra() {
-        when(universidadRepository.findById(10L))
+        when(universidadRepository.buscarPorId(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "UN")));
         UniversidadRequestDTO req = new UniversidadRequestDTO("Otra", "OT", "Calle 1", "Centro", 1L);
 
-        when(universidadRepository.existsByNombreAndIdNot("Otra", 10L)).thenReturn(true);
+        when(universidadRepository.existePorNombreExceptoId("Otra", 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.actualizarUniversidad(10L, req))
                 .isInstanceOf(DuplicateResourceException.class);
 
-        when(universidadRepository.existsByNombreAndIdNot("Otra", 10L)).thenReturn(false);
-        when(universidadRepository.existsBySiglaAndIdNot("OT", 10L)).thenReturn(true);
+        when(universidadRepository.existePorNombreExceptoId("Otra", 10L)).thenReturn(false);
+        when(universidadRepository.existePorSiglaExceptoId("OT", 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.actualizarUniversidad(10L, req))
                 .isInstanceOf(DuplicateResourceException.class);
-        verify(universidadRepository, never()).update(any());
+        verify(universidadRepository, never()).actualizar(any());
     }
 
     @Test
     void actualizarCarreraCambiaNombreYFacultad() {
-        when(carreraRepository.findById(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
+        when(carreraRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
 
         var dto = service.actualizarCarrera(1L, new CarreraRequestDTO(" Medicina General ", " Ciencias de la Salud "));
 
-        assertThat(dto.nombre()).isEqualTo("Medicina General");
-        assertThat(dto.facultad()).isEqualTo("Ciencias de la Salud");
-        verify(carreraRepository).update(any(Carrera.class));
+        assertThat(dto.getNombre()).isEqualTo("Medicina General");
+        assertThat(dto.getFacultad()).isEqualTo("Ciencias de la Salud");
+        verify(carreraRepository).actualizar(any(Carrera.class));
     }
 
     @Test
     void actualizarOfertaCambiaLaFacultadDeLaCarrera() {
         Ofrece oferta = new Ofrece(TestData.carrera(1L, "Medicina"),
                 TestData.universidad(10L, "Uni", "UN"), "Vieja");
-        when(ofreceRepository.findByIds(1L, 10L)).thenReturn(Optional.of(oferta));
+        when(ofreceRepository.buscarPorIds(1L, 10L)).thenReturn(Optional.of(oferta));
 
         OfreceDTO dto = service.actualizarOferta(1L, 10L, new ActualizarOfertaRequestDTO(" Ciencias de la Salud "));
 
-        assertThat(dto.facultad()).isEqualTo("Ciencias de la Salud");
+        assertThat(dto.getFacultad()).isEqualTo("Ciencias de la Salud");
         assertThat(oferta.getCarrera().getFacultad()).isEqualTo("Ciencias de la Salud");
-        verify(carreraRepository).update(oferta.getCarrera());
+        verify(carreraRepository).actualizar(oferta.getCarrera());
     }
 
     // ---- eliminacion ----
 
     @Test
     void eliminarCiudadConUniversidadesDa409() {
-        when(ciudadRepository.findById(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
+        when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
         when(universidadRepository.contarPorCiudad(1L)).thenReturn(2L);
 
         assertThatThrownBy(() -> service.eliminarCiudad(1L)).isInstanceOf(OperationNotAllowedException.class);
-        verify(ciudadRepository, never()).deleteById(any());
+        verify(ciudadRepository, never()).eliminar(any());
     }
 
     @Test
     void eliminarCiudadSinUniversidadesLaBorra() {
-        when(ciudadRepository.findById(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
+        when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
 
         service.eliminarCiudad(1L);
 
-        verify(ciudadRepository).deleteById(1L);
+        verify(ciudadRepository).eliminar(1L);
     }
 
     @Test
     void eliminarUniversidadConEstudiantesDa409() {
-        when(universidadRepository.findById(10L))
+        when(universidadRepository.buscarPorId(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "UN")));
         when(universidadRepository.contarEstudiantes(10L)).thenReturn(3L);
 
         assertThatThrownBy(() -> service.eliminarUniversidad(10L)).isInstanceOf(OperationNotAllowedException.class);
         verify(ofreceRepository, never()).eliminarPorUniversidad(any());
-        verify(universidadRepository, never()).deleteById(any());
+        verify(universidadRepository, never()).eliminar(any());
     }
 
     @Test
     void eliminarUniversidadLibreBorraTambienSuOferta() {
-        when(universidadRepository.findById(10L))
+        when(universidadRepository.buscarPorId(10L))
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "UN")));
 
         service.eliminarUniversidad(10L);
 
         verify(ofreceRepository).eliminarPorUniversidad(10L);
-        verify(universidadRepository).deleteById(10L);
+        verify(universidadRepository).eliminar(10L);
     }
 
     @Test
     void eliminarCarreraConEstudiantesDa409YLibreBorraSuOferta() {
-        when(carreraRepository.findById(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
+        when(carreraRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
         when(carreraRepository.contarEstudiantes(1L)).thenReturn(1L);
         assertThatThrownBy(() -> service.eliminarCarrera(1L)).isInstanceOf(OperationNotAllowedException.class);
 
         when(carreraRepository.contarEstudiantes(1L)).thenReturn(0L);
         service.eliminarCarrera(1L);
         verify(ofreceRepository).eliminarPorCarrera(1L);
-        verify(carreraRepository).deleteById(1L);
+        verify(carreraRepository).eliminar(1L);
     }
 
     @Test
     void eliminarOfertaConEstudiantesDa409YSiNoExisteDa404() {
         Ofrece oferta = new Ofrece(TestData.carrera(1L, "Medicina"),
                 TestData.universidad(10L, "Uni", "UN"), "F");
-        when(ofreceRepository.findByIds(1L, 10L)).thenReturn(Optional.of(oferta));
+        when(ofreceRepository.buscarPorIds(1L, 10L)).thenReturn(Optional.of(oferta));
         when(ofreceRepository.contarEstudiantes(1L, 10L)).thenReturn(2L);
         assertThatThrownBy(() -> service.eliminarOferta(1L, 10L)).isInstanceOf(OperationNotAllowedException.class);
 
         when(ofreceRepository.contarEstudiantes(1L, 10L)).thenReturn(0L);
         service.eliminarOferta(1L, 10L);
-        verify(ofreceRepository).delete(1L, 10L);
+        verify(ofreceRepository).eliminar(1L, 10L);
 
         assertThatThrownBy(() -> service.eliminarOferta(9L, 9L)).isInstanceOf(ResourceNotFoundException.class);
     }
