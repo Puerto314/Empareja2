@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.dao.DuplicateKeyException;
 
 import co.edu.unbosque.empareja2.TestData;
 import co.edu.unbosque.empareja2.dto.MeGustaDTO;
@@ -26,8 +27,11 @@ import co.edu.unbosque.empareja2.dto.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.MeGustaAUnoMismoException;
+import co.edu.unbosque.empareja2.exception.MeGustaNoEncontradoException;
+import co.edu.unbosque.empareja2.exception.MeGustaYaDadoException;
+import co.edu.unbosque.empareja2.exception.ReaccionNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.UsuarioNoEncontradoPorIdException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
 import co.edu.unbosque.empareja2.repository.ReaccionRepository;
 
@@ -76,7 +80,7 @@ class ReaccionServiceImplTest {
 
     @Test
     void noSePuedeDarMeGustaAUnoMismo() {
-        assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 1L)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 1L)).isInstanceOf(MeGustaAUnoMismoException.class);
         verify(reaccionRepository, never()).guardar(any());
     }
 
@@ -86,16 +90,25 @@ class ReaccionServiceImplTest {
                 .thenReturn(Optional.of(new Reaccion(ana, luis, 1)));
 
         assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 2L))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(MeGustaYaDadoException.class);
         verify(reaccionRepository, never()).guardar(any());
     }
 
     @Test
+    void siLaBaseRechazaElMeGustaPorConcurrenciaSeTrataComoRepetido() {
+        when(reaccionRepository.buscar(1L, 2L)).thenReturn(Optional.empty());
+        when(reaccionRepository.maximoNumero(1L)).thenReturn(0);
+        when(reaccionRepository.guardar(any(Reaccion.class))).thenThrow(new DuplicateKeyException("uk_reaccion"));
+
+        assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 2L)).isInstanceOf(MeGustaYaDadoException.class);
+    }
+
+    @Test
     void darMeGustaAUnPerfilInexistenteDa404() {
-        when(usuarioFinder.estudianteVisible(99L)).thenThrow(new ResourceNotFoundException("No existe"));
+        when(usuarioFinder.estudianteVisible(99L)).thenThrow(new UsuarioNoEncontradoPorIdException(99L));
 
         assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 99L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(UsuarioNoEncontradoPorIdException.class);
         verify(reaccionRepository, never()).guardar(any());
     }
 
@@ -118,7 +131,7 @@ class ReaccionServiceImplTest {
         when(reaccionRepository.buscar(1L, 2L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.quitarMeGusta("ana@mail.com", 2L))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(MeGustaNoEncontradoException.class);
         verify(reaccionRepository, never()).eliminar(any(), any());
     }
 
@@ -155,6 +168,6 @@ class ReaccionServiceImplTest {
         when(reaccionRepository.eliminar(1L, 9)).thenReturn(0);
 
         service.eliminarPorAdmin(1L, 1);
-        assertThatThrownBy(() -> service.eliminarPorAdmin(1L, 9)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.eliminarPorAdmin(1L, 9)).isInstanceOf(ReaccionNoEncontradaException.class);
     }
 }

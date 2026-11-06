@@ -26,7 +26,15 @@ import co.edu.unbosque.empareja2.dto.RedPerfilRequestDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.CarreraNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.CorreoFormatoInvalidoException;
+import co.edu.unbosque.empareja2.exception.DebeIndicarUnaCarreraException;
+import co.edu.unbosque.empareja2.exception.EdadMinimaNoCumplidaException;
+import co.edu.unbosque.empareja2.exception.FechaNacimientoObligatoriaParaEstudianteException;
+import co.edu.unbosque.empareja2.exception.RedSocialRepetidaException;
+import co.edu.unbosque.empareja2.exception.SoloUnaCarreraException;
+import co.edu.unbosque.empareja2.exception.UniversidadNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.UniversidadNoOfreceCarreraException;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.OfreceRepository;
 import co.edu.unbosque.empareja2.repository.UniversidadRepository;
@@ -65,7 +73,7 @@ class PerfilAssemblerTest {
     @Test
     void rechazaMenoresDeEdad() {
         LocalDate diecisiete = LocalDate.now().minusYears(17);
-        assertThatThrownBy(() -> assembler.validarEdadMinima(diecisiete)).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> assembler.validarEdadMinima(diecisiete)).isInstanceOf(EdadMinimaNoCumplidaException.class)
                 .hasMessageContaining("18");
     }
 
@@ -133,7 +141,7 @@ class PerfilAssemblerTest {
     void rechazaMasDeUnEstudio() {
         List<EstudioRequestDTO> dos = List.of(new EstudioRequestDTO(1L, 10L, 4), new EstudioRequestDTO(2L, 10L, 2));
         assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, dos))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("una carrera");
+                .isInstanceOf(SoloUnaCarreraException.class).hasMessageContaining("una carrera");
         assertThat(usuario.getEstudios()).isEmpty();
     }
 
@@ -141,14 +149,14 @@ class PerfilAssemblerTest {
     void rechazaCarreraInexistente() {
         List<EstudioRequestDTO> lista = List.of(new EstudioRequestDTO(99L, 10L, 4));
         assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, lista))
-                .isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("carrera");
+                .isInstanceOf(CarreraNoEncontradaException.class).hasMessageContaining("carrera");
     }
 
     @Test
     void rechazaUniversidadInexistente() {
         List<EstudioRequestDTO> lista = List.of(new EstudioRequestDTO(1L, 99L, 4));
         assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, lista))
-                .isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("universidad");
+                .isInstanceOf(UniversidadNoEncontradaException.class).hasMessageContaining("universidad");
     }
 
     @Test
@@ -157,7 +165,7 @@ class PerfilAssemblerTest {
         List<EstudioRequestDTO> lista = List.of(new EstudioRequestDTO(1L, 10L, 4));
 
         assertThatThrownBy(() -> assembler.sincronizarEstudios(usuario, lista))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no ofrece");
+                .isInstanceOf(UniversidadNoOfreceCarreraException.class).hasMessageContaining("no ofrece");
         assertThat(usuario.getEstudios()).isEmpty();
     }
 
@@ -202,7 +210,7 @@ class PerfilAssemblerTest {
         List<RedPerfilRequestDTO> repetidas = List.of(new RedPerfilRequestDTO("Instagram", "https://instagram.com/a"),
                 new RedPerfilRequestDTO("instagram", "https://instagram.com/b"));
         assertThatThrownBy(() -> assembler.sincronizarRedes(usuario, repetidas))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(RedSocialRepetidaException.class);
     }
 
     @Test
@@ -216,9 +224,9 @@ class PerfilAssemblerTest {
     @Test
     void validaElFormatoDelCorreo() {
         assertThatCode(() -> assembler.validarCorreo("ana@mail.com")).doesNotThrowAnyException();
-        assertThatThrownBy(() -> assembler.validarCorreo("Puerto314")).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> assembler.validarCorreo("a@b")).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> assembler.validarCorreo(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> assembler.validarCorreo("Puerto314")).isInstanceOf(CorreoFormatoInvalidoException.class);
+        assertThatThrownBy(() -> assembler.validarCorreo("a@b")).isInstanceOf(CorreoFormatoInvalidoException.class);
+        assertThatThrownBy(() -> assembler.validarCorreo(null)).isInstanceOf(CorreoFormatoInvalidoException.class);
     }
 
     @Test
@@ -228,13 +236,13 @@ class PerfilAssemblerTest {
         assertThatCode(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), estudios))
                 .doesNotThrowAnyException();
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(null, estudios))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(FechaNacimientoObligatoriaParaEstudianteException.class);
         List<EstudioRequestDTO> dos = List.of(new EstudioRequestDTO(1L, 10L, 3), new EstudioRequestDTO(2L, 10L, 3));
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), dos))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("exactamente una");
+                .isInstanceOf(DebeIndicarUnaCarreraException.class).hasMessageContaining("exactamente una");
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), List.of()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(DebeIndicarUnaCarreraException.class);
         assertThatThrownBy(() -> assembler.exigirDatosDeEstudiante(LocalDate.now().minusYears(20), null))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(DebeIndicarUnaCarreraException.class);
     }
 }

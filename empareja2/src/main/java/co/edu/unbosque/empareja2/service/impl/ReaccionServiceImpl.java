@@ -2,6 +2,7 @@ package co.edu.unbosque.empareja2.service.impl;
 
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,9 @@ public class ReaccionServiceImpl implements ReaccionService {
     }
 
     /**
-     * Da me gusta a un perfil (no al propio y una sola vez).
+     * Da me gusta a un perfil (no al propio y una sola vez). Si dos peticiones
+     * simultaneas intentan dar el mismo me gusta, la restriccion unica de la base
+     * de datos rechaza la segunda y se responde igual que un me gusta repetido.
      *
      * @param correoActual el correo del usuario que da el me gusta
      * @param idPerfil     el identificador del perfil
@@ -67,7 +70,11 @@ public class ReaccionServiceImpl implements ReaccionService {
         }
 
         int numero = reaccionRepository.maximoNumero(autor.getId()) + 1;
-        reaccionRepository.guardar(new Reaccion(autor, destinatario, numero));
+        try {
+            reaccionRepository.guardar(new Reaccion(autor, destinatario, numero));
+        } catch (DataIntegrityViolationException ex) {
+            LanzadorException.meGustaYaDado();
+        }
 
         return new MeGustaDTO(destinatario.getId(),
                 reaccionRepository.contar(destinatario.getId()), true);

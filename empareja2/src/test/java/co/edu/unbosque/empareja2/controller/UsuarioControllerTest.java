@@ -1,11 +1,11 @@
 package co.edu.unbosque.empareja2.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,12 +20,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import co.edu.unbosque.empareja2.dto.ActualizarPerfilRequestDTO;
 import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.UniversidadNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.UsuarioNoEncontradoPorIdException;
 import co.edu.unbosque.empareja2.service.UsuarioService;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,10 +80,10 @@ class UsuarioControllerTest extends ControllerTestSupport {
     @Test
     void rankingConUniversidadInexistenteDa404() throws Exception {
         when(usuarioService.rankingMeGusta("ana@mail.com", 99L, 20))
-                .thenThrow(new ResourceNotFoundException("No existe la universidad"));
+                .thenThrow(new UniversidadNoEncontradaException(99L));
 
         mvc.perform(get("/api/usuarios/ranking").param("universidadId", "99").principal(ANA))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound()).andExpect(lanza(UniversidadNoEncontradaException.class));
     }
 
     @Test
@@ -110,10 +113,11 @@ class UsuarioControllerTest extends ControllerTestSupport {
     @Test
     void perfilInexistenteDa404ConMensaje() throws Exception {
         when(usuarioService.obtenerPerfilPublico("ana@mail.com", 99L))
-                .thenThrow(new ResourceNotFoundException("No existe un usuario con id 99"));
+                .thenThrow(new UsuarioNoEncontradoPorIdException(99L));
 
         mvc.perform(get("/api/usuarios/99").principal(ANA)).andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No existe un usuario con id 99"));
+                .andExpect(lanza(UsuarioNoEncontradoPorIdException.class))
+                .andExpect(mensaje("No existe un usuario con id 99"));
     }
 
     @Test
@@ -128,9 +132,10 @@ class UsuarioControllerTest extends ControllerTestSupport {
 
         mvc.perform(put("/api/usuarios/me").principal(ANA).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(invalido))).andExpect(status().isBadRequest())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("nombre")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("fechaNacimiento")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("estudios")));
+                .andExpect(lanza(MethodArgumentNotValidException.class))
+                .andExpect(result -> assertThat(((MethodArgumentNotValidException) result.getResolvedException())
+                        .getBindingResult().getFieldErrors()).extracting(FieldError::getField)
+                        .contains("nombre", "fechaNacimiento", "estudios"));
     }
 
     @Test

@@ -26,17 +26,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import co.edu.unbosque.empareja2.TestData;
 import co.edu.unbosque.empareja2.dto.ActualizarPerfilRequestDTO;
 import co.edu.unbosque.empareja2.dto.AdminUsuarioRequestDTO;
+import co.edu.unbosque.empareja2.dto.ConteoReaccionesDTO;
 import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
-import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.ContrasenaObligatoriaAlCrearException;
+import co.edu.unbosque.empareja2.exception.CorreoUsuarioYaExisteException;
+import co.edu.unbosque.empareja2.exception.LimiteRankingInvalidoException;
+import co.edu.unbosque.empareja2.exception.UltimoAdministradorEliminadoException;
+import co.edu.unbosque.empareja2.exception.UltimoAdministradorSinRolException;
+import co.edu.unbosque.empareja2.exception.UniversidadNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.UsuarioNoEncontradoPorIdException;
 import co.edu.unbosque.empareja2.mapper.UsuarioMapper;
-import co.edu.unbosque.empareja2.dto.ConteoReaccionesDTO;
 import co.edu.unbosque.empareja2.repository.ReaccionRepository;
 import co.edu.unbosque.empareja2.repository.UniversidadRepository;
 import co.edu.unbosque.empareja2.repository.UsuarioRepository;
@@ -115,7 +119,7 @@ class UsuarioServiceImplTest {
 		when(universidadRepository.existePorId(99L)).thenReturn(false);
 
 		assertThatThrownBy(() -> service.listarCatalogo("ana@mail.com", 99L))
-				.isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("99");
+				.isInstanceOf(UniversidadNoEncontradaException.class).hasMessageContaining("99");
 		verify(usuarioRepository, never()).listarPorUniversidad(any(), any(), any());
 	}
 
@@ -147,9 +151,9 @@ class UsuarioServiceImplTest {
 	@Test
 	void rankingConLimiteFueraDeRangoDa400() {
 		assertThatThrownBy(() -> service.rankingMeGusta("ana@mail.com", null, 0))
-				.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(LimiteRankingInvalidoException.class);
 		assertThatThrownBy(() -> service.rankingMeGusta("ana@mail.com", null, 101))
-				.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(LimiteRankingInvalidoException.class);
 	}
 
 	@Test
@@ -170,10 +174,10 @@ class UsuarioServiceImplTest {
 
 	@Test
 	void perfilPublicoDeUnaCuentaNoVisibleDa404() {
-		when(usuarioFinder.estudianteVisible(50L)).thenThrow(new ResourceNotFoundException("No existe"));
+		when(usuarioFinder.estudianteVisible(50L)).thenThrow(new UsuarioNoEncontradoPorIdException(50L));
 
 		assertThatThrownBy(() -> service.obtenerPerfilPublico("ana@mail.com", 50L))
-				.isInstanceOf(ResourceNotFoundException.class);
+				.isInstanceOf(UsuarioNoEncontradoPorIdException.class);
 	}
 
 	// ------------------------------------------------------------------
@@ -239,7 +243,7 @@ class UsuarioServiceImplTest {
 	void adminNoPuedeCrearConCorreoRepetido() {
 		when(usuarioRepository.existePorCorreo("repetido@mail.com")).thenReturn(true);
 		assertThatThrownBy(() -> service.crearPorAdmin(adminRequest("repetido@mail.com", "secreto123", null)))
-				.isInstanceOf(DuplicateResourceException.class);
+				.isInstanceOf(CorreoUsuarioYaExisteException.class);
 
 		verify(usuarioRepository, never()).guardar(any());
 	}
@@ -247,9 +251,9 @@ class UsuarioServiceImplTest {
 	@Test
 	void adminDebeIndicarContrasenaAlCrear() {
 		assertThatThrownBy(() -> service.crearPorAdmin(adminRequest("nuevo@mail.com", " ", null)))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("contrasena");
+				.isInstanceOf(ContrasenaObligatoriaAlCrearException.class).hasMessageContaining("contrasena");
 		assertThatThrownBy(() -> service.crearPorAdmin(adminRequest("nuevo@mail.com", null, null)))
-				.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(ContrasenaObligatoriaAlCrearException.class);
 	}
 
 	@Test
@@ -279,15 +283,15 @@ class UsuarioServiceImplTest {
 		when(usuarioRepository.existePorCorreoExceptoId("ana@mail.com", 2L)).thenReturn(true);
 
 		assertThatThrownBy(() -> service.actualizarPorAdmin(2L, adminRequest("ana@mail.com", null, null)))
-				.isInstanceOf(DuplicateResourceException.class);
+				.isInstanceOf(CorreoUsuarioYaExisteException.class);
 		verify(usuarioRepository, never()).guardar(any());
 	}
 
 	@Test
 	void adminEliminaUsuarioInexistenteDa404() {
-		when(usuarioFinder.porId(77L)).thenThrow(new ResourceNotFoundException("No existe"));
+		when(usuarioFinder.porId(77L)).thenThrow(new UsuarioNoEncontradoPorIdException(77L));
 
-		assertThatThrownBy(() -> service.eliminarPorAdmin(77L)).isInstanceOf(ResourceNotFoundException.class);
+		assertThatThrownBy(() -> service.eliminarPorAdmin(77L)).isInstanceOf(UsuarioNoEncontradoPorIdException.class);
 		verify(usuarioRepository, never()).eliminar(any());
 	}
 
@@ -333,7 +337,7 @@ class UsuarioServiceImplTest {
 		when(usuarioFinder.porId(9L)).thenReturn(admin);
 		when(usuarioRepository.contarPorRol(Rol.ADMIN)).thenReturn(1L);
 
-		assertThatThrownBy(() -> service.eliminarPorAdmin(9L)).isInstanceOf(OperationNotAllowedException.class);
+		assertThatThrownBy(() -> service.eliminarPorAdmin(9L)).isInstanceOf(UltimoAdministradorEliminadoException.class);
 		verify(usuarioRepository, never()).eliminar(any());
 	}
 
@@ -357,7 +361,7 @@ class UsuarioServiceImplTest {
 		when(usuarioRepository.contarPorRol(Rol.ADMIN)).thenReturn(1L);
 
 		assertThatThrownBy(() -> service.actualizarPorAdmin(9L, adminRequest("root", null, Rol.ESTUDIANTE)))
-				.isInstanceOf(OperationNotAllowedException.class);
+				.isInstanceOf(UltimoAdministradorSinRolException.class);
 		verify(usuarioRepository, never()).guardar(any());
 	}
 

@@ -21,15 +21,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import co.edu.unbosque.empareja2.dto.ComentarioRequestDTO;
-import co.edu.unbosque.empareja2.dto.ReporteRequestDTO;
 import co.edu.unbosque.empareja2.dto.ComentarioDTO;
+import co.edu.unbosque.empareja2.dto.ComentarioRequestDTO;
 import co.edu.unbosque.empareja2.dto.MeGustaDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.dto.ReporteDTO;
+import co.edu.unbosque.empareja2.dto.ReporteRequestDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
+import co.edu.unbosque.empareja2.exception.MeGustaYaDadoException;
 import co.edu.unbosque.empareja2.service.ComentarioService;
 import co.edu.unbosque.empareja2.service.ReaccionService;
 import co.edu.unbosque.empareja2.service.ReporteService;
@@ -67,9 +67,11 @@ class InteraccionControllersTest extends ControllerTestSupport {
 
     @Test
     void darMeGustaDosVecesDa409() throws Exception {
-        when(reaccionService.darMeGusta("ana@mail.com", 2L)).thenThrow(new DuplicateResourceException("ya"));
+        when(reaccionService.darMeGusta("ana@mail.com", 2L)).thenThrow(new MeGustaYaDadoException());
 
-        mvc.perform(post("/api/usuarios/2/me-gusta").principal(ANA)).andExpect(status().isConflict());
+        mvc.perform(post("/api/usuarios/2/me-gusta").principal(ANA)).andExpect(status().isConflict())
+                .andExpect(lanza(MeGustaYaDadoException.class))
+                .andExpect(mensaje("Ya le diste me gusta a este perfil"));
     }
 
     @Test

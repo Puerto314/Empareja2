@@ -33,9 +33,13 @@ import co.edu.unbosque.empareja2.security.JwtAuthenticationFilter;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /** Rutas que no necesitan iniciar sesion. */
-    private static final String[] PUBLIC_ENDPOINTS = { "/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**",
-            "/swagger-ui.html" };
+    /**
+     * Rutas que no necesitan iniciar sesion. "/error" es la ruta interna a la que
+     * Spring redirige cuando una excepcion trae su codigo HTTP (404, 409...); si no
+     * fuera publica, Spring Security taparia ese codigo y el mensaje con un 401.
+     */
+    private static final String[] PUBLIC_ENDPOINTS = { "/api/auth/**", "/error", "/v3/api-docs/**",
+            "/swagger-ui/**", "/swagger-ui.html" };
 
     /** Carga los datos de acceso de un usuario. */
     private final CustomUserDetailsService userDetailsService;

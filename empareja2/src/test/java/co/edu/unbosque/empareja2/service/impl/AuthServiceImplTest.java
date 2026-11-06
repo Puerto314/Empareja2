@@ -29,14 +29,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import co.edu.unbosque.empareja2.TestData;
+import co.edu.unbosque.empareja2.dto.AuthResponseDTO;
 import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.LoginRequestDTO;
 import co.edu.unbosque.empareja2.dto.RegistroRequestDTO;
-import co.edu.unbosque.empareja2.dto.AuthResponseDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
+import co.edu.unbosque.empareja2.exception.CorreoYaRegistradoException;
+import co.edu.unbosque.empareja2.exception.CredencialesInvalidasException;
+import co.edu.unbosque.empareja2.exception.DebeIndicarUnaCarreraException;
+import co.edu.unbosque.empareja2.exception.EdadMinimaNoCumplidaException;
 import co.edu.unbosque.empareja2.mapper.UsuarioMapper;
 import co.edu.unbosque.empareja2.repository.UsuarioRepository;
 import co.edu.unbosque.empareja2.security.CustomUserDetailsService;
@@ -118,7 +121,7 @@ class AuthServiceImplTest {
     void registroConCorreoRepetidoLanzaConflicto() {
         when(usuarioRepository.existePorCorreo("ana@mail.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(DuplicateResourceException.class)
+        assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(CorreoYaRegistradoException.class)
                 .hasMessageContaining("correo");
         verify(usuarioRepository, never()).guardar(any());
     }
@@ -128,20 +131,20 @@ class AuthServiceImplTest {
         RegistroRequestDTO dos = new RegistroRequestDTO("ana@mail.com", "secreto123", Genero.FEMENINO, "Ana", "Garcia",
                 LocalDate.now().minusYears(21), null, Set.of("cine"),
                 List.of(new EstudioRequestDTO(1L, 10L, 3), new EstudioRequestDTO(2L, 10L, 3)), List.of());
-        doThrow(new IllegalArgumentException("Debes indicar exactamente una carrera y universidad"))
+        doThrow(new DebeIndicarUnaCarreraException())
                 .when(perfilAssembler).exigirDatosDeEstudiante(any(), any());
 
-        assertThatThrownBy(() -> service.registrar(dos)).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> service.registrar(dos)).isInstanceOf(DebeIndicarUnaCarreraException.class)
                 .hasMessageContaining("exactamente una");
         verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
     void registroDeMenorDeEdadSeRechazaYNoGuarda() {
-        doThrow(new IllegalArgumentException("Debes tener al menos 18 anos")).when(perfilAssembler)
+        doThrow(new EdadMinimaNoCumplidaException()).when(perfilAssembler)
                 .validarEdadMinima(any());
 
-        assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.registrar(registro)).isInstanceOf(EdadMinimaNoCumplidaException.class);
         verify(usuarioRepository, never()).guardar(any());
     }
 
@@ -158,11 +161,11 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void loginConCredencialesInvalidasPropagaLaExcepcion() {
+    void loginConCredencialesInvalidasLanzaCredencialesInvalidasDa401() {
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("malas"));
 
         assertThatThrownBy(() -> service.iniciarSesion(new LoginRequestDTO("ana@mail.com", "x")))
-                .isInstanceOf(BadCredentialsException.class);
+                .isInstanceOf(CredencialesInvalidasException.class).hasMessageContaining("Credenciales invalidas");
         verify(jwtService, never()).generateToken(any());
     }
 }

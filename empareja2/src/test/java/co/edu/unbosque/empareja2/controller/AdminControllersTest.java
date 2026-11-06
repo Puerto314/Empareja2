@@ -23,14 +23,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import co.edu.unbosque.empareja2.dto.ActualizarOfertaRequestDTO;
-import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.CiudadDTO;
+import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.OfreceDTO;
 import co.edu.unbosque.empareja2.dto.ReporteDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
-import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.CiudadConUniversidadesException;
+import co.edu.unbosque.empareja2.exception.UltimoAdministradorEliminadoException;
+import co.edu.unbosque.empareja2.exception.UniversidadNoEncontradaException;
 import co.edu.unbosque.empareja2.service.CatalogoService;
 import co.edu.unbosque.empareja2.service.ComentarioService;
 import co.edu.unbosque.empareja2.service.ReaccionService;
@@ -67,11 +68,12 @@ class AdminControllersTest extends ControllerTestSupport {
 
     @Test
     void eliminarUltimoAdministradorDa409() throws Exception {
-        org.mockito.Mockito.doThrow(new OperationNotAllowedException("ultimo admin")).when(usuarioService)
+        org.mockito.Mockito.doThrow(new UltimoAdministradorEliminadoException()).when(usuarioService)
                 .eliminarPorAdmin(9L);
 
         mvc.perform(delete("/api/admin/usuarios/9")).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("ultimo admin"));
+                .andExpect(lanza(UltimoAdministradorEliminadoException.class))
+                .andExpect(mensaje("No se puede eliminar al ultimo administrador"));
     }
 
     @Test
@@ -102,20 +104,22 @@ class AdminControllersTest extends ControllerTestSupport {
 
     @Test
     void eliminarCiudadConUniversidadesDa409YLibreDa204() throws Exception {
-        org.mockito.Mockito.doThrow(new OperationNotAllowedException("tiene universidades")).when(catalogoService)
+        org.mockito.Mockito.doThrow(new CiudadConUniversidadesException()).when(catalogoService)
                 .eliminarCiudad(1L);
 
-        mvc.perform(delete("/api/admin/catalogos/ciudades/1")).andExpect(status().isConflict());
+        mvc.perform(delete("/api/admin/catalogos/ciudades/1")).andExpect(status().isConflict())
+                .andExpect(lanza(CiudadConUniversidadesException.class));
         mvc.perform(delete("/api/admin/catalogos/ciudades/2")).andExpect(status().isNoContent());
         verify(catalogoService).eliminarCiudad(2L);
     }
 
     @Test
     void eliminarUniversidadInexistenteDa404() throws Exception {
-        org.mockito.Mockito.doThrow(new ResourceNotFoundException("no existe")).when(catalogoService)
+        org.mockito.Mockito.doThrow(new UniversidadNoEncontradaException(99L)).when(catalogoService)
                 .eliminarUniversidad(99L);
 
-        mvc.perform(delete("/api/admin/catalogos/universidades/99")).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/admin/catalogos/universidades/99")).andExpect(status().isNotFound())
+                .andExpect(lanza(UniversidadNoEncontradaException.class));
     }
 
     @Test

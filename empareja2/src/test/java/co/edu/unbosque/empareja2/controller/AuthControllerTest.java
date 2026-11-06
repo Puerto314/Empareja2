@@ -1,5 +1,6 @@
 package co.edu.unbosque.empareja2.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,15 +19,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import co.edu.unbosque.empareja2.dto.AuthResponseDTO;
 import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.LoginRequestDTO;
 import co.edu.unbosque.empareja2.dto.RegistroRequestDTO;
-import co.edu.unbosque.empareja2.dto.AuthResponseDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
+import co.edu.unbosque.empareja2.exception.CorreoYaRegistradoException;
+import co.edu.unbosque.empareja2.exception.CredencialesInvalidasException;
 import co.edu.unbosque.empareja2.service.AuthService;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +64,9 @@ class AuthControllerTest extends ControllerTestSupport {
     void registroInvalidoDa400SinLlamarAlServicio() throws Exception {
         mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(registro("no-es-correo", "corta", List.of()))))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.details.length()").value(3));
+                .andExpect(status().isBadRequest()).andExpect(lanza(MethodArgumentNotValidException.class))
+                .andExpect(result -> assertThat(((MethodArgumentNotValidException) result.getResolvedException())
+                        .getBindingResult().getFieldErrors()).hasSize(3));
         verify(authService, never()).registrar(any());
     }
 
@@ -82,12 +86,13 @@ class AuthControllerTest extends ControllerTestSupport {
 
     @Test
     void registroConCorreoRepetidoDa409() throws Exception {
-        when(authService.registrar(any())).thenThrow(new DuplicateResourceException("Ya existe"));
+        when(authService.registrar(any())).thenThrow(new CorreoYaRegistradoException());
 
         mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(
                         registro("ana@mail.com", "secreto123", List.of(new EstudioRequestDTO(1L, 10L, 3))))))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict()).andExpect(lanza(CorreoYaRegistradoException.class))
+                .andExpect(mensaje("Ya existe un usuario registrado con ese correo"));
     }
 
     @Test
@@ -101,11 +106,12 @@ class AuthControllerTest extends ControllerTestSupport {
 
     @Test
     void loginConCredencialesInvalidasDa401() throws Exception {
-        when(authService.iniciarSesion(any())).thenThrow(new BadCredentialsException("mal"));
+        when(authService.iniciarSesion(any())).thenThrow(new CredencialesInvalidasException());
 
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(new LoginRequestDTO("ana@mail.com", "x"))))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized()).andExpect(lanza(CredencialesInvalidasException.class))
+                .andExpect(mensaje("Credenciales invalidas"));
     }
 
     @Test
