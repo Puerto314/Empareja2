@@ -82,10 +82,6 @@ class UsuarioServiceImplTest {
 		when(passwordEncoder.encode(any())).thenReturn("ENC");
 	}
 
-	// ------------------------------------------------------------------
-	// Catalogo
-	// ------------------------------------------------------------------
-
 	@Test
 	void catalogoListaALosDemasSinElUsuarioActualYConMeGusta() {
 		when(usuarioRepository.listarPorRolExcepto(Rol.ESTUDIANTE, 1L)).thenReturn(List.of(luis, marta));
@@ -180,10 +176,6 @@ class UsuarioServiceImplTest {
 				.isInstanceOf(UsuarioNoEncontradoPorIdException.class);
 	}
 
-	// ------------------------------------------------------------------
-	// Perfil propio
-	// ------------------------------------------------------------------
-
 	@Test
 	void perfilPropioIncluyeDatosPrivados() {
 		UsuarioPerfilDTO dto = service.obtenerPerfilPropio("ana@mail.com");
@@ -208,7 +200,6 @@ class UsuarioServiceImplTest {
 		verify(perfilAssembler).aplicarIntereses(ana, request.getIntereses());
 		verify(perfilAssembler).sincronizarEstudios(ana, estudios);
 		verify(perfilAssembler).sincronizarRedes(ana, request.getRedes());
-		// el correo NO se puede cambiar desde el perfil propio
 		assertThat(ana.getCorreo()).isEqualTo("ana@mail.com");
 	}
 
@@ -218,10 +209,6 @@ class UsuarioServiceImplTest {
 
 		verify(usuarioRepository).eliminar(ana);
 	}
-
-	// ------------------------------------------------------------------
-	// Administracion
-	// ------------------------------------------------------------------
 
 	private AdminUsuarioRequestDTO adminRequest(String correo, String contrasena, Rol rol) {
 		return new AdminUsuarioRequestDTO(correo, contrasena, rol, null, "Nuevo", "Usuario", null, null, null, null,

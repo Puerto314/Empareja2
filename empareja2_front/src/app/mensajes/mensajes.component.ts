@@ -4,7 +4,6 @@ import { ComentarioModel } from '../models/interaccion.model';
 import { InteraccionService } from '../services/interaccion.service';
 import { mensajeDeError } from '../utils/error.util';
 
-// Comentarios privados: los que me enviaron y los que yo envié.
 @Component({
   standalone: false,
   selector: 'app-mensajes',

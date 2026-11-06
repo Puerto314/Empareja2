@@ -68,8 +68,6 @@ class PerfilAssemblerTest {
         when(ofreceRepository.existePorCarreraYUniversidad(anyLong(), anyLong())).thenReturn(true);
     }
 
-    // ---- edad minima ----
-
     @Test
     void rechazaMenoresDeEdad() {
         LocalDate diecisiete = LocalDate.now().minusYears(17);
@@ -82,8 +80,6 @@ class PerfilAssemblerTest {
         assertThatCode(() -> assembler.validarEdadMinima(LocalDate.now().minusYears(18))).doesNotThrowAnyException();
         assertThatCode(() -> assembler.validarEdadMinima(null)).doesNotThrowAnyException();
     }
-
-    // ---- intereses ----
 
     @Test
     void interesesSeLimpianYSeReemplazan() {
@@ -100,8 +96,6 @@ class PerfilAssemblerTest {
         assembler.aplicarIntereses(usuario, null);
         assertThat(usuario.getIntereses()).isEmpty();
     }
-
-    // ---- estudios ----
 
     @Test
     void agregaEstudioNuevo() {
@@ -176,8 +170,6 @@ class PerfilAssemblerTest {
         assertThat(usuario.getEstudios()).isEmpty();
     }
 
-    // ---- redes sociales ----
-
     @Test
     void reemplazaLasRedesDelUsuario() {
         assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO("Instagram", "https://instagram.com/ana")));
@@ -218,8 +210,6 @@ class PerfilAssemblerTest {
         assembler.aplicarIntereses(usuario, Set.of("a", "b"));
         assertThat(usuario.getIntereses()).hasSize(2);
     }
-
-    // ---- datos de estudiante ----
 
     @Test
     void validaElFormatoDelCorreo() {

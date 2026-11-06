@@ -4,7 +4,6 @@ import { ReporteModel } from '../models/interaccion.model';
 import { AdminService } from '../services/admin.service';
 import { mensajeDeError } from '../utils/error.util';
 
-// Moderación de reportes: listar (con filtro por estado), ver, cambiar estado y eliminar.
 @Component({
   standalone: false,
   selector: 'app-admin-reportes',

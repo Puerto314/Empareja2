@@ -21,7 +21,6 @@ export class LoginComponent {
 
   entrar(): void {
     const correo = this.email.trim();
-    // No se exige "@": el backend también acepta un usuario simple (ej. el administrador).
     if (!correo || !this.password) {
       this.error.set('Escribe tu correo y tu contraseña para entrar.');
       return;
@@ -32,7 +31,6 @@ export class LoginComponent {
       next: respuesta => {
         this.authService.guardarSesion(respuesta);
         this.cargando.set(false);
-        // Un administrador entra al panel de administración; un estudiante al catálogo.
         this.router.navigate([respuesta.usuario?.rol === RolEnum.ADMIN ? '/admin' : '/universidades']);
       },
       error: (err: unknown) => {

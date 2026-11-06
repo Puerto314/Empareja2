@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 
-// Contenedor del panel de administración: pestañas + las pantallas hijas.
 @Component({
   standalone: false,
   selector: 'app-admin',

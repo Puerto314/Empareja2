@@ -3,7 +3,6 @@ import { GeneroEnum } from './genero.enum';
 import { RedPerfilModel } from './red-perfil.model';
 import { RolEnum } from './rol.enum';
 
-// Refleja UsuarioPerfilDTO (perfil completo, solo del dueño o un administrador).
 export interface PerfilModel {
   id: number;
   correo: string;

@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -21,6 +21,7 @@ import { AdminComentariosComponent } from './admin/admin-comentarios.component';
 import { AdminMeGustaComponent } from './admin/admin-megusta.component';
 import { AdminCatalogosComponent } from './admin/admin-catalogos.component';
 import { AuthInterceptor } from './services/auth.interceptor';
+import { ManejadorGlobalErrores } from './services/manejador-global-errores';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import { AuthInterceptor } from './services/auth.interceptor';
   imports: [BrowserModule, AppRoutingModule, FormsModule],
   providers: [
     provideHttpClient(withInterceptorsFromDi()),
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: ErrorHandler, useClass: ManejadorGlobalErrores }
   ],
   bootstrap: [AppComponent]
 })

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { OfertaModel, RedSocialModel } from '../models/catalogo.model';
+import { OfertaModel } from '../models/catalogo.model';
 import { GeneroEnum } from '../models/genero.enum';
 import { ActualizarPerfilRequestModel, AdminUsuarioRequestModel } from '../models/perfil-request.model';
 import { PerfilModel } from '../models/perfil.model';
@@ -14,11 +14,10 @@ export type ModoPerfilForm = 'registro' | 'edicion' | 'admin';
 export type PerfilFormValor = RegistroRequestModel | ActualizarPerfilRequestModel | AdminUsuarioRequestModel;
 
 interface FilaEstudio { idUniversidad: number | null; idCarrera: number | null; semestre: number | null; }
-interface FilaRed { idRedSocial: number | null; nombreUsuario: string; }
+interface FilaRed { tipoRedSocial: string; urlPerfil: string; }
 
-const EDAD_MINIMA = 18; // igual a Usuario.EDAD_MINIMA del backend
+const EDAD_MINIMA = 18;
 
-// Formulario de perfil que comparten el registro, "Mi perfil" (edición) y la administración de usuarios.
 @Component({
   standalone: false,
   selector: 'app-perfil-form',
@@ -39,7 +38,7 @@ export class PerfilFormComponent implements OnInit, OnChanges {
 
   universidades = signal<UniversidadModel[]>([]);
   oferta = signal<OfertaModel[]>([]);
-  redesDisponibles = signal<RedSocialModel[]>([]);
+  readonly sugerenciasRed = ['Instagram', 'Facebook', 'X', 'TikTok', 'LinkedIn', 'GitHub', 'Snapchat', 'Discord'];
   errorCatalogo = signal('');
   errorLocal = signal('');
 
@@ -68,15 +67,13 @@ export class PerfilFormComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     forkJoin({
       universidades: this.universidadService.listar(),
-      oferta: this.catalogo.oferta(),
-      redes: this.catalogo.redesSociales()
+      oferta: this.catalogo.oferta()
     }).subscribe({
       next: r => {
         this.universidades.set(r.universidades);
         this.oferta.set(r.oferta);
-        this.redesDisponibles.set(r.redes);
       },
-      error: () => this.errorCatalogo.set('No pudimos cargar universidades, carreras y redes sociales. Recarga la página.')
+      error: () => this.errorCatalogo.set('No pudimos cargar universidades y carreras. Recarga la página.')
     });
     if (this.modo === 'registro' && this.estudios.length === 0) { this.agregarEstudio(); }
   }
@@ -98,7 +95,7 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     this.fotoPerfil = p.fotoPerfil ?? '';
     this.interesesTexto = p.intereses.join(', ');
     this.estudios = p.estudios.map(e => ({ idUniversidad: e.idUniversidad, idCarrera: e.idCarrera, semestre: e.semestre }));
-    this.redes = p.redes.map(r => ({ idRedSocial: r.idRedSocial, nombreUsuario: r.nombreUsuario }));
+    this.redes = p.redes.map(r => ({ tipoRedSocial: r.tipoRedSocial, urlPerfil: r.urlPerfil }));
   }
 
   carrerasDe(idUniversidad: number | null): OfertaModel[] {
@@ -107,11 +104,10 @@ export class PerfilFormComponent implements OnInit, OnChanges {
 
   cambiarUniversidad(fila: FilaEstudio): void { fila.idCarrera = null; }
   agregarEstudio(): void { this.estudios.push({ idUniversidad: null, idCarrera: null, semestre: null }); }
-  agregarRed(): void { this.redes.push({ idRedSocial: null, nombreUsuario: '' }); }
+  agregarRed(): void { this.redes.push({ tipoRedSocial: '', urlPerfil: '' }); }
   quitarRed(i: number): void { this.redes.splice(i, 1); }
 
   private intereses(): string[] {
-    // Sin repetidos ignorando mayúsculas ("Cine" y "cine" chocarían en la base de datos); se conserva la primera.
     const vistos = new Set<string>();
     return this.interesesTexto.split(',').map(t => t.trim()).filter(t => {
       const clave = t.toLowerCase();
@@ -129,7 +125,6 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     return edad;
   }
 
-  // Validaciones rápidas (las mismas reglas del backend); devuelve el primer problema o ''.
   validar(): string {
     const correo = this.correo.trim();
     if (this.pideCuenta) {
@@ -158,14 +153,16 @@ export class PerfilFormComponent implements OnInit, OnChanges {
       }
       if (e.semestre < 1 || e.semestre > 20) { return 'El semestre debe estar entre 1 y 20.'; }
     }
-    const idsRed = new Set<number>();
+    const tipos = new Set<string>();
     for (const r of this.redes) {
-      if (r.idRedSocial === null || !r.nombreUsuario.trim()) {
-        return 'Cada red social necesita la red y tu nombre de usuario en ella.';
-      }
-      if (r.nombreUsuario.trim().length > 50) { return 'El nombre de usuario de una red social admite máximo 50 caracteres.'; }
-      if (idsRed.has(r.idRedSocial)) { return 'No repitas la misma red social.'; }
-      idsRed.add(r.idRedSocial);
+      const tipo = r.tipoRedSocial.trim();
+      const url = r.urlPerfil.trim();
+      if (!tipo || !url) { return 'Cada red social necesita el tipo de red y el enlace a tu perfil.'; }
+      if (tipo.length > 50) { return 'El tipo de red social admite máximo 50 caracteres.'; }
+      if (url.length > 255) { return 'El enlace de una red social admite máximo 255 caracteres.'; }
+      if (!/^https?:\/\/\S+$/i.test(url)) { return 'El enlace de cada red social debe empezar por http:// o https://.'; }
+      if (tipos.has(tipo.toLowerCase())) { return 'No repitas la misma red social.'; }
+      tipos.add(tipo.toLowerCase());
     }
     return '';
   }
@@ -175,7 +172,7 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     this.errorLocal.set(problema);
     if (problema) { return; }
     const estudios = this.estudios.map(e => ({ idCarrera: e.idCarrera as number, idUniversidad: e.idUniversidad as number, semestre: e.semestre as number }));
-    const redes = this.redes.map(r => ({ idRedSocial: r.idRedSocial as number, nombreUsuario: r.nombreUsuario.trim() }));
+    const redes = this.redes.map(r => ({ tipoRedSocial: r.tipoRedSocial.trim(), urlPerfil: r.urlPerfil.trim() }));
     const comun = {
       nombre: this.nombre.trim(),
       apellido: this.apellido.trim(),

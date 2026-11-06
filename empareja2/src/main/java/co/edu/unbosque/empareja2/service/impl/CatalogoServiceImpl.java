@@ -69,10 +69,6 @@ public class CatalogoServiceImpl implements CatalogoService {
         this.mapper = mapper;
     }
 
-    // ------------------------------------------------------------------
-    // Listados
-    // ------------------------------------------------------------------
-
     /**
      * Lista las ciudades ordenadas por nombre.
      *
@@ -126,10 +122,6 @@ public class CatalogoServiceImpl implements CatalogoService {
         }
         return oferta.stream().map(mapper::toDTO).toList();
     }
-
-    // ------------------------------------------------------------------
-    // Creacion
-    // ------------------------------------------------------------------
 
     /**
      * Crea una ciudad (no se admite repetirla en el mismo departamento).
@@ -204,10 +196,6 @@ public class CatalogoServiceImpl implements CatalogoService {
         return mapper.toDTO(ofreceRepository.guardar(new Ofrece(carrera, universidad, carrera.getFacultad())));
     }
 
-    // ------------------------------------------------------------------
-    // Consulta por id
-    // ------------------------------------------------------------------
-
     /**
      * Obtiene una ciudad por id.
      *
@@ -240,10 +228,6 @@ public class CatalogoServiceImpl implements CatalogoService {
     public CarreraDTO obtenerCarrera(Long id) {
         return mapper.toDTO(buscarCarrera(id));
     }
-
-    // ------------------------------------------------------------------
-    // Edicion
-    // ------------------------------------------------------------------
 
     /**
      * Edita una ciudad (no se admite repetirla en el mismo departamento).
@@ -337,10 +321,6 @@ public class CatalogoServiceImpl implements CatalogoService {
         return mapper.toDTO(oferta);
     }
 
-    // ------------------------------------------------------------------
-    // Eliminacion
-    // ------------------------------------------------------------------
-
     /**
      * Elimina una ciudad si no tiene universidades.
      *
@@ -404,10 +384,6 @@ public class CatalogoServiceImpl implements CatalogoService {
         }
         ofreceRepository.eliminar(idCarrera, idUniversidad);
     }
-
-    // ------------------------------------------------------------------
-    // Busquedas con 404
-    // ------------------------------------------------------------------
 
     /**
      * Busca una ciudad y lanza 404 si no existe.

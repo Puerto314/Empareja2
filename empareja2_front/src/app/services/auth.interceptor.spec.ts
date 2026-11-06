@@ -67,4 +67,22 @@ describe('AuthInterceptor', () => {
     controller.expectOne(`${API_URL}/auth/login`).flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(rutaDestino).toEqual([]);
   });
+
+  it('debe registrar en consola el error HTTP y devolverlo intacto al suscriptor', () => {
+    const aviso = spyOn(console, 'warn');
+    let recibido: unknown;
+    http.post(`${API_URL}/auth/login`, {}).subscribe({ error: e => recibido = e });
+    controller.expectOne(`${API_URL}/auth/login`).flush({ message: 'Credenciales invalidas' }, { status: 401, statusText: 'Unauthorized' });
+    expect(aviso).toHaveBeenCalledTimes(1);
+    expect(aviso.calls.mostRecent().args[0]).toBe('[empareja2] HTTP 401 POST /auth/login -> Credenciales invalidas');
+    expect((recibido as { status: number }).status).toBe(401);
+  });
+
+  it('debe registrar como error la caída del servidor', () => {
+    const fallo = spyOn(console, 'error');
+    http.get(`${API_URL}/usuarios`).subscribe({ error: () => {} });
+    controller.expectOne(`${API_URL}/usuarios`).error(new ProgressEvent('error'));
+    expect(fallo).toHaveBeenCalledTimes(1);
+    expect(fallo.calls.mostRecent().args[0]).toContain('HTTP sin respuesta GET /usuarios');
+  });
 });

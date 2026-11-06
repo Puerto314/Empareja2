@@ -1,4 +1,3 @@
-// Igual al enum TipoReporte del backend.
 export enum TipoReporteEnum {
   SPAM = 'SPAM',
   ACOSO = 'ACOSO',

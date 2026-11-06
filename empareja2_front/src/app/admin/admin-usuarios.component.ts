@@ -5,7 +5,6 @@ import { PerfilFormValor } from '../perfil-form/perfil-form.component';
 import { AdminService } from '../services/admin.service';
 import { mensajeDeError } from '../utils/error.util';
 
-// CRUD de usuarios (estudiantes y administradores): /api/admin/usuarios
 @Component({
   standalone: false,
   selector: 'app-admin-usuarios',
@@ -19,7 +18,6 @@ export class AdminUsuariosComponent {
   cargando = signal(true);
   error = signal('');
   exito = signal('');
-  // null = formulario cerrado; 'nuevo' = crear; PerfilModel = editando
   formulario = signal<null | 'nuevo' | PerfilModel>(null);
   guardando = signal(false);
   errorForm = signal('');
@@ -47,7 +45,6 @@ export class AdminUsuariosComponent {
 
   nuevo(): void { this.exito.set(''); this.errorForm.set(''); this.formulario.set('nuevo'); }
 
-  // Trae el usuario fresco con GET /api/admin/usuarios/{id} antes de editarlo.
   editar(u: PerfilModel): void {
     this.exito.set(''); this.errorForm.set('');
     this.admin.obtenerUsuario(u.id).subscribe({

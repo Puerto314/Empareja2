@@ -41,9 +41,9 @@
         </article>
         <article class="box">
           <h2>Redes sociales</h2>
-          @for (r of st.redes; track r.idRedSocial) {
+          @for (r of st.redes; track r.tipoRedSocial) {
             <div class="mini-row red">
-              <span><strong>{{ r.redSocial }}</strong><small>&#64;{{ r.nombreUsuario }}</small></span>
+              <span><strong>{{ r.tipoRedSocial }}</strong><small>{{ r.urlPerfil }}</small></span>
             </div>
           } @empty { <p class="ph">Aún no ha agregado sus redes sociales.</p> }
         </article>

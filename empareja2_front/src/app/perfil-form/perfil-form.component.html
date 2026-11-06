@@ -78,17 +78,17 @@
     @for (r of redes; track $index; let i = $index) {
       <div class="subbox row-fields">
         <label class="field">Red
-          <select [name]="'red' + i" [(ngModel)]="r.idRedSocial">
-            <option [ngValue]="null">Elige…</option>
-            @for (d of redesDisponibles(); track d.idRedSocial) { <option [ngValue]="d.idRedSocial">{{ d.nombreRedSocial }}</option> }
-          </select>
+          <input type="text" [name]="'red' + i" [(ngModel)]="r.tipoRedSocial" maxlength="50" placeholder="Instagram" list="sugerencias-red">
         </label>
-        <label class="field">Tu nombre de usuario en esa red
-          <input type="text" [name]="'usr' + i" [(ngModel)]="r.nombreUsuario" maxlength="50" placeholder="@usuario">
+        <label class="field">Enlace a tu perfil
+          <input type="url" [name]="'url' + i" [(ngModel)]="r.urlPerfil" maxlength="255" placeholder="https://instagram.com/usuario">
         </label>
         <button type="button" class="btn sec sm" (click)="quitarRed(i)" aria-label="Quitar red social">Quitar</button>
       </div>
     }
+    <datalist id="sugerencias-red">
+      @for (n of sugerenciasRed; track n) { <option [value]="n"></option> }
+    </datalist>
     <div class="btn-row"><button type="button" class="btn sec sm" (click)="agregarRed()">+ Agregar red social</button></div>
   </fieldset>
 

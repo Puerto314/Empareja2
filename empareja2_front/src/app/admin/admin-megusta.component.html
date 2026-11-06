@@ -7,13 +7,12 @@
   } @else {
     <div class="table-wrap">
       <table class="tabla">
-        <thead><tr><th>Quién</th><th>A quién</th><th>Tipo</th><th>Fecha</th><th></th></tr></thead>
+        <thead><tr><th>Quién</th><th>A quién</th><th>Fecha</th><th></th></tr></thead>
         <tbody>
           @for (r of reacciones(); track llave(r)) {
             <tr>
               <td>{{ r.nombreAutor }}</td>
               <td>{{ r.nombreDestinatario }}</td>
-              <td>{{ r.tipoReaccion }}</td>
               <td>{{ r.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td class="acciones">
                 @if (confirmando() === llave(r)) {

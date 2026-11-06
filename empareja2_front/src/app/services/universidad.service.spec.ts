@@ -50,7 +50,6 @@ describe('UniversidadService', () => {
     expect(resumen.map(u => u.nombre)).toEqual(['Alfa', 'Vacía', 'Zeta']);
     expect(resumen.map(u => u.cantidad)).toEqual([2, 0, 2]);
     expect(resumen[0].vistaPrevia.map(e => e.id)).toEqual([10, 11]);
-    // El estudiante 11 estudia en dos universidades pero es una sola persona: 3 estudiantes, no 4.
     expect(total).toBe(3);
   });
 

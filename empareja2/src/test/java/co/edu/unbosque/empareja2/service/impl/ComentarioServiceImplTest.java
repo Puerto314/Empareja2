@@ -109,12 +109,10 @@ class ComentarioServiceImplTest {
         when(comentarioRepository.listarRecibidos(2L)).thenReturn(List.of(paraLuis));
         when(comentarioRepository.listarRecibidos(1L)).thenReturn(List.of());
 
-        // Luis (el destinatario) lo ve...
         List<ComentarioDTO> deLuis = service.listarRecibidos("luis@mail.com");
         assertThat(deLuis).hasSize(1);
         assertThat(deLuis.get(0).getContenido()).isEqualTo("hola luis");
 
-        // ...Ana (otra persona) no ve nada, y el servicio solo consulto por su propio id
         assertThat(service.listarRecibidos("ana@mail.com")).isEmpty();
         verify(comentarioRepository).listarRecibidos(2L);
         verify(comentarioRepository).listarRecibidos(1L);

@@ -172,8 +172,6 @@ class CatalogoServiceImplTest {
                 .isInstanceOf(UniversidadNoEncontradaException.class);
     }
 
-    // ---- edicion ----
-
     @Test
     void actualizarCiudadPermiteConservarSuPropioNombre() {
         when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
@@ -251,8 +249,6 @@ class CatalogoServiceImplTest {
         assertThat(oferta.getCarrera().getFacultad()).isEqualTo("Ciencias de la Salud");
         verify(carreraRepository).actualizar(oferta.getCarrera());
     }
-
-    // ---- eliminacion ----
 
     @Test
     void eliminarCiudadConUniversidadesDa409() {

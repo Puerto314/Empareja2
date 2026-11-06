@@ -107,10 +107,6 @@ public class UsuarioRepository {
         return "ad.id_usuario IS NULL AND EXISTS (SELECT 1 FROM estudiante es0 WHERE es0.id_usuario = u.id_usuario)";
     }
 
-    // ------------------------------------------------------------------
-    // Consultas
-    // ------------------------------------------------------------------
-
     /**
      * Busca un usuario por su id, con sus intereses, estudios y redes.
      *
@@ -246,10 +242,6 @@ public class UsuarioRepository {
                 + "LEFT JOIN administrador ad ON ad.id_usuario = u.id_usuario WHERE " + filtroRol(rol));
     }
 
-    // ------------------------------------------------------------------
-    // Escritura
-    // ------------------------------------------------------------------
-
     /**
      * Inserta (id nulo) o actualiza el usuario, ajusta su rol (tablas
      * administrador / estudiante) y REEMPLAZA sus intereses y redes por los que
@@ -374,8 +366,6 @@ public class UsuarioRepository {
         Long idCarrera = estudio.getCarrera().getIdCarrera();
         Long idUniversidad = estudio.getUniversidad().getIdUniversidad();
 
-        // Se actualiza la fila existente en lugar de borrarla y reinsertarla: borrarla dispararia el
-        // ON DELETE CASCADE sobre las reacciones, comentarios y reportes del estudiante.
         if (Sql.contar(jdbc, "SELECT COUNT(*) FROM estudiante WHERE id_usuario = ?", id) > 0) {
             jdbc.update("UPDATE estudiante SET id_carrera = ?, id_universidad = ?, semestre = ? WHERE id_usuario = ?",
                     idCarrera, idUniversidad, estudio.getSemestre(), id);
@@ -395,10 +385,6 @@ public class UsuarioRepository {
                     red.getTipoRedSocial(), red.getUrlPerfil());
         }
     }
-
-    // ------------------------------------------------------------------
-    // Carga de colecciones (3 consultas para toda la lista, no 3 por usuario)
-    // ------------------------------------------------------------------
 
     /**
      * Completa los usuarios con sus intereses, estudios y redes sociales. Hace

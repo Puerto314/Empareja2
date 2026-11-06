@@ -76,10 +76,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ------------------------------------------------------------------
-    // Catalogo (informacion publica)
-    // ------------------------------------------------------------------
-
     /**
      * Lista los demas estudiantes con su informacion publica, opcionalmente solo
      * los de una universidad.
@@ -175,10 +171,6 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .toList();
     }
 
-    // ------------------------------------------------------------------
-    // Perfil propio
-    // ------------------------------------------------------------------
-
     /**
      * Obtiene el perfil completo del usuario autenticado.
      *
@@ -221,10 +213,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void eliminarCuentaPropia(String correo) {
         eliminarUsuario(usuarioFinder.porCorreo(correo));
     }
-
-    // ------------------------------------------------------------------
-    // Administracion
-    // ------------------------------------------------------------------
 
     /**
      * Lista todos los usuarios con su perfil completo (solo ADMIN).
@@ -303,7 +291,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (rolFinal == Rol.ESTUDIANTE) {
             aplicarColecciones(usuario, request);
         } else {
-            // Un administrador no es un perfil del catalogo: no tiene intereses, estudios ni redes.
             usuario.getIntereses().clear();
             usuario.getEstudios().clear();
             usuario.getRedes().clear();

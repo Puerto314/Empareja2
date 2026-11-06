@@ -88,7 +88,6 @@ public class CatalogoSeeder implements CommandLineRunner {
                 new Carrera("Psicologia", "Facultad de Psicologia"),
                 new Carrera("Administracion de Empresas", "Facultad de Administracion de Empresas")));
 
-        // Ejemplo de oferta: cada universidad ofrece todas las carreras de la lista.
         for (Universidad universidad : universidades) {
             for (Carrera carrera : carreras) {
                 ofreceRepository.guardar(new Ofrece(carrera, universidad, carrera.getFacultad()));
