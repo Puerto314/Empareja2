@@ -11,7 +11,6 @@ import { CuentaService } from './cuenta.service';
 import { InteraccionService } from './interaccion.service';
 import { UniversidadService } from './universidad.service';
 
-// Verifica que cada método del front llame al método HTTP y a la ruta exacta del back.
 describe('Endpoints del backend', () => {
   let http: HttpTestingController;
   let admin: AdminService;
@@ -36,7 +35,6 @@ describe('Endpoints del backend', () => {
   const caso = (metodo: string, ruta: string, llamar: () => Observable<unknown>) =>
     casos.push({ nombre: `${metodo} ${ruta}`, metodo, ruta, llamar });
 
-  // La lambda se evalúa dentro del test (los servicios se inyectan en beforeEach).
   caso('GET', '/usuarios/me', () => cuenta.miPerfil());
   caso('PUT', '/usuarios/me', () => cuenta.actualizar({} as any));
   caso('DELETE', '/usuarios/me', () => cuenta.eliminar());
@@ -51,11 +49,8 @@ describe('Endpoints del backend', () => {
   caso('GET', '/catalogos/ciudades/2', () => catalogo.ciudad(2));
   caso('GET', '/catalogos/carreras', () => catalogo.carreras());
   caso('GET', '/catalogos/carreras/2', () => catalogo.carrera(2));
-  caso('GET', '/catalogos/redes-sociales', () => catalogo.redesSociales());
-  caso('GET', '/catalogos/redes-sociales/2', () => catalogo.redSocial(2));
   caso('GET', '/catalogos/oferta', () => catalogo.oferta());
   caso('POST', '/auth/registro', () => auth.registrar({} as any));
-  // ---- Administración
   caso('GET', '/admin/usuarios', () => admin.listarUsuarios());
   caso('GET', '/admin/usuarios/3', () => admin.obtenerUsuario(3));
   caso('POST', '/admin/usuarios', () => admin.crearUsuario({} as any));
@@ -106,7 +101,6 @@ describe('Endpoints del backend', () => {
   });
 
   it('GET /catalogos/universidades?nombre= busca por nombre', () => {
-    // UniversidadService.listar(nombre) se cubre aquí por ser parte del contrato público
     const svc = TestBed.inject(UniversidadService);
     svc.listar('bosque').subscribe();
     const req = http.expectOne(r => r.url === `${API_URL}/catalogos/universidades`);

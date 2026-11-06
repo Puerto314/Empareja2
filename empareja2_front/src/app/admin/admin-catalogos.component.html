@@ -88,15 +88,6 @@
             } @empty { <tr><td colspan="4" class="vacio">No hay carreras.</td></tr> }
           </tbody></table></div>
       }
-      @case ('redes') {
-        <p class="muted">Redes sociales disponibles para los perfiles (lista fija del sistema; no se editan).</p>
-        <div class="table-wrap"><table class="tabla">
-          <thead><tr><th>ID</th><th>Red</th><th>Url base</th></tr></thead>
-          <tbody>
-            @for (r of redes(); track r.idRedSocial) { <tr><td>{{ r.idRedSocial }}</td><td>{{ r.nombreRedSocial }}</td><td>{{ r.url }}</td></tr> }
-            @empty { <tr><td colspan="3" class="vacio">No hay redes sociales.</td></tr> }
-          </tbody></table></div>
-      }
       @case ('oferta') {
         <form class="subbox row-fields" (ngSubmit)="guardarOferta()">
           <label class="field">Universidad

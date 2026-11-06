@@ -22,7 +22,6 @@ export class EstudiantesComponent {
   private estudianteService = inject(EstudianteService);
   private universidadService = inject(UniversidadService);
 
-  // La ruta /universidades/:id trae el idUniversidad (no el nombre).
   private idUni = signal(0);
   universidad = signal<UniversidadModel | undefined>(undefined);
   todos = signal<EstudianteModel[]>([]);
@@ -39,7 +38,6 @@ export class EstudiantesComponent {
   ] as const;
   grad = gradient; hue = hueOf; ini = initials;
 
-  // Carrera y semestre que el estudiante cursa en ESTA universidad (puede tener varios estudios).
   estudioEn(s: EstudianteModel): EstudioModel | undefined {
     return s.estudios.find(e => e.idUniversidad === this.idUni());
   }

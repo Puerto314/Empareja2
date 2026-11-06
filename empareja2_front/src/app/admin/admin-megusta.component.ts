@@ -3,7 +3,6 @@ import { ReaccionAdminModel } from '../models/interaccion.model';
 import { AdminService } from '../services/admin.service';
 import { mensajeDeError } from '../utils/error.util';
 
-// Moderación de me gusta: listar todos y eliminar (llave = autor + número).
 @Component({
   standalone: false,
   selector: 'app-admin-megusta',

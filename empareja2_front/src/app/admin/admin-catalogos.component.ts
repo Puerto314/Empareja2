@@ -1,15 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { CarreraModel, OfertaModel, RedSocialModel } from '../models/catalogo.model';
+import { CarreraModel, OfertaModel } from '../models/catalogo.model';
 import { CiudadModel, UniversidadModel } from '../models/universidad.model';
 import { AdminService } from '../services/admin.service';
 import { CatalogoService } from '../services/catalogo.service';
 import { UniversidadService } from '../services/universidad.service';
 import { mensajeDeError } from '../utils/error.util';
 
-type Seccion = 'ciudades' | 'universidades' | 'carreras' | 'redes' | 'oferta';  // 'redes' es solo lectura: el modelo no tiene tabla de catálogo
+type Seccion = 'ciudades' | 'universidades' | 'carreras' | 'oferta';
 
-// Datos de referencia: ciudades, universidades, carreras, redes sociales y oferta académica (crear, editar, eliminar).
 @Component({
   standalone: false,
   selector: 'app-admin-catalogos',
@@ -22,14 +21,13 @@ export class AdminCatalogosComponent {
 
   readonly secciones: { id: Seccion; t: string }[] = [
     { id: 'ciudades', t: 'Ciudades' }, { id: 'universidades', t: 'Universidades' }, { id: 'carreras', t: 'Carreras' },
-    { id: 'redes', t: 'Redes sociales' }, { id: 'oferta', t: 'Oferta académica' }
+    { id: 'oferta', t: 'Oferta académica' }
   ];
   seccion = signal<Seccion>('ciudades');
 
   ciudades = signal<CiudadModel[]>([]);
   universidades = signal<UniversidadModel[]>([]);
   carreras = signal<CarreraModel[]>([]);
-  redes = signal<RedSocialModel[]>([]);
   oferta = signal<OfertaModel[]>([]);
 
   cargando = signal(true);
@@ -37,7 +35,6 @@ export class AdminCatalogosComponent {
   exito = signal('');
   confirmando = signal('');
 
-  // Formularios (id = null => crear; con id => editar)
   fCiudad: { id: number | null; nombre: string; departamento: string } = { id: null, nombre: '', departamento: '' };
   fUni: { id: number | null; nombre: string; sigla: string; calle: string; barrio: string; idCiudad: number | null } =
     { id: null, nombre: '', sigla: '', calle: '', barrio: '', idCiudad: null };
@@ -54,17 +51,16 @@ export class AdminCatalogosComponent {
     this.cargando.set(true);
     forkJoin({
       ciudades: this.catalogo.ciudades(), universidades: this.universidadService.listar(this.busquedaUni.trim() || undefined),
-      carreras: this.catalogo.carreras(), redes: this.catalogo.redesSociales(), oferta: this.catalogo.oferta()
+      carreras: this.catalogo.carreras(), oferta: this.catalogo.oferta()
     }).subscribe({
       next: r => {
         this.ciudades.set(r.ciudades); this.universidades.set(r.universidades); this.carreras.set(r.carreras);
-        this.redes.set(r.redes); this.oferta.set(r.oferta); this.cargando.set(false);
+        this.oferta.set(r.oferta); this.cargando.set(false);
       },
       error: (err: unknown) => { this.error.set(mensajeDeError(err, 'No pudimos cargar los catálogos.')); this.cargando.set(false); }
     });
   }
 
-  // Resultado común de guardar/eliminar.
   private ok(mensaje: string, limpiar?: () => void): void {
     this.error.set(''); this.confirmando.set(''); this.exito.set(mensaje);
     limpiar?.();
@@ -76,7 +72,6 @@ export class AdminCatalogosComponent {
   pedir(clave: string): void { this.confirmando.set(clave); }
   cancelarPedido(): void { this.confirmando.set(''); }
 
-  // ---- Ciudades ----
   editarCiudad(c: CiudadModel): void {
     this.catalogo.ciudad(c.idCiudad).subscribe({
       next: x => (this.fCiudad = { id: x.idCiudad, nombre: x.nombre, departamento: x.departamento }),
@@ -96,7 +91,6 @@ export class AdminCatalogosComponent {
     this.admin.eliminarCiudad(c.idCiudad).subscribe({ next: () => this.ok('Ciudad eliminada.'), error: e => this.fallo(e, 'No pudimos eliminar la ciudad.') });
   }
 
-  // ---- Universidades ----
   editarUniversidad(u: UniversidadModel): void {
     this.universidadService.obtener(u.idUniversidad).subscribe({
       next: x => {
@@ -122,7 +116,6 @@ export class AdminCatalogosComponent {
     this.admin.eliminarUniversidad(u.idUniversidad).subscribe({ next: () => this.ok('Universidad eliminada.'), error: e => this.fallo(e, 'No pudimos eliminar la universidad.') });
   }
 
-  // ---- Carreras ----
   editarCarrera(c: CarreraModel): void {
     this.catalogo.carrera(c.idCarrera).subscribe({
       next: x => (this.fCarrera = { id: x.idCarrera, nombre: x.nombre, facultad: x.facultad }),
@@ -142,7 +135,6 @@ export class AdminCatalogosComponent {
     this.admin.eliminarCarrera(c.idCarrera).subscribe({ next: () => this.ok('Carrera eliminada.'), error: e => this.fallo(e, 'No pudimos eliminar la carrera.') });
   }
 
-  // ---- Oferta académica ----
   editarOferta(o: OfertaModel): void {
     this.fOferta = { editando: true, idCarrera: o.idCarrera, idUniversidad: o.idUniversidad, facultad: o.facultad };
   }

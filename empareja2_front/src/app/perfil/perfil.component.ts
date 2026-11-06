@@ -32,20 +32,17 @@ export class PerfilComponent {
   error = signal('');
   grad = gradient; hue = hueOf; ini = initials;
 
-  // ---- Me gusta ----
   meGusta = signal(false);
   totalMeGusta = signal(0);
   quienes = signal<ReaccionModel[]>([]);
   errorMeGusta = signal('');
   trabajandoMeGusta = signal(false);
 
-  // ---- Comentario privado ----
   comentario = '';
   enviandoComentario = signal(false);
   exitoComentario = signal('');
   errorComentario = signal('');
 
-  // ---- Reporte ----
   readonly tiposReporte = [
     { v: TipoReporteEnum.SPAM, t: 'Spam' }, { v: TipoReporteEnum.ACOSO, t: 'Acoso' },
     { v: TipoReporteEnum.PERFIL_FALSO, t: 'Perfil falso' }, { v: TipoReporteEnum.CONTENIDO_INAPROPIADO, t: 'Contenido inapropiado' },
@@ -65,11 +62,9 @@ export class PerfilComponent {
     [GeneroEnum.NO_ESPECIFICA]: 'Prefiere no decirlo'
   };
 
-  // Quien mira es el dueño del perfil, o un administrador (que modera desde /admin y no interactúa).
   esPropio = computed(() => this.s()?.id === this.auth.obtenerUsuario()?.id);
   puedeInteractuar = computed(() => !!this.s() && !this.esPropio() && !this.auth.esAdmin());
 
-  // Texto del género; vacío si no lo especificó.
   generoDe(est: EstudianteModel): string {
     return est.genero && est.genero !== GeneroEnum.NO_ESPECIFICA ? this.generos[est.genero] : '';
   }

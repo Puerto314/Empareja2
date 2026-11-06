@@ -1,13 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: co.edu.unbosque.empareja2.controller.InteraccionControllersTest
 -------------------------------------------------------------------------------
-Tests run: 9, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.152 s <<< FAILURE! -- in co.edu.unbosque.empareja2.controller.InteraccionControllersTest
-co.edu.unbosque.empareja2.controller.InteraccionControllersTest.listarMeGustaEsPublico -- Time elapsed: 0.031 s <<< FAILURE!
-java.lang.AssertionError: No value at JSON path "0.nombreAutor"
-	at org.springframework.test.util.JsonPathExpectationsHelper.evaluateJsonPath(JsonPathExpectationsHelper.java:350)
-	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:148)
-	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:111)
-	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)
-	at co.edu.unbosque.empareja2.controller.InteraccionControllersTest.listarMeGustaEsPublico(InteraccionControllersTest.java:89)
-Caused by: com.jayway.jsonpath.PathNotFoundException: Expected to find an object with property ['0'] in path $ but found 'net.minidev.json.JSONArray'. This is not a json object according to the JsonProvider: 'com.jayway.jsonpath.spi.json.JsonSmartJsonProvider'.
-
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.211 s -- in co.edu.unbosque.empareja2.controller.InteraccionControllersTest

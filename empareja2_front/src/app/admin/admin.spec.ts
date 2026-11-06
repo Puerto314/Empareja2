@@ -142,7 +142,7 @@ describe('Admin · comentarios y me gusta', () => {
   it('lista y elimina me gusta por autor + número', async () => {
     let borrado = '';
     const a: any = {
-      listarMeGusta: () => of([{ numeroReaccion: 2, idAutor: 7, nombreAutor: 'A', idDestinatario: 8, nombreDestinatario: 'B', tipoReaccion: 'ME_GUSTA', fechaHora: '2026-10-01T10:00:00' }]),
+      listarMeGusta: () => of([{ numeroReaccion: 2, idAutor: 7, nombreAutor: 'A', idDestinatario: 8, nombreDestinatario: 'B', fechaHora: '2026-10-01T10:00:00' }]),
       eliminarMeGusta: (u: number, n: number) => { borrado = `${u}/${n}`; return of(undefined); }
     };
     const f = await montar(AdminMeGustaComponent, a);
@@ -159,11 +159,9 @@ describe('Admin · catálogos', () => {
     llamadas.length = 0;
     cat.ciudades = () => of([{ idCiudad: 1, nombre: 'Bogota', departamento: 'Cundinamarca' }]);
     cat.carreras = () => of([{ idCarrera: 5, nombre: 'Medicina', facultad: 'Salud' }]);
-    cat.redesSociales = () => of([{ idRedSocial: 3, nombreRedSocial: 'X', url: 'https://x.com' }]);
     cat.oferta = () => of([{ idCarrera: 5, carrera: 'Medicina', idUniversidad: 2, universidad: 'Uni', facultad: 'Salud' }]);
     cat.ciudad = (id: number) => of({ idCiudad: id, nombre: 'Fresca', departamento: 'D' });
     cat.carrera = (id: number) => of({ idCarrera: id, nombre: 'Fresca', facultad: 'F' });
-    cat.redSocial = (id: number) => of({ idRedSocial: id, nombreRedSocial: 'Fresca', url: 'https://f.co' });
     uni.listar = (n?: string) => { llamadas.push('listar ' + (n ?? '')); return of([{ idUniversidad: 2, nombre: 'Uni', sigla: 'U', calle: null, barrio: null, ciudad: { idCiudad: 1, nombre: 'Bogota', departamento: 'C' } }]); };
     uni.obtener = (id: number) => of({ idUniversidad: id, nombre: 'Fresca', sigla: 'F', calle: 'c', barrio: 'b', ciudad: { idCiudad: 1, nombre: 'Bogota', departamento: 'C' } });
     for (const m of ['crearCiudad', 'actualizarCiudad', 'eliminarCiudad', 'crearUniversidad', 'actualizarUniversidad', 'eliminarUniversidad', 'crearCarrera', 'actualizarCarrera',
@@ -176,7 +174,7 @@ describe('Admin · catálogos', () => {
   it('carga todos los catálogos', async () => {
     const f = await crear();
     const c = f.componentInstance as any;
-    expect([c.ciudades().length, c.universidades().length, c.carreras().length, c.redes().length, c.oferta().length]).toEqual([1, 1, 1, 1, 1]);
+    expect([c.ciudades().length, c.universidades().length, c.carreras().length, c.oferta().length]).toEqual([1, 1, 1, 1]);
   });
 
   it('ciudades: crea, edita (cargando por id) y elimina', async () => {

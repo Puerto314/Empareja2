@@ -31,7 +31,7 @@
           <dt>Edad</dt><dd>{{ p.edad ?? '—' }}</dd>
           <dt>Gustos</dt><dd>{{ p.intereses.length ? p.intereses.join(', ') : '—' }}</dd>
           @for (e of p.estudios; track e.idCarrera) { <dt>Estudios</dt><dd>{{ e.carrera }} · semestre {{ e.semestre }} · {{ e.universidad }}</dd> }
-          @for (r of p.redes; track r.idRedSocial) { <dt>{{ r.redSocial }}</dt><dd>&#64;{{ r.nombreUsuario }}</dd> }
+          @for (r of p.redes; track r.tipoRedSocial) { <dt>{{ r.tipoRedSocial }}</dt><dd>{{ r.urlPerfil }}</dd> }
         </dl>
       </section>
       <section class="panel zona-peligro">

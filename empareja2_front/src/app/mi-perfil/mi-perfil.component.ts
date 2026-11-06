@@ -7,7 +7,6 @@ import { CuentaService } from '../services/cuenta.service';
 import { mensajeDeError } from '../utils/error.util';
 import { gradient, hueOf, initials } from '../utils/avatar.util';
 
-// Perfil propio: ver, editar (PUT /usuarios/me) y eliminar la cuenta (DELETE /usuarios/me).
 @Component({
   standalone: false,
   selector: 'app-mi-perfil',

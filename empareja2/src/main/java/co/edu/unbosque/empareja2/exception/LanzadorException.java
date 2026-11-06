@@ -23,10 +23,6 @@ public final class LanzadorException {
     private LanzadorException() {
     }
 
-    // ------------------------------------------------------------------
-    // No encontrado (404)
-    // ------------------------------------------------------------------
-
     /**
      * Lanza el error de un usuario que no existe con ese correo.
      *
@@ -129,10 +125,6 @@ public final class LanzadorException {
         throw new MeGustaNoEncontradoException();
     }
 
-    // ------------------------------------------------------------------
-    // Datos repetidos (409)
-    // ------------------------------------------------------------------
-
     /**
      * Lanza el error de registrarse con un correo que ya existe.
      *
@@ -217,10 +209,6 @@ public final class LanzadorException {
         throw new ReporteActivoYaExisteException();
     }
 
-    // ------------------------------------------------------------------
-    // Operaciones no permitidas (409)
-    // ------------------------------------------------------------------
-
     /**
      * Lanza el error de eliminar una ciudad que todavia tiene universidades.
      *
@@ -277,10 +265,6 @@ public final class LanzadorException {
     public static void ultimoAdministradorEliminado() {
         throw new UltimoAdministradorEliminadoException();
     }
-
-    // ------------------------------------------------------------------
-    // Datos invalidos (400)
-    // ------------------------------------------------------------------
 
     /**
      * Lanza el error de enviarse un comentario a uno mismo.
@@ -413,10 +397,6 @@ public final class LanzadorException {
         throw new UniversidadNoOfreceCarreraException(nombreUniversidad, nombreCarrera);
     }
 
-    // ------------------------------------------------------------------
-    // Estados inesperados del sistema (500)
-    // ------------------------------------------------------------------
-
     /**
      * Lanza el error de guardar un estudiante sin carrera ni universidad.
      *
@@ -454,10 +434,6 @@ public final class LanzadorException {
     public static void esquemaDesactualizado() {
         throw new EsquemaDesactualizadoException();
     }
-
-    // ------------------------------------------------------------------
-    // Seguridad (Spring Security)
-    // ------------------------------------------------------------------
 
     /**
      * Lanza el error de Spring Security cuando no existe el usuario que

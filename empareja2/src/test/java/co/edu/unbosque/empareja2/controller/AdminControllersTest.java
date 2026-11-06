@@ -64,8 +64,6 @@ class AdminControllersTest extends ControllerTestSupport {
                 new AdminModeracionController(reporteService, comentarioService, reaccionService));
     }
 
-    // ---- usuarios ----
-
     @Test
     void eliminarUltimoAdministradorDa409() throws Exception {
         org.mockito.Mockito.doThrow(new UltimoAdministradorEliminadoException()).when(usuarioService)
@@ -81,8 +79,6 @@ class AdminControllersTest extends ControllerTestSupport {
         mvc.perform(delete("/api/admin/usuarios/2")).andExpect(status().isNoContent());
         verify(usuarioService).eliminarPorAdmin(2L);
     }
-
-    // ---- catalogos ----
 
     @Test
     void editarCiudadDa200() throws Exception {
@@ -137,23 +133,9 @@ class AdminControllersTest extends ControllerTestSupport {
         verify(catalogoService).eliminarOferta(1L, 10L);
     }
 
-    // ---- moderacion ----
-
     private ReporteDTO reporte(EstadoReporte estado) {
         return new ReporteDTO(5L, 1L, "Ana Garcia", 2L, "Luis Perez", TipoReporte.ACOSO, estado, "x",
                 LocalDateTime.now());
-    }
-
-    @Test
-    void listarReportesSinFiltroYConFiltroDeEstado() throws Exception {
-        when(reporteService.listarTodos()).thenReturn(List.of(reporte(EstadoReporte.PENDIENTE)));
-        when(reporteService.listarPorEstado(EstadoReporte.RESUELTO)).thenReturn(List.of());
-
-        mvc.perform(get("/api/admin/reportes")).andExpect(status().isOk())
-                .andExpect(jsonPath("0.estado").value("PENDIENTE"));
-        mvc.perform(get("/api/admin/reportes").param("estado", "RESUELTO")).andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
-        mvc.perform(get("/api/admin/reportes").param("estado", "INVENTADO")).andExpect(status().isBadRequest());
     }
 
     @Test

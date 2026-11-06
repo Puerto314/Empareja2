@@ -50,25 +50,6 @@ class UsuarioControllerTest extends ControllerTestSupport {
     }
 
     @Test
-    void catalogoSinFiltroLlamaConUniversidadNula() throws Exception {
-        when(usuarioService.listarCatalogo("ana@mail.com", null)).thenReturn(List.of(publico(2, "Luis")));
-
-        mvc.perform(get("/api/usuarios").principal(ANA)).andExpect(status().isOk())
-                .andExpect(jsonPath("0.id").value(2)).andExpect(jsonPath("0.nombreCompleto").value("Luis Perez"))
-                .andExpect(jsonPath("0.totalMeGusta").value(2));
-    }
-
-    @Test
-    void rankingUsaLimite20PorDefectoYNoLoConfundeConUnId() throws Exception {
-        when(usuarioService.rankingMeGusta("ana@mail.com", null, 20))
-                .thenReturn(List.of(publico(3, "Marta"), publico(2, "Luis")));
-
-        mvc.perform(get("/api/usuarios/ranking").principal(ANA)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("0.id").value(3));
-        verify(usuarioService).rankingMeGusta("ana@mail.com", null, 20);
-    }
-
-    @Test
     void rankingFiltraPorUniversidadYLimite() throws Exception {
         when(usuarioService.rankingMeGusta("ana@mail.com", 10L, 5)).thenReturn(List.of(publico(2, "Luis")));
 

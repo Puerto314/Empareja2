@@ -10,13 +10,11 @@ export class UniversidadService {
   private http = inject(HttpClient);
   private estudianteService = inject(EstudianteService);
 
-  // GET /api/catalogos/universidades (público). Con "nombre" busca por nombre o sigla.
   listar(nombre?: string): Observable<UniversidadModel[]> {
     return this.http.get<UniversidadModel[]>(`${API_URL}/catalogos/universidades`,
       nombre ? { params: { nombre } } : {});
   }
 
-  // GET /api/catalogos/universidades/{id}. Devuelve undefined si no existe (404) o el id no es válido (400).
   obtener(id: number): Observable<UniversidadModel | undefined> {
     return this.http.get<UniversidadModel>(`${API_URL}/catalogos/universidades/${id}`).pipe(
       catchError((err: unknown) =>
@@ -26,8 +24,6 @@ export class UniversidadService {
     );
   }
 
-  // Universidades con su cantidad de estudiantes y una vista previa de 4, ordenadas por nombre.
-  // Incluye las universidades sin estudiantes (cantidad 0).
   listarResumen(): Observable<ResumenUniversidadesModel> {
     return forkJoin({ unis: this.listar(), estudiantes: this.estudianteService.listarTodos() }).pipe(
       map(({ unis, estudiantes }) => ({

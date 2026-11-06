@@ -27,7 +27,7 @@ describe('PerfilFormComponent', () => {
       imports: [FormsModule],
       providers: [
         { provide: UniversidadService, useValue: { listar: () => of(unis) } },
-        { provide: CatalogoService, useValue: { oferta: () => of(oferta), redesSociales: () => of([{ idRedSocial: 1, nombreRedSocial: 'Instagram', url: 'https://instagram.com' }]) } }
+        { provide: CatalogoService, useValue: { oferta: () => of(oferta) } }
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
@@ -49,11 +49,10 @@ describe('PerfilFormComponent', () => {
 
   beforeEach(() => { emitido = null; });
 
-  it('debe cargar universidades, oferta y redes al abrir', async () => {
+  it('debe cargar universidades y oferta al abrir', async () => {
     await crear('registro');
     expect(comp.universidades().length).toBe(2);
     expect(comp.oferta().length).toBe(2);
-    expect(comp.redesDisponibles().length).toBe(1);
   });
 
   it('en registro empieza con una fila de estudio', async () => {
@@ -107,12 +106,14 @@ describe('PerfilFormComponent', () => {
     expect(comp.validar()).toContain('entre 1 y 20');
   });
 
-  it('valida las redes sociales (nombre de usuario obligatorio y sin repetir)', async () => {
+  it('valida las redes sociales (tipo y enlace http(s) obligatorios, sin repetir tipo)', async () => {
     await crear('registro');
     llenarValido();
-    comp.redes = [{ idRedSocial: 1, nombreUsuario: ' ' }];
-    expect(comp.validar()).toContain('nombre de usuario');
-    comp.redes = [{ idRedSocial: 1, nombreUsuario: 'a' }, { idRedSocial: 1, nombreUsuario: 'b' }];
+    comp.redes = [{ tipoRedSocial: 'Instagram', urlPerfil: ' ' }];
+    expect(comp.validar()).toContain('enlace');
+    comp.redes = [{ tipoRedSocial: 'Instagram', urlPerfil: 'instagram.com/ana' }];
+    expect(comp.validar()).toContain('http');
+    comp.redes = [{ tipoRedSocial: 'Instagram', urlPerfil: 'https://instagram.com/a' }, { tipoRedSocial: 'instagram', urlPerfil: 'https://instagram.com/b' }];
     expect(comp.validar()).toContain('repitas');
   });
 
@@ -121,12 +122,12 @@ describe('PerfilFormComponent', () => {
     llenarValido();
     comp.genero = 'FEMENINO' as any;
     comp.interesesTexto = 'Cine, rock, cine, ';
-    comp.redes = [{ idRedSocial: 1, nombreUsuario: '@ana' }];
+    comp.redes = [{ tipoRedSocial: 'Instagram', urlPerfil: 'https://instagram.com/ana' }];
     comp.guardar();
     expect(emitido).toEqual({
       nombre: 'Ana', apellido: 'Pérez', genero: 'FEMENINO', fechaNacimiento: '2000-05-10', fotoPerfil: '',
       intereses: ['Cine', 'rock'], estudios: [{ idCarrera: 10, idUniversidad: 1, semestre: 4 }],
-      redes: [{ idRedSocial: 1, nombreUsuario: '@ana' }],
+      redes: [{ tipoRedSocial: 'Instagram', urlPerfil: 'https://instagram.com/ana' }],
       correo: 'ana@unbosque.edu.co', contrasena: '12345678'
     } as any);
   });

@@ -10,7 +10,6 @@ import { gradient, hueOf, initials } from '../utils/avatar.util';
 
 interface Datos { lista: EstudianteModel[]; fallo?: boolean }
 
-// Top 20 de usuarios con más "me gusta": general o filtrado por universidad (?universidad=ID).
 @Component({
   standalone: false,
   selector: 'app-ranking',

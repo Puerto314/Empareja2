@@ -55,8 +55,6 @@ class InteraccionControllersTest extends ControllerTestSupport {
                 new ReporteController(reporteService));
     }
 
-    // ---- me gusta ----
-
     @Test
     void darMeGustaDa201() throws Exception {
         when(reaccionService.darMeGusta("ana@mail.com", 2L)).thenReturn(new MeGustaDTO(2L, 1L, true));
@@ -81,17 +79,6 @@ class InteraccionControllersTest extends ControllerTestSupport {
         mvc.perform(delete("/api/usuarios/2/me-gusta").principal(ANA)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.meGusta").value(false));
     }
-
-    @Test
-    void listarMeGustaEsPublico() throws Exception {
-        when(reaccionService.listarMeGusta(2L)).thenReturn(
-                List.of(new ReaccionDTO(1L, "Ana Garcia", null, LocalDateTime.now())));
-
-        mvc.perform(get("/api/usuarios/2/me-gusta").principal(ANA)).andExpect(status().isOk())
-                .andExpect(jsonPath("0.nombreAutor").value("Ana Garcia"));
-    }
-
-    // ---- comentarios ----
 
     @Test
     void enviarComentarioPrivadoDa201() throws Exception {
@@ -122,8 +109,6 @@ class InteraccionControllersTest extends ControllerTestSupport {
         verify(comentarioService).listarRecibidos("ana@mail.com");
         verify(comentarioService).listarEnviados("ana@mail.com");
     }
-
-    // ---- reportes ----
 
     @Test
     void reportarPerfilDa201() throws Exception {

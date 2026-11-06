@@ -55,8 +55,6 @@ public class AdminModeracionController {
         this.reaccionService = reaccionService;
     }
 
-    // ---- Reportes ----
-
     /**
      * Lista los reportes, del mas reciente al mas antiguo; con ?estado=PENDIENTE
      * filtra por estado.
@@ -108,8 +106,6 @@ public class AdminModeracionController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---- Comentarios ----
-
     /**
      * Lista todos los comentarios privados del sistema.
      *
@@ -132,8 +128,6 @@ public class AdminModeracionController {
         comentarioService.eliminarPorAdmin(idAutor, numeroComentario);
         return ResponseEntity.noContent().build();
     }
-
-    // ---- Me gusta ----
 
     /**
      * Lista todos los me gusta del sistema.

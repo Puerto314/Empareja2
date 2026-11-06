@@ -19,7 +19,6 @@ input { font:inherit; padding:12px 14px; border:1.5px solid var(--line); border-
 .chips em { font-style:normal; font-size:.85rem; padding:4px 12px; border-radius:99px; background:var(--mint); color:#14452f; }
 @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
 
-/* ---- Componentes compartidos (formularios, paneles, tablas, pestañas) ---- */
 .page-wrap { max-width:1100px; margin:0 auto; padding:24px 5vw 64px; }
 .page-wrap > h1 { font-size:clamp(1.7rem,4vw,2.4rem); margin-bottom:6px; }
 .panel { background:#fff; border:1px solid var(--line); border-radius:22px; padding:22px; margin-top:18px; }

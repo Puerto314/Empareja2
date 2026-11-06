@@ -13,7 +13,7 @@ import { InteraccionService } from '../services/interaccion.service';
 const estudio = { idCarrera: 1, carrera: 'Medicina', idUniversidad: 5, universidad: 'Universidad Uno', siglaUniversidad: 'UU', semestre: 2 };
 const ana: any = {
   id: 1, nombre: 'Ana', apellido: 'Prueba', nombreCompleto: 'Ana Prueba', edad: 21, genero: 'FEMENINO', fotoPerfil: null,
-  intereses: ['Cine', 'Rock'], redes: [{ idRedSocial: 1, redSocial: 'Instagram', nombreUsuario: '@ana' }],
+  intereses: ['Cine', 'Rock'], redes: [{ tipoRedSocial: 'Instagram', urlPerfil: 'https://instagram.com/ana' }],
   estudios: [estudio], totalMeGusta: 3, meGustaDelUsuarioActual: false
 };
 const luis: any = { ...ana, id: 2, nombre: 'Luis', nombreCompleto: 'Luis Prueba', intereses: [], redes: [] };
@@ -33,7 +33,7 @@ describe('PerfilComponent', () => {
     usuarioActual = { id: 99, rol: 'ESTUDIANTE' };
     serviceMock.obtenerPorId = () => of(ana);
     serviceMock.listarCompaneros = () => of([luis]);
-    interaccionMock.listarMeGusta = () => of([{ idAutor: 50, nombreAutor: 'Marta Ruiz', fotoAutor: null, tipoReaccion: 'ME_GUSTA', fechaHora: '2026-10-01T10:00:00' }]);
+    interaccionMock.listarMeGusta = () => of([{ idAutor: 50, nombreAutor: 'Marta Ruiz', fotoAutor: null, fechaHora: '2026-10-01T10:00:00' }]);
     interaccionMock.darMeGusta = (id: number) => { llamadas.push('dar ' + id); return of({ idUsuario: id, totalMeGusta: 4, meGusta: true }); };
     interaccionMock.quitarMeGusta = (id: number) => { llamadas.push('quitar ' + id); return of({ idUsuario: id, totalMeGusta: 3, meGusta: false }); };
     interaccionMock.enviarComentario = (id: number, t: string) => { llamadas.push(`comentario ${id} ${t}`); return of({}); };
@@ -78,11 +78,11 @@ describe('PerfilComponent', () => {
     expect(texto()).toContain('Medicina');
   });
 
-  it('debe mostrar las redes sociales con el nombre de usuario (sin enlaces externos)', async () => {
+  it('debe mostrar las redes sociales con el enlace al perfil (como texto, sin enlaces externos)', async () => {
     await crear();
     const red = fixture.nativeElement.querySelector('.mini-row.red') as HTMLElement;
     expect(red.textContent).toContain('Instagram');
-    expect(red.textContent).toContain('@ana');
+    expect(red.textContent).toContain('https://instagram.com/ana');
     expect(fixture.nativeElement.querySelector('a.red')).toBeNull();
   });
 

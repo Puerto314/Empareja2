@@ -86,7 +86,7 @@ describe('EstudianteService', () => {
   });
 
   it('no debe pedir compañeros si el estudiante no tiene estudios', () => {
-    let ids: number[] = [-1]; // -1 = el observable aún no emitió
+    let ids: number[] = [-1];
     service.listarCompaneros({ ...estudiante(1), estudios: [] }).subscribe(l => ids = l.map(e => e.id));
     expect(ids).toEqual([]);
   });

@@ -43,8 +43,6 @@ public class AdminCatalogoController {
         this.catalogoService = catalogoService;
     }
 
-    // ---- Ciudades ----
-
     /**
      * Crea una ciudad.
      *
@@ -80,8 +78,6 @@ public class AdminCatalogoController {
         catalogoService.eliminarCiudad(id);
         return ResponseEntity.noContent().build();
     }
-
-    // ---- Universidades ----
 
     /**
      * Crea una universidad.
@@ -119,8 +115,6 @@ public class AdminCatalogoController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---- Carreras ----
-
     /**
      * Crea una carrera.
      *
@@ -156,8 +150,6 @@ public class AdminCatalogoController {
         catalogoService.eliminarCarrera(id);
         return ResponseEntity.noContent().build();
     }
-
-    // ---- Oferta academica (universidad - carrera - facultad) ----
 
     /**
      * Registra que una universidad ofrece una carrera.
