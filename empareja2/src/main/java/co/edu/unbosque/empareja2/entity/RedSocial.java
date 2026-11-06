@@ -1,18 +1,18 @@
 package co.edu.unbosque.empareja2.entity;
 
 /**
- * Entidad RED_SOCIAL(id_red_social, nombre_red_social, url).
+ * Perfil de un estudiante en una red social: RED_SOCIAL(id_usuario, tipo_red_social,
+ * url_perfil). Su llave es (id_usuario, tipo_red_social): un estudiante tiene como
+ * maximo un perfil por tipo de red. No hay un catalogo de redes; cada fila guarda el
+ * enlace al perfil de un usuario.
  */
 public class RedSocial {
 
-    /** El identificador de la red social. */
-    private Long idRedSocial;
+    /** El tipo de red social (por ejemplo Instagram o LinkedIn). */
+    private String tipoRedSocial;
 
-    /** El nombre de la red social. */
-    private String nombreRedSocial;
-
-    /** La direccion base de la red social. */
-    private String url;
+    /** La direccion (url) del perfil del estudiante en esa red. */
+    private String urlPerfil;
 
     /**
      * Crea un objeto RedSocial vacio; los datos se asignan con los metodos set.
@@ -21,80 +21,56 @@ public class RedSocial {
     }
 
     /**
-     * Crea una red social con su nombre y su direccion base.
+     * Crea el perfil de un estudiante en una red social.
      *
-     * @param nombreRedSocial el nombre de la red social
-     * @param url             la direccion base de la red social
+     * @param tipoRedSocial el tipo de red social
+     * @param urlPerfil     la url del perfil del estudiante en esa red
      */
-    public RedSocial(String nombreRedSocial, String url) {
-        this.nombreRedSocial = nombreRedSocial;
-        this.url = url;
+    public RedSocial(String tipoRedSocial, String urlPerfil) {
+        this.tipoRedSocial = tipoRedSocial;
+        this.urlPerfil = urlPerfil;
     }
 
     /**
-     * Obtiene el identificador de la red social.
+     * Obtiene el tipo de red social.
      *
-     * @return el identificador de la red social
+     * @return el tipo de red social
      */
-    public Long getIdRedSocial() {
-        return idRedSocial;
+    public String getTipoRedSocial() {
+        return tipoRedSocial;
     }
 
     /**
-     * Establece el identificador de la red social.
+     * Establece el tipo de red social.
      *
-     * @param idRedSocial el identificador de la red social
+     * @param tipoRedSocial el tipo de red social
      */
-    public void setIdRedSocial(Long idRedSocial) {
-        this.idRedSocial = idRedSocial;
+    public void setTipoRedSocial(String tipoRedSocial) {
+        this.tipoRedSocial = tipoRedSocial;
     }
 
     /**
-     * Obtiene el nombre de la red social.
+     * Obtiene la url del perfil del estudiante en esa red.
      *
-     * @return el nombre de la red social
+     * @return la url del perfil
      */
-    public String getNombreRedSocial() {
-        return nombreRedSocial;
+    public String getUrlPerfil() {
+        return urlPerfil;
     }
 
     /**
-     * Establece el nombre de la red social.
+     * Establece la url del perfil del estudiante en esa red.
      *
-     * @param nombreRedSocial el nombre de la red social
+     * @param urlPerfil la url del perfil
      */
-    public void setNombreRedSocial(String nombreRedSocial) {
-        this.nombreRedSocial = nombreRedSocial;
+    public void setUrlPerfil(String urlPerfil) {
+        this.urlPerfil = urlPerfil;
     }
 
-    /**
-     * Obtiene la direccion base de la red social.
-     *
-     * @return la direccion base de la red social
-     */
-    public String getUrl() {
-        return url;
-    }
-
-    /**
-     * Establece la direccion base de la red social.
-     *
-     * @param url la direccion base de la red social
-     */
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    /**
-     * Devuelve una representacion en texto de este objeto para depuracion.
-     *
-     * @return el objeto como texto
-     */
     @Override
     public String toString() {
-        return "RedSocial [idRedSocial=" + idRedSocial
-                + ", nombreRedSocial=" + nombreRedSocial
-                + ", url=" + url
+        return "RedSocial [tipoRedSocial=" + tipoRedSocial
+                + ", urlPerfil=" + urlPerfil
                 + "]";
     }
 }

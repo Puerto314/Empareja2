@@ -16,7 +16,6 @@ import co.edu.unbosque.empareja2.dto.ConteoReaccionesDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.LanzadorException;
 import co.edu.unbosque.empareja2.mapper.UsuarioMapper;
@@ -121,8 +120,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (idUniversidad != null) {
             exigirUniversidad(idUniversidad);
         }
-        List<Usuario> ranking = usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA,
-                idUniversidad, limite);
+        List<Usuario> ranking = usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, idUniversidad, limite);
         return aPublicos(ranking, actual);
     }
 
@@ -166,11 +164,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         List<Long> ids = usuarios.stream().map(Usuario::getId).toList();
 
         Map<Long, Long> totales = new HashMap<>();
-        for (ConteoReaccionesDTO conteo : reaccionRepository.contarPorDestinatarios(ids, TipoReaccion.ME_GUSTA)) {
+        for (ConteoReaccionesDTO conteo : reaccionRepository.contarPorDestinatarios(ids)) {
             totales.put(conteo.getIdUsuario(), conteo.getTotal());
         }
         Set<Long> mios = new HashSet<>(
-                reaccionRepository.destinatariosReaccionados(actual.getId(), TipoReaccion.ME_GUSTA, ids));
+                reaccionRepository.destinatariosReaccionados(actual.getId(), ids));
 
         return usuarios.stream()
                 .map(u -> usuarioMapper.toPublicoDTO(u, totales.getOrDefault(u.getId(), 0L), mios.contains(u.getId())))

@@ -18,7 +18,6 @@ import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.Tiene;
 import co.edu.unbosque.empareja2.entity.Usuario;
 
 class UsuarioMapperTest {
@@ -32,7 +31,7 @@ class UsuarioMapperTest {
         u.getIntereses().addAll(Set.of("Musica", "cine", "Anime"));
         u.getEstudios().add(new Estudio(TestData.carrera(1L, "Medicina"),
                 TestData.universidad(10L, "Universidad El Bosque", "UNBOSQUE"), 5));
-        u.getRedes().add(new Tiene(TestData.redSocial(2L, "Instagram"), "ana.g"));
+        u.getRedes().add(TestData.redSocial("Instagram", "ana.g"));
         return u;
     }
 
@@ -60,8 +59,8 @@ class UsuarioMapperTest {
         assertThat(dto.getEstudios().get(0).getUniversidad()).isEqualTo("Universidad El Bosque");
         assertThat(dto.getEstudios().get(0).getSemestre()).isEqualTo(5);
         assertThat(dto.getRedes()).hasSize(1);
-        assertThat(dto.getRedes().get(0).getRedSocial()).isEqualTo("Instagram");
-        assertThat(dto.getRedes().get(0).getNombreUsuario()).isEqualTo("ana.g");
+        assertThat(dto.getRedes().get(0).getTipoRedSocial()).isEqualTo("Instagram");
+        assertThat(dto.getRedes().get(0).getUrlPerfil()).isEqualTo("https://instagram.com/ana.g");
     }
 
     @Test

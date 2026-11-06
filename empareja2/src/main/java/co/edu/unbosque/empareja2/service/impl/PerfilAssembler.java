@@ -1,10 +1,12 @@
 package co.edu.unbosque.empareja2.service.impl;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -17,13 +19,11 @@ import co.edu.unbosque.empareja2.dto.RedPerfilRequestDTO;
 import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.RedSocial;
-import co.edu.unbosque.empareja2.entity.Tiene;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.LanzadorException;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.OfreceRepository;
-import co.edu.unbosque.empareja2.repository.RedSocialRepository;
 import co.edu.unbosque.empareja2.repository.UniversidadRepository;
 
 /**
@@ -48,23 +48,18 @@ public class PerfilAssembler {
     /** Acceso a los datos de la oferta academica. */
     private final OfreceRepository ofreceRepository;
 
-    /** Acceso a los datos de las redes sociales. */
-    private final RedSocialRepository redSocialRepository;
-
     /**
      * Crea el ensamblador.
      *
      * @param carreraRepository     el repositorio de carreras
      * @param universidadRepository el repositorio de universidades
      * @param ofreceRepository      el repositorio de la oferta academica
-     * @param redSocialRepository   el repositorio de redes sociales
      */
     public PerfilAssembler(CarreraRepository carreraRepository, UniversidadRepository universidadRepository,
-            OfreceRepository ofreceRepository, RedSocialRepository redSocialRepository) {
+            OfreceRepository ofreceRepository) {
         this.carreraRepository = carreraRepository;
         this.universidadRepository = universidadRepository;
         this.ofreceRepository = ofreceRepository;
-        this.redSocialRepository = redSocialRepository;
     }
 
     /**
@@ -182,8 +177,8 @@ public class PerfilAssembler {
     }
 
     /**
-     * Sincroniza las redes sociales del usuario con las enviadas, validando que
-     * cada red exista y no este repetida.
+     * Reemplaza las redes sociales del usuario por las enviadas, validando que no
+     * haya dos del mismo tipo (sin distinguir mayusculas).
      *
      * @param usuario     el usuario a modificar
      * @param solicitadas las redes enviadas (puede ser null)
@@ -191,30 +186,17 @@ public class PerfilAssembler {
     public void sincronizarRedes(Usuario usuario, List<RedPerfilRequestDTO> solicitadas) {
         List<RedPerfilRequestDTO> lista = solicitadas == null ? List.of() : solicitadas;
 
-        Set<Long> redesSolicitadas = new HashSet<>();
+        Set<String> tiposVistos = new HashSet<>();
+        List<RedSocial> nuevas = new ArrayList<>();
         for (RedPerfilRequestDTO dto : lista) {
-            if (!redesSolicitadas.add(dto.getIdRedSocial())) {
-                LanzadorException.redSocialRepetida(dto.getIdRedSocial());
+            String tipo = dto.getTipoRedSocial().trim();
+            if (!tiposVistos.add(tipo.toLowerCase(Locale.ROOT))) {
+                LanzadorException.redSocialRepetida(tipo);
             }
+            nuevas.add(new RedSocial(tipo, dto.getUrlPerfil().trim()));
         }
 
-        Map<Long, Tiene> existentes = usuario.getRedes().stream()
-                .collect(Collectors.toMap(t -> t.getRedSocial().getIdRedSocial(), Function.identity()));
-
-        for (RedPerfilRequestDTO dto : lista) {
-            RedSocial red = redSocialRepository.buscarPorId(dto.getIdRedSocial()).orElse(null);
-            if (red == null) {
-                LanzadorException.redSocialNoEncontrada(dto.getIdRedSocial());
-            }
-
-            Tiene existente = existentes.get(red.getIdRedSocial());
-            if (existente != null) {
-                existente.setNombreUsuario(dto.getNombreUsuario().trim());
-            } else {
-                usuario.getRedes().add(new Tiene(red, dto.getNombreUsuario().trim()));
-            }
-        }
-
-        usuario.getRedes().removeIf(t -> !redesSolicitadas.contains(t.getRedSocial().getIdRedSocial()));
+        usuario.getRedes().clear();
+        usuario.getRedes().addAll(nuevas);
     }
 }

@@ -2,8 +2,6 @@ package co.edu.unbosque.empareja2.dto;
 
 import java.time.LocalDateTime;
 
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
-
 /**
  * Una reaccion publica: quien la dio y cuando.
  */
@@ -17,9 +15,6 @@ public class ReaccionDTO {
 
     /** La foto de perfil del autor. */
     private String fotoAutor;
-
-    /** El tipo de reaccion. */
-    private TipoReaccion tipoReaccion;
 
     /** La fecha y hora de la reaccion. */
     private LocalDateTime fechaHora;
@@ -36,15 +31,13 @@ public class ReaccionDTO {
      * @param idAutor el identificador del autor
      * @param nombreAutor el nombre completo del autor
      * @param fotoAutor la foto de perfil del autor
-     * @param tipoReaccion el tipo de reaccion
      * @param fechaHora la fecha y hora de la reaccion
      */
-    public ReaccionDTO(Long idAutor, String nombreAutor, String fotoAutor, TipoReaccion tipoReaccion,
+    public ReaccionDTO(Long idAutor, String nombreAutor, String fotoAutor,
             LocalDateTime fechaHora) {
         this.idAutor = idAutor;
         this.nombreAutor = nombreAutor;
         this.fotoAutor = fotoAutor;
-        this.tipoReaccion = tipoReaccion;
         this.fechaHora = fechaHora;
     }
 
@@ -103,24 +96,6 @@ public class ReaccionDTO {
     }
 
     /**
-     * Obtiene el tipo de reaccion.
-     *
-     * @return el tipo de reaccion
-     */
-    public TipoReaccion getTipoReaccion() {
-        return tipoReaccion;
-    }
-
-    /**
-     * Establece el tipo de reaccion.
-     *
-     * @param tipoReaccion el tipo de reaccion
-     */
-    public void setTipoReaccion(TipoReaccion tipoReaccion) {
-        this.tipoReaccion = tipoReaccion;
-    }
-
-    /**
      * Obtiene la fecha y hora de la reaccion.
      *
      * @return la fecha y hora de la reaccion
@@ -148,7 +123,6 @@ public class ReaccionDTO {
         return "ReaccionDTO [idAutor=" + idAutor
                 + ", nombreAutor=" + nombreAutor
                 + ", fotoAutor=" + fotoAutor
-                + ", tipoReaccion=" + tipoReaccion
                 + ", fechaHora=" + fechaHora
                 + "]";
     }

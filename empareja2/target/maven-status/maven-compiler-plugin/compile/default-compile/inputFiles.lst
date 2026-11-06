@@ -36,7 +36,6 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ReaccionDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/RedPerfilDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/RedPerfilRequestDTO.java
-/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/RedSocialDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/RegistroRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ReporteDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ReporteRequestDTO.java
@@ -56,8 +55,6 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/RedSocial.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Reporte.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Rol.java
-/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Tiene.java
-/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/TipoReaccion.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/TipoReporte.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Universidad.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/entity/Usuario.java
@@ -74,7 +71,6 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/ComentarioRepository.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/OfreceRepository.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/ReaccionRepository.java
-/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/RedSocialRepository.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/ReporteRepository.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/Sql.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/UniversidadRepository.java

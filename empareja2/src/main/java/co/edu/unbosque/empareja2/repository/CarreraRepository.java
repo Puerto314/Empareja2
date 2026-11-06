@@ -20,7 +20,7 @@ import co.edu.unbosque.empareja2.entity.Carrera;
 public class CarreraRepository {
 
     /** Consulta base: las columnas de la tabla carrera. */
-    private static final String SELECT = "SELECT id_carrera, nombre, facultad FROM carrera ";
+    private static final String SELECT = "SELECT id_carrera, nombre_carrera, facultad FROM carrera ";
 
     /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
@@ -47,7 +47,7 @@ public class CarreraRepository {
      * @throws SQLException si falla la lectura de una columna
      */
     private Carrera mapear(ResultSet rs, int fila) throws SQLException {
-        Carrera carrera = new Carrera(rs.getString("nombre"), rs.getString("facultad"));
+        Carrera carrera = new Carrera(rs.getString("nombre_carrera"), rs.getString("facultad"));
         carrera.setIdCarrera(rs.getLong("id_carrera"));
         return carrera;
     }
@@ -68,7 +68,7 @@ public class CarreraRepository {
      * @return las carreras
      */
     public List<Carrera> listarTodas() {
-        return jdbc.query(SELECT + "ORDER BY nombre", this::mapear);
+        return jdbc.query(SELECT + "ORDER BY nombre_carrera", this::mapear);
     }
 
     /**
@@ -78,7 +78,7 @@ public class CarreraRepository {
      * @return true si ya existe
      */
     public boolean existePorNombre(String nombre) {
-        return Sql.contar(jdbc, "SELECT COUNT(*) FROM carrera WHERE LOWER(nombre) = LOWER(?)", nombre) > 0;
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM carrera WHERE LOWER(nombre_carrera) = LOWER(?)", nombre) > 0;
     }
 
     /**
@@ -90,7 +90,7 @@ public class CarreraRepository {
      * @return true si existe otra carrera con ese nombre
      */
     public boolean existePorNombreExceptoId(String nombre, Long id) {
-        return Sql.contar(jdbc, "SELECT COUNT(*) FROM carrera WHERE LOWER(nombre) = LOWER(?) AND id_carrera <> ?",
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM carrera WHERE LOWER(nombre_carrera) = LOWER(?) AND id_carrera <> ?",
                 nombre, id) > 0;
     }
 
@@ -111,7 +111,7 @@ public class CarreraRepository {
      * @return la misma carrera, ya con su id
      */
     public Carrera guardar(Carrera carrera) {
-        Number id = insertar.executeAndReturnKey(Map.of("nombre", carrera.getNombre(), "facultad", carrera.getFacultad()));
+        Number id = insertar.executeAndReturnKey(Map.of("nombre_carrera", carrera.getNombre(), "facultad", carrera.getFacultad()));
         carrera.setIdCarrera(id.longValue());
         return carrera;
     }
@@ -136,7 +136,7 @@ public class CarreraRepository {
      * @param carrera la carrera con los datos nuevos
      */
     public void actualizar(Carrera carrera) {
-        jdbc.update("UPDATE carrera SET nombre = ?, facultad = ? WHERE id_carrera = ?", carrera.getNombre(),
+        jdbc.update("UPDATE carrera SET nombre_carrera = ?, facultad = ? WHERE id_carrera = ?", carrera.getNombre(),
                 carrera.getFacultad(), carrera.getIdCarrera());
     }
 

@@ -1,18 +1,15 @@
 package co.edu.unbosque.empareja2.dto;
 
 /**
- * El perfil de un usuario en una red social.
+ * El perfil de un usuario en una red social: el tipo de red y la url de su perfil.
  */
 public class RedPerfilDTO {
 
-    /** El identificador de la red social. */
-    private Long idRedSocial;
+    /** El tipo de red social. */
+    private String tipoRedSocial;
 
-    /** El nombre de la red social. */
-    private String redSocial;
-
-    /** El nombre de usuario en esa red. */
-    private String nombreUsuario;
+    /** La url del perfil del usuario en esa red. */
+    private String urlPerfil;
 
     /**
      * Crea un objeto RedPerfilDTO vacio; los datos se asignan con los metodos set.
@@ -23,80 +20,54 @@ public class RedPerfilDTO {
     /**
      * Crea un objeto RedPerfilDTO con todos sus datos.
      *
-     * @param idRedSocial el identificador de la red social
-     * @param redSocial el nombre de la red social
-     * @param nombreUsuario el nombre de usuario en esa red
+     * @param tipoRedSocial el tipo de red social
+     * @param urlPerfil     la url del perfil del usuario en esa red
      */
-    public RedPerfilDTO(Long idRedSocial, String redSocial, String nombreUsuario) {
-        this.idRedSocial = idRedSocial;
-        this.redSocial = redSocial;
-        this.nombreUsuario = nombreUsuario;
+    public RedPerfilDTO(String tipoRedSocial, String urlPerfil) {
+        this.tipoRedSocial = tipoRedSocial;
+        this.urlPerfil = urlPerfil;
     }
 
     /**
-     * Obtiene el identificador de la red social.
+     * Obtiene el tipo de red social.
      *
-     * @return el identificador de la red social
+     * @return el tipo de red social
      */
-    public Long getIdRedSocial() {
-        return idRedSocial;
+    public String getTipoRedSocial() {
+        return tipoRedSocial;
     }
 
     /**
-     * Establece el identificador de la red social.
+     * Establece el tipo de red social.
      *
-     * @param idRedSocial el identificador de la red social
+     * @param tipoRedSocial el tipo de red social
      */
-    public void setIdRedSocial(Long idRedSocial) {
-        this.idRedSocial = idRedSocial;
+    public void setTipoRedSocial(String tipoRedSocial) {
+        this.tipoRedSocial = tipoRedSocial;
     }
 
     /**
-     * Obtiene el nombre de la red social.
+     * Obtiene la url del perfil del usuario en esa red.
      *
-     * @return el nombre de la red social
+     * @return la url del perfil
      */
-    public String getRedSocial() {
-        return redSocial;
+    public String getUrlPerfil() {
+        return urlPerfil;
     }
 
     /**
-     * Establece el nombre de la red social.
+     * Establece la url del perfil del usuario en esa red.
      *
-     * @param redSocial el nombre de la red social
+     * @param urlPerfil la url del perfil
      */
-    public void setRedSocial(String redSocial) {
-        this.redSocial = redSocial;
+    public void setUrlPerfil(String urlPerfil) {
+        this.urlPerfil = urlPerfil;
     }
 
-    /**
-     * Obtiene el nombre de usuario en esa red.
-     *
-     * @return el nombre de usuario en esa red
-     */
-    public String getNombreUsuario() {
-        return nombreUsuario;
-    }
-
-    /**
-     * Establece el nombre de usuario en esa red.
-     *
-     * @param nombreUsuario el nombre de usuario en esa red
-     */
-    public void setNombreUsuario(String nombreUsuario) {
-        this.nombreUsuario = nombreUsuario;
-    }
-
-    /**
-     * Devuelve una representacion en texto de este objeto para depuracion.
-     *
-     * @return el objeto como texto
-     */
     @Override
     public String toString() {
-        return "RedPerfilDTO [idRedSocial=" + idRedSocial
-                + ", redSocial=" + redSocial
-                + ", nombreUsuario=" + nombreUsuario
+        return "RedPerfilDTO [tipoRedSocial=" + tipoRedSocial
+                + ", urlPerfil=" + urlPerfil
                 + "]";
     }
 }

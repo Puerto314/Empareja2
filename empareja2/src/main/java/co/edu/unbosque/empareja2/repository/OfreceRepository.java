@@ -19,8 +19,8 @@ import co.edu.unbosque.empareja2.entity.Universidad;
 public class OfreceRepository {
 
     /** Consulta base: la oferta con los datos de su carrera y su universidad. */
-    private static final String SELECT = "SELECT c.facultad, c.id_carrera, c.nombre AS carrera_nombre, "
-            + "u.id_universidad, u.nombre AS universidad_nombre, u.sigla "
+    private static final String SELECT = "SELECT c.facultad, c.id_carrera, c.nombre_carrera AS carrera_nombre, "
+            + "u.id_universidad, u.nombre_universidad AS universidad_nombre, u.sigla "
             + "FROM ofrecer o JOIN carrera c ON c.id_carrera = o.id_carrera "
             + "JOIN universidad u ON u.id_universidad = o.id_universidad ";
 
@@ -74,7 +74,7 @@ public class OfreceRepository {
      * @return todas las ofertas
      */
     public List<Ofrece> listarTodas() {
-        return jdbc.query(SELECT + "ORDER BY u.nombre, c.nombre", this::mapear);
+        return jdbc.query(SELECT + "ORDER BY u.nombre_universidad, c.nombre_carrera", this::mapear);
     }
 
     /**
@@ -84,7 +84,7 @@ public class OfreceRepository {
      * @return las ofertas de esa universidad
      */
     public List<Ofrece> listarPorUniversidad(Long idUniversidad) {
-        return jdbc.query(SELECT + "WHERE o.id_universidad = ? ORDER BY c.nombre", this::mapear, idUniversidad);
+        return jdbc.query(SELECT + "WHERE o.id_universidad = ? ORDER BY c.nombre_carrera", this::mapear, idUniversidad);
     }
 
     /**

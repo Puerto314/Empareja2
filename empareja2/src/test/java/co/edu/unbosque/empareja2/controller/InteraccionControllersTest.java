@@ -28,7 +28,6 @@ import co.edu.unbosque.empareja2.dto.MeGustaDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.dto.ReporteDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.service.ComentarioService;
@@ -84,7 +83,7 @@ class InteraccionControllersTest extends ControllerTestSupport {
     @Test
     void listarMeGustaEsPublico() throws Exception {
         when(reaccionService.listarMeGusta(2L)).thenReturn(
-                List.of(new ReaccionDTO(1L, "Ana Garcia", null, TipoReaccion.ME_GUSTA, LocalDateTime.now())));
+                List.of(new ReaccionDTO(1L, "Ana Garcia", null, LocalDateTime.now())));
 
         mvc.perform(get("/api/usuarios/2/me-gusta").principal(ANA)).andExpect(status().isOk())
                 .andExpect(jsonPath("0.nombreAutor").value("Ana Garcia"));

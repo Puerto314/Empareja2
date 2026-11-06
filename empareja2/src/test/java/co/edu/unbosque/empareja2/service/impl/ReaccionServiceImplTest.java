@@ -25,7 +25,6 @@ import co.edu.unbosque.empareja2.dto.MeGustaDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
@@ -58,9 +57,9 @@ class ReaccionServiceImplTest {
 
     @Test
     void darMeGustaGuardaLaReaccionConElSiguienteNumeroDelAutor() {
-        when(reaccionRepository.buscar(1L, 2L, TipoReaccion.ME_GUSTA)).thenReturn(Optional.empty());
+        when(reaccionRepository.buscar(1L, 2L)).thenReturn(Optional.empty());
         when(reaccionRepository.maximoNumero(1L)).thenReturn(3);
-        when(reaccionRepository.contar(2L, TipoReaccion.ME_GUSTA)).thenReturn(1L);
+        when(reaccionRepository.contar(2L)).thenReturn(1L);
 
         MeGustaDTO dto = service.darMeGusta("ana@mail.com", 2L);
 
@@ -70,7 +69,6 @@ class ReaccionServiceImplTest {
         assertThat(guardada.getAutor().getId()).isEqualTo(1L);
         assertThat(guardada.getNumeroReaccion()).isEqualTo(4);
         assertThat(guardada.getDestinatario()).isSameAs(luis);
-        assertThat(guardada.getTipoReaccion()).isEqualTo(TipoReaccion.ME_GUSTA);
         assertThat(dto.getIdUsuario()).isEqualTo(2L);
         assertThat(dto.getTotalMeGusta()).isEqualTo(1L);
         assertThat(dto.isMeGusta()).isEqualTo(true);
@@ -84,8 +82,8 @@ class ReaccionServiceImplTest {
 
     @Test
     void noSePuedeDarMeGustaDosVecesAlMismoPerfil() {
-        when(reaccionRepository.buscar(1L, 2L, TipoReaccion.ME_GUSTA))
-                .thenReturn(Optional.of(new Reaccion(ana, luis, 1, TipoReaccion.ME_GUSTA)));
+        when(reaccionRepository.buscar(1L, 2L))
+                .thenReturn(Optional.of(new Reaccion(ana, luis, 1)));
 
         assertThatThrownBy(() -> service.darMeGusta("ana@mail.com", 2L))
                 .isInstanceOf(DuplicateResourceException.class);
@@ -103,9 +101,9 @@ class ReaccionServiceImplTest {
 
     @Test
     void quitarMeGustaElimina() {
-        Reaccion existente = new Reaccion(ana, luis, 1, TipoReaccion.ME_GUSTA);
-        when(reaccionRepository.buscar(1L, 2L, TipoReaccion.ME_GUSTA)).thenReturn(Optional.of(existente));
-        when(reaccionRepository.contar(2L, TipoReaccion.ME_GUSTA)).thenReturn(0L);
+        Reaccion existente = new Reaccion(ana, luis, 1);
+        when(reaccionRepository.buscar(1L, 2L)).thenReturn(Optional.of(existente));
+        when(reaccionRepository.contar(2L)).thenReturn(0L);
 
         MeGustaDTO dto = service.quitarMeGusta("ana@mail.com", 2L);
 
@@ -117,7 +115,7 @@ class ReaccionServiceImplTest {
 
     @Test
     void quitarMeGustaQueNoExisteDa404() {
-        when(reaccionRepository.buscar(1L, 2L, TipoReaccion.ME_GUSTA)).thenReturn(Optional.empty());
+        when(reaccionRepository.buscar(1L, 2L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.quitarMeGusta("ana@mail.com", 2L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -126,9 +124,9 @@ class ReaccionServiceImplTest {
 
     @Test
     void listarMeGustaEsPublicoYMuestraQuienLoDio() {
-        Reaccion r = new Reaccion(ana, luis, 1, TipoReaccion.ME_GUSTA);
+        Reaccion r = new Reaccion(ana, luis, 1);
         r.setFechaHora(LocalDateTime.of(2026, 10, 1, 12, 0));
-        when(reaccionRepository.listarPorDestinatario(2L, TipoReaccion.ME_GUSTA)).thenReturn(List.of(r));
+        when(reaccionRepository.listarPorDestinatario(2L)).thenReturn(List.of(r));
 
         List<ReaccionDTO> lista = service.listarMeGusta(2L);
 
@@ -141,7 +139,7 @@ class ReaccionServiceImplTest {
     @Test
     void adminListaTodasLasReaccionesConAutorYDestinatario() {
         when(reaccionRepository.listarTodas())
-                .thenReturn(List.of(new Reaccion(ana, luis, 1, TipoReaccion.ME_GUSTA)));
+                .thenReturn(List.of(new Reaccion(ana, luis, 1)));
 
         List<ReaccionAdminDTO> lista = service.listarTodasParaAdmin();
 

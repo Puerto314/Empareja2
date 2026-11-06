@@ -9,12 +9,11 @@ import co.edu.unbosque.empareja2.dto.CiudadDTO;
 import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.OfreceDTO;
 import co.edu.unbosque.empareja2.dto.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.RedSocialDTO;
 import co.edu.unbosque.empareja2.dto.UniversidadDTO;
 import co.edu.unbosque.empareja2.dto.UniversidadRequestDTO;
 
 /**
- * Datos de referencia: ciudades, universidades, carreras, redes sociales y la
+ * Datos de referencia: ciudades, universidades, carreras y la
  * oferta academica. La consulta es publica (se necesita para registrarse); la
  * creacion, edicion y eliminacion son solo para administradores.
  */
@@ -41,13 +40,6 @@ public interface CatalogoService {
      * @return las carreras
      */
     List<CarreraDTO> listarCarreras();
-
-    /**
-     * Lista las redes sociales ordenadas por nombre.
-     *
-     * @return las redes sociales
-     */
-    List<RedSocialDTO> listarRedesSociales();
 
     /**
      * Lista la oferta academica, de todas las universidades o de una sola.
@@ -112,14 +104,6 @@ public interface CatalogoService {
      * @return la carrera
      */
     CarreraDTO obtenerCarrera(Long id);
-
-    /**
-     * Obtiene una red social por id.
-     *
-     * @param id el identificador de la red social
-     * @return la red social
-     */
-    RedSocialDTO obtenerRedSocial(Long id);
 
     /**
      * Edita una ciudad.

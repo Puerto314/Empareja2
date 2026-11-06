@@ -19,8 +19,6 @@ import co.edu.unbosque.empareja2.entity.Estudio;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.Tiene;
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.LanzadorException;
@@ -28,8 +26,8 @@ import co.edu.unbosque.empareja2.exception.LanzadorException;
 /**
  * Acceso a datos (JDBC) del agregado USUARIO segun el modelo relacional:
  * usuario (datos comunes), administrador (subtipo), estudiante (subtipo con su
- * carrera, universidad y semestre), interes_estudiante y estudiante_red_social
- * (union estudiante - red_social, con el nombre de usuario en cada red).
+ * carrera, universidad y semestre), interes_estudiante y red_social (los perfiles
+ * del estudiante en redes sociales: tipo de red y url a su perfil).
  *
  * El rol no se guarda como columna: es ADMIN si el usuario esta en la tabla
  * administrador y ESTUDIANTE si no esta ahi y tiene fila en estudiante.
@@ -50,11 +48,11 @@ public class UsuarioRepository {
     /** Consulta base: el usuario con su rol (ADMIN si esta en la tabla administrador). */
     private static final String SELECT = "SELECT u.id_usuario, u.correo, u.contrasena_hash, u.genero, "
             + "CASE WHEN ad.id_usuario IS NULL THEN 'ESTUDIANTE' ELSE 'ADMIN' END AS rol, "
-            + "u.nombre, u.apellido, u.foto_perfil, u.fecha_nacimiento "
+            + "u.nombre_usuario, u.apellido, u.foto_perfil, u.fecha_nacimiento "
             + "FROM usuario u LEFT JOIN administrador ad ON ad.id_usuario = u.id_usuario ";
 
     /** Orden del catalogo: por nombre y luego por apellido. */
-    private static final String ORDEN_NOMBRE = "ORDER BY u.nombre ASC, u.apellido ASC";
+    private static final String ORDEN_NOMBRE = "ORDER BY u.nombre_usuario ASC, u.apellido ASC";
 
     /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
@@ -89,7 +87,7 @@ public class UsuarioRepository {
         String genero = rs.getString("genero");
         usuario.setGenero(genero == null ? null : Genero.valueOf(genero));
         usuario.setRol(Rol.valueOf(rs.getString("rol")));
-        usuario.setNombre(rs.getString("nombre"));
+        usuario.setNombre(rs.getString("nombre_usuario"));
         usuario.setApellido(rs.getString("apellido"));
         usuario.setFotoPerfil(rs.getString("foto_perfil"));
         usuario.setFechaNacimiento(rs.getObject("fecha_nacimiento", LocalDate.class));
@@ -187,21 +185,19 @@ public class UsuarioRepository {
 
     /**
      * Ranking por reacciones recibidas: los usuarios con ese rol que tienen al
-     * menos una reaccion del tipo indicado, de mas a menos (empata por nombre y
+     * menos una reaccion, de mas a menos (empata por nombre y
      * apellido). Si idUniversidad no es nulo, solo cuenta a quienes estudian en
      * esa universidad. Incluye al usuario que consulta (es un ranking, no el
      * catalogo).
      *
      * @param rol           el rol de los usuarios
-     * @param tipo          el tipo de reaccion que se cuenta
      * @param idUniversidad la universidad a filtrar (puede ser null)
      * @param limite        cuantos usuarios devolver como maximo
      * @return los usuarios del ranking
      */
-    public List<Usuario> rankingPorMeGusta(Rol rol, TipoReaccion tipo, Long idUniversidad, int limite) {
+    public List<Usuario> rankingPorMeGusta(Rol rol, Long idUniversidad, int limite) {
         String filtroUniversidad = "";
         List<Object> argumentos = new ArrayList<>();
-        argumentos.add(tipo.name());
         if (idUniversidad != null) {
             filtroUniversidad = "AND EXISTS (SELECT 1 FROM estudiante e WHERE e.id_usuario = u.id_usuario "
                     + "AND e.id_universidad = ?) ";
@@ -210,9 +206,9 @@ public class UsuarioRepository {
         argumentos.add(limite);
 
         String sql = SELECT + "JOIN (SELECT id_destinatario, COUNT(*) AS total FROM reaccion "
-                + "WHERE tipo = ? GROUP BY id_destinatario) r ON r.id_destinatario = u.id_usuario "
+                + "GROUP BY id_destinatario) r ON r.id_destinatario = u.id_usuario "
                 + "WHERE " + filtroRol(rol) + " " + filtroUniversidad
-                + "ORDER BY r.total DESC, u.nombre ASC, u.apellido ASC, u.id_usuario ASC LIMIT ?";
+                + "ORDER BY r.total DESC, u.nombre_usuario ASC, u.apellido ASC, u.id_usuario ASC LIMIT ?";
         return cargarColecciones(jdbc.query(sql, this::mapear, argumentos.toArray()));
     }
 
@@ -307,7 +303,7 @@ public class UsuarioRepository {
         valores.put("correo", usuario.getCorreo());
         valores.put("contrasena_hash", usuario.getContrasenaHash());
         valores.put("genero", generoParaGuardar(usuario));
-        valores.put("nombre", usuario.getNombre());
+        valores.put("nombre_usuario", usuario.getNombre());
         valores.put("apellido", usuario.getApellido());
         valores.put("foto_perfil", usuario.getFotoPerfil());
         valores.put("fecha_nacimiento", fechaNacimientoParaGuardar(usuario));
@@ -320,7 +316,7 @@ public class UsuarioRepository {
      * @param usuario el usuario con los datos nuevos
      */
     private void actualizarUsuario(Usuario usuario) {
-        jdbc.update("UPDATE usuario SET correo = ?, contrasena_hash = ?, genero = ?, nombre = ?, apellido = ?, "
+        jdbc.update("UPDATE usuario SET correo = ?, contrasena_hash = ?, genero = ?, nombre_usuario = ?, apellido = ?, "
                 + "foto_perfil = ?, fecha_nacimiento = ? WHERE id_usuario = ?", usuario.getCorreo(),
                 usuario.getContrasenaHash(), generoParaGuardar(usuario), usuario.getNombre(), usuario.getApellido(),
                 usuario.getFotoPerfil(), fechaNacimientoParaGuardar(usuario), usuario.getId());
@@ -393,11 +389,10 @@ public class UsuarioRepository {
             jdbc.update("INSERT INTO interes_estudiante (id_estudiante, interes) VALUES (?, ?)", id, interes);
         }
 
-        jdbc.update("DELETE FROM estudiante_red_social WHERE id_estudiante = ?", id);
-        for (Tiene red : usuario.getRedes()) {
-            jdbc.update(
-                    "INSERT INTO estudiante_red_social (id_estudiante, id_red_social, nombre_usuario) VALUES (?, ?, ?)",
-                    id, red.getRedSocial().getIdRedSocial(), red.getNombreUsuario());
+        jdbc.update("DELETE FROM red_social WHERE id_usuario = ?", id);
+        for (RedSocial red : usuario.getRedes()) {
+            jdbc.update("INSERT INTO red_social (id_usuario, tipo_red_social, url_perfil) VALUES (?, ?, ?)", id,
+                    red.getTipoRedSocial(), red.getUrlPerfil());
         }
     }
 
@@ -454,8 +449,8 @@ public class UsuarioRepository {
      * @param ids   los ids de los usuarios
      */
     private void cargarEstudios(Map<Long, Usuario> porId, String in, Object[] ids) {
-        String sql = "SELECT e.id_usuario, e.semestre, c.id_carrera, c.nombre AS carrera_nombre, "
-                + "un.id_universidad, un.nombre AS universidad_nombre, un.sigla "
+        String sql = "SELECT e.id_usuario, e.semestre, c.id_carrera, c.nombre_carrera AS carrera_nombre, "
+                + "un.id_universidad, un.nombre_universidad AS universidad_nombre, un.sigla "
                 + "FROM estudiante e JOIN carrera c ON c.id_carrera = e.id_carrera "
                 + "JOIN universidad un ON un.id_universidad = e.id_universidad WHERE e.id_usuario IN (" + in + ")";
         RowCallbackHandler alLeerFila = rs -> {
@@ -473,9 +468,8 @@ public class UsuarioRepository {
      * @param ids   los ids de los usuarios
      */
     private void cargarRedes(Map<Long, Usuario> porId, String in, Object[] ids) {
-        String sql = "SELECT er.id_estudiante AS id_usuario, er.id_red_social, r.nombre AS nombre_red_social, "
-                + "er.nombre_usuario FROM estudiante_red_social er "
-                + "JOIN red_social r ON r.id_red_social = er.id_red_social WHERE er.id_estudiante IN (" + in + ")";
+        String sql = "SELECT id_usuario, tipo_red_social, url_perfil FROM red_social "
+                + "WHERE id_usuario IN (" + in + ")";
         RowCallbackHandler alLeerFila = rs -> {
             Usuario usuario = porId.get(rs.getLong("id_usuario"));
             usuario.getRedes().add(mapearRed(rs));
@@ -506,12 +500,10 @@ public class UsuarioRepository {
      * Convierte la fila actual del resultado en el perfil de una red social.
      *
      * @param rs el resultado de la consulta, posicionado en una fila
-     * @return la red social con el nombre de usuario
+     * @return la red social con el tipo y la url del perfil
      * @throws SQLException si falla la lectura de una columna
      */
-    private Tiene mapearRed(ResultSet rs) throws SQLException {
-        RedSocial red = new RedSocial(rs.getString("nombre_red_social"), null);
-        red.setIdRedSocial(rs.getLong("id_red_social"));
-        return new Tiene(red, rs.getString("nombre_usuario"));
+    private RedSocial mapearRed(ResultSet rs) throws SQLException {
+        return new RedSocial(rs.getString("tipo_red_social"), rs.getString("url_perfil"));
     }
 }

@@ -38,7 +38,6 @@ import co.edu.unbosque.empareja2.mapper.CatalogoMapper;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.CiudadRepository;
 import co.edu.unbosque.empareja2.repository.OfreceRepository;
-import co.edu.unbosque.empareja2.repository.RedSocialRepository;
 import co.edu.unbosque.empareja2.repository.UniversidadRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,8 +51,6 @@ class CatalogoServiceImplTest {
     @Mock
     private CarreraRepository carreraRepository;
     @Mock
-    private RedSocialRepository redSocialRepository;
-    @Mock
     private OfreceRepository ofreceRepository;
 
     private CatalogoServiceImpl service;
@@ -61,7 +58,7 @@ class CatalogoServiceImplTest {
     @BeforeEach
     void preparar() {
         service = new CatalogoServiceImpl(ciudadRepository, universidadRepository, carreraRepository,
-                redSocialRepository, ofreceRepository, new CatalogoMapper());
+                ofreceRepository, new CatalogoMapper());
     }
 
     @Test
@@ -319,6 +316,5 @@ class CatalogoServiceImplTest {
         assertThatThrownBy(() -> service.obtenerCiudad(9L)).isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> service.obtenerUniversidad(9L)).isInstanceOf(ResourceNotFoundException.class);
         assertThatThrownBy(() -> service.obtenerCarrera(9L)).isInstanceOf(ResourceNotFoundException.class);
-        assertThatThrownBy(() -> service.obtenerRedSocial(9L)).isInstanceOf(ResourceNotFoundException.class);
     }
 }

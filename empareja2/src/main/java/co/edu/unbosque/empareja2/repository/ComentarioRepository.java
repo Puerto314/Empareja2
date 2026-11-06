@@ -19,9 +19,9 @@ import co.edu.unbosque.empareja2.entity.Usuario;
 public class ComentarioRepository {
 
     /** Consulta base: el comentario con el nombre de su autor y de su destinatario. */
-    private static final String SELECT = "SELECT c.id_autor, c.numero AS numero_comentario, c.id_destinatario, "
-            + "c.contenido, c.fecha_hora, a.nombre AS autor_nombre, a.apellido AS autor_apellido, "
-            + "d.nombre AS dest_nombre, d.apellido AS dest_apellido FROM comentario c "
+    private static final String SELECT = "SELECT c.id_autor, c.numero_comentario, c.id_destinatario, "
+            + "c.contenido_comentario, c.fecha_hora_comentario, a.nombre_usuario AS autor_nombre, a.apellido AS autor_apellido, "
+            + "d.nombre_usuario AS dest_nombre, d.apellido AS dest_apellido FROM comentario c "
             + "JOIN usuario a ON a.id_usuario = c.id_autor "
             + "JOIN usuario d ON d.id_usuario = c.id_destinatario ";
 
@@ -57,8 +57,8 @@ public class ComentarioRepository {
         destinatario.setApellido(rs.getString("dest_apellido"));
 
         Comentario comentario = new Comentario(autor, destinatario, rs.getInt("numero_comentario"),
-                rs.getString("contenido"));
-        comentario.setFechaHora(rs.getObject("fecha_hora", LocalDateTime.class));
+                rs.getString("contenido_comentario"));
+        comentario.setFechaHora(rs.getObject("fecha_hora_comentario", LocalDateTime.class));
         return comentario;
     }
 
@@ -70,7 +70,7 @@ public class ComentarioRepository {
      * @return los comentarios recibidos
      */
     public List<Comentario> listarRecibidos(Long idUsuario) {
-        return jdbc.query(SELECT + "WHERE c.id_destinatario = ? ORDER BY c.fecha_hora DESC, c.numero DESC",
+        return jdbc.query(SELECT + "WHERE c.id_destinatario = ? ORDER BY c.fecha_hora_comentario DESC, c.numero_comentario DESC",
                 this::mapear, idUsuario);
     }
 
@@ -81,7 +81,7 @@ public class ComentarioRepository {
      * @return los comentarios enviados
      */
     public List<Comentario> listarEnviados(Long idUsuario) {
-        return jdbc.query(SELECT + "WHERE c.id_autor = ? ORDER BY c.fecha_hora DESC, c.numero DESC", this::mapear,
+        return jdbc.query(SELECT + "WHERE c.id_autor = ? ORDER BY c.fecha_hora_comentario DESC, c.numero_comentario DESC", this::mapear,
                 idUsuario);
     }
 
@@ -91,7 +91,7 @@ public class ComentarioRepository {
      * @return todos los comentarios, del mas reciente al mas antiguo
      */
     public List<Comentario> listarTodos() {
-        return jdbc.query(SELECT + "ORDER BY c.fecha_hora DESC, c.id_autor, c.numero DESC", this::mapear);
+        return jdbc.query(SELECT + "ORDER BY c.fecha_hora_comentario DESC, c.id_autor, c.numero_comentario DESC", this::mapear);
     }
 
     /**
@@ -101,7 +101,7 @@ public class ComentarioRepository {
      * @return el mayor numero (0 si no tiene ningun comentario)
      */
     public Integer maximoNumero(Long idAutor) {
-        return jdbc.queryForObject("SELECT COALESCE(MAX(numero), 0) FROM comentario WHERE id_autor = ?",
+        return jdbc.queryForObject("SELECT COALESCE(MAX(numero_comentario), 0) FROM comentario WHERE id_autor = ?",
                 Integer.class, idAutor);
     }
 
@@ -112,7 +112,8 @@ public class ComentarioRepository {
      * @return el mismo comentario
      */
     public Comentario guardar(Comentario comentario) {
-        jdbc.update("INSERT INTO comentario (id_autor, numero, id_destinatario, contenido, fecha_hora) "
+        jdbc.update("INSERT INTO comentario (id_autor, numero_comentario, id_destinatario, "
+                + "contenido_comentario, fecha_hora_comentario) "
                 + "VALUES (?, ?, ?, ?, ?)", comentario.getAutor().getId(), comentario.getNumeroComentario(),
                 comentario.getDestinatario().getId(), comentario.getContenido(), comentario.getFechaHora());
         return comentario;
@@ -126,6 +127,6 @@ public class ComentarioRepository {
      * @return cuantas filas borro (0 o 1)
      */
     public int eliminar(Long idAutor, Integer numero) {
-        return jdbc.update("DELETE FROM comentario WHERE id_autor = ? AND numero = ?", idAutor, numero);
+        return jdbc.update("DELETE FROM comentario WHERE id_autor = ? AND numero_comentario = ?", idAutor, numero);
     }
 }

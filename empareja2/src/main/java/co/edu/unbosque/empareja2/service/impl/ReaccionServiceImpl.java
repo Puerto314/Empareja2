@@ -9,7 +9,6 @@ import co.edu.unbosque.empareja2.dto.MeGustaDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionAdminDTO;
 import co.edu.unbosque.empareja2.dto.ReaccionDTO;
 import co.edu.unbosque.empareja2.entity.Reaccion;
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.LanzadorException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
@@ -63,15 +62,15 @@ public class ReaccionServiceImpl implements ReaccionService {
         if (autor.getId().equals(destinatario.getId())) {
             LanzadorException.meGustaAUnoMismo();
         }
-        if (reaccionRepository.buscar(autor.getId(), destinatario.getId(), TipoReaccion.ME_GUSTA).isPresent()) {
+        if (reaccionRepository.buscar(autor.getId(), destinatario.getId()).isPresent()) {
             LanzadorException.meGustaYaDado();
         }
 
         int numero = reaccionRepository.maximoNumero(autor.getId()) + 1;
-        reaccionRepository.guardar(new Reaccion(autor, destinatario, numero, TipoReaccion.ME_GUSTA));
+        reaccionRepository.guardar(new Reaccion(autor, destinatario, numero));
 
         return new MeGustaDTO(destinatario.getId(),
-                reaccionRepository.contar(destinatario.getId(), TipoReaccion.ME_GUSTA), true);
+                reaccionRepository.contar(destinatario.getId()), true);
     }
 
     /**
@@ -87,15 +86,14 @@ public class ReaccionServiceImpl implements ReaccionService {
         Usuario autor = usuarioFinder.porCorreo(correoActual);
         Usuario destinatario = usuarioFinder.estudianteVisible(idPerfil);
 
-        Reaccion reaccion = reaccionRepository.buscar(autor.getId(), destinatario.getId(), TipoReaccion.ME_GUSTA)
-                .orElse(null);
+        Reaccion reaccion = reaccionRepository.buscar(autor.getId(), destinatario.getId()).orElse(null);
         if (reaccion == null) {
             LanzadorException.meGustaNoEncontrado();
         }
         reaccionRepository.eliminar(reaccion.getAutor().getId(), reaccion.getNumeroReaccion());
 
         return new MeGustaDTO(destinatario.getId(),
-                reaccionRepository.contar(destinatario.getId(), TipoReaccion.ME_GUSTA), false);
+                reaccionRepository.contar(destinatario.getId()), false);
     }
 
     /**
@@ -107,7 +105,7 @@ public class ReaccionServiceImpl implements ReaccionService {
     @Override
     public List<ReaccionDTO> listarMeGusta(Long idPerfil) {
         Usuario destinatario = usuarioFinder.estudianteVisible(idPerfil);
-        return reaccionRepository.listarPorDestinatario(destinatario.getId(), TipoReaccion.ME_GUSTA).stream()
+        return reaccionRepository.listarPorDestinatario(destinatario.getId()).stream()
                 .map(interaccionMapper::toReaccionDTO).toList();
     }
 

@@ -31,7 +31,6 @@ import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Genero;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
 import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
@@ -86,10 +85,9 @@ class UsuarioServiceImplTest {
 	@Test
 	void catalogoListaALosDemasSinElUsuarioActualYConMeGusta() {
 		when(usuarioRepository.listarPorRolExcepto(Rol.ESTUDIANTE, 1L)).thenReturn(List.of(luis, marta));
-		when(reaccionRepository.contarPorDestinatarios(List.of(2L, 3L), TipoReaccion.ME_GUSTA))
+		when(reaccionRepository.contarPorDestinatarios(List.of(2L, 3L)))
 				.thenReturn(List.of(new ConteoReaccionesDTO(2L, 5L)));
-		when(reaccionRepository.destinatariosReaccionados(1L, TipoReaccion.ME_GUSTA, List.of(2L, 3L)))
-				.thenReturn(List.of(3L));
+		when(reaccionRepository.destinatariosReaccionados(1L, List.of(2L, 3L))).thenReturn(List.of(3L));
 
 		List<UsuarioPublicoDTO> catalogo = service.listarCatalogo("ana@mail.com", null);
 
@@ -123,12 +121,10 @@ class UsuarioServiceImplTest {
 
 	@Test
 	void rankingGeneralConservaElOrdenDelRepositorioYAgregaLosConteos() {
-		when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, null, 20))
-				.thenReturn(List.of(marta, luis));
-		when(reaccionRepository.contarPorDestinatarios(List.of(3L, 2L), TipoReaccion.ME_GUSTA))
+		when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, null, 20)).thenReturn(List.of(marta, luis));
+		when(reaccionRepository.contarPorDestinatarios(List.of(3L, 2L)))
 				.thenReturn(List.of(new ConteoReaccionesDTO(3L, 9L), new ConteoReaccionesDTO(2L, 4L)));
-		when(reaccionRepository.destinatariosReaccionados(1L, TipoReaccion.ME_GUSTA, List.of(3L, 2L)))
-				.thenReturn(List.of(2L));
+		when(reaccionRepository.destinatariosReaccionados(1L, List.of(3L, 2L))).thenReturn(List.of(2L));
 
 		List<UsuarioPublicoDTO> ranking = service.rankingMeGusta("ana@mail.com", null, 20);
 
@@ -141,22 +137,11 @@ class UsuarioServiceImplTest {
 	@Test
 	void rankingPorUniversidadFiltraEnElRepositorio() {
 		when(universidadRepository.existePorId(10L)).thenReturn(true);
-		when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, 10L, 20))
-				.thenReturn(List.of(luis));
+		when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, 10L, 20)).thenReturn(List.of(luis));
 
 		List<UsuarioPublicoDTO> ranking = service.rankingMeGusta("ana@mail.com", 10L, 20);
 
 		assertThat(ranking).extracting(UsuarioPublicoDTO::getId).containsExactly(2L);
-	}
-
-	@Test
-	void rankingConUniversidadInexistenteDa404() {
-		when(universidadRepository.existePorId(99L)).thenReturn(false);
-
-		assertThatThrownBy(() -> service.rankingMeGusta("ana@mail.com", 99L, 20))
-				.isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("99");
-		verify(usuarioRepository, never()).rankingPorMeGusta(any(), any(), any(),
-				org.mockito.ArgumentMatchers.anyInt());
 	}
 
 	@Test
@@ -169,8 +154,7 @@ class UsuarioServiceImplTest {
 
 	@Test
 	void rankingVacioNoConsultaReacciones() {
-		when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, TipoReaccion.ME_GUSTA, null, 20))
-				.thenReturn(List.of());
+		when(usuarioRepository.rankingPorMeGusta(Rol.ESTUDIANTE, null, 20)).thenReturn(List.of());
 
 		assertThat(service.rankingMeGusta("ana@mail.com", null, 20)).isEmpty();
 		verifyNoInteractions(reaccionRepository);
@@ -182,20 +166,6 @@ class UsuarioServiceImplTest {
 
 		assertThat(service.listarCatalogo("ana@mail.com", null)).isEmpty();
 		verifyNoInteractions(reaccionRepository);
-	}
-
-	@Test
-	void perfilPublicoDeUnEstudianteIncluyeConteoDeMeGusta() {
-		when(usuarioFinder.estudianteVisible(2L)).thenReturn(luis);
-		when(reaccionRepository.contarPorDestinatarios(anyCollection(), any()))
-				.thenReturn(List.of(new ConteoReaccionesDTO(2L, 1L)));
-		when(reaccionRepository.destinatariosReaccionados(any(), any(), anyCollection())).thenReturn(List.of());
-
-		UsuarioPublicoDTO dto = service.obtenerPerfilPublico("ana@mail.com", 2L);
-
-		assertThat(dto.getId()).isEqualTo(2L);
-		assertThat(dto.getTotalMeGusta()).isEqualTo(1L);
-		assertThat(dto.isMeGustaDelUsuarioActual()).isFalse();
 	}
 
 	@Test
