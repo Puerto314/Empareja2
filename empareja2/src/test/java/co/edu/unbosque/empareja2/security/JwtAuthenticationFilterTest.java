@@ -18,8 +18,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import co.edu.unbosque.empareja2.exception.UsuarioDeSesionNoEncontradoException;
 import io.jsonwebtoken.MalformedJwtException;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,7 +89,7 @@ class JwtAuthenticationFilterTest {
     void usuarioEliminadoNoRompeLaPeticion() throws Exception {
         request.addHeader("Authorization", "Bearer abc");
         when(jwtService.extractUsername("abc")).thenReturn("fantasma@mail.com");
-        when(userDetailsService.loadUserByUsername(any())).thenThrow(new UsernameNotFoundException("no existe"));
+        when(userDetailsService.loadUserByUsername(any())).thenThrow(new UsuarioDeSesionNoEncontradoException("fantasma@mail.com"));
 
         filter.doFilter(request, response, chain);
 

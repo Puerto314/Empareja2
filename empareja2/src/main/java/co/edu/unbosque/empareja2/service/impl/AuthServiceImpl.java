@@ -2,6 +2,7 @@ package co.edu.unbosque.empareja2.service.impl;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -98,8 +99,8 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Inicia sesion con correo y contrasena. Si las credenciales son invalidas el
-     * AuthenticationManager lanza BadCredentialsException, que captura
-     * GlobalExceptionHandler (401).
+     * AuthenticationManager lanza una AuthenticationException, que se convierte en
+     * CredencialesInvalidasException (401) desde el lanzador.
      *
      * @param request las credenciales
      * @return el token y el perfil del usuario
@@ -107,8 +108,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public AuthResponseDTO iniciarSesion(LoginRequestDTO request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getContrasena()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getContrasena()));
+        } catch (AuthenticationException ex) {
+            LanzadorException.credencialesInvalidas();
+        }
 
         Usuario usuario = usuarioRepository.buscarPorCorreo(request.getCorreo()).orElse(null);
         if (usuario == null) {

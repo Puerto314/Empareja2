@@ -21,11 +21,13 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.ComentarioRequestDTO;
 import co.edu.unbosque.empareja2.dto.ComentarioDTO;
+import co.edu.unbosque.empareja2.dto.ComentarioRequestDTO;
 import co.edu.unbosque.empareja2.entity.Comentario;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.ComentarioAUnoMismoException;
+import co.edu.unbosque.empareja2.exception.ComentarioNoEncontradoException;
+import co.edu.unbosque.empareja2.exception.UsuarioNoEncontradoPorIdException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
 import co.edu.unbosque.empareja2.repository.ComentarioRepository;
 
@@ -87,16 +89,16 @@ class ComentarioServiceImplTest {
     @Test
     void noSePuedeComentarUnoMismo() {
         assertThatThrownBy(() -> service.enviar("ana@mail.com", 1L, new ComentarioRequestDTO("hola")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ComentarioAUnoMismoException.class);
         verify(comentarioRepository, never()).guardar(any());
     }
 
     @Test
     void comentarAUnDestinatarioInexistenteDa404() {
-        when(usuarioFinder.estudianteVisible(99L)).thenThrow(new ResourceNotFoundException("No existe"));
+        when(usuarioFinder.estudianteVisible(99L)).thenThrow(new UsuarioNoEncontradoPorIdException(99L));
 
         assertThatThrownBy(() -> service.enviar("ana@mail.com", 99L, new ComentarioRequestDTO("hola")))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(UsuarioNoEncontradoPorIdException.class);
         verify(comentarioRepository, never()).guardar(any());
     }
 
@@ -143,6 +145,6 @@ class ComentarioServiceImplTest {
         when(comentarioRepository.eliminar(1L, 9)).thenReturn(0);
 
         service.eliminarPorAdmin(1L, 1);
-        assertThatThrownBy(() -> service.eliminarPorAdmin(1L, 9)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.eliminarPorAdmin(1L, 9)).isInstanceOf(ComentarioNoEncontradoException.class);
     }
 }

@@ -21,14 +21,17 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import co.edu.unbosque.empareja2.TestData;
-import co.edu.unbosque.empareja2.dto.ReporteRequestDTO;
 import co.edu.unbosque.empareja2.dto.ReporteDTO;
+import co.edu.unbosque.empareja2.dto.ReporteRequestDTO;
 import co.edu.unbosque.empareja2.entity.EstadoReporte;
 import co.edu.unbosque.empareja2.entity.Reporte;
 import co.edu.unbosque.empareja2.entity.TipoReporte;
 import co.edu.unbosque.empareja2.entity.Usuario;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.ReporteAUnoMismoException;
+import co.edu.unbosque.empareja2.exception.ReporteActivoYaExisteException;
+import co.edu.unbosque.empareja2.exception.ReporteNoEncontradoException;
+import co.edu.unbosque.empareja2.exception.ReporteOtroSinDescripcionException;
+import co.edu.unbosque.empareja2.exception.UsuarioNoEncontradoPorIdException;
 import co.edu.unbosque.empareja2.mapper.InteraccionMapper;
 import co.edu.unbosque.empareja2.repository.ReporteRepository;
 
@@ -91,16 +94,16 @@ class ReporteServiceImplTest {
     @Test
     void noSePuedeReportarElPropioPerfil() {
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 1L, new ReporteRequestDTO(TipoReporte.SPAM, null)))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ReporteAUnoMismoException.class);
         verify(reporteRepository, never()).guardar(any());
     }
 
     @Test
     void reportarUnPerfilInexistenteDa404() {
-        when(usuarioFinder.estudianteVisible(99L)).thenThrow(new ResourceNotFoundException("No existe"));
+        when(usuarioFinder.estudianteVisible(99L)).thenThrow(new UsuarioNoEncontradoPorIdException(99L));
 
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 99L, new ReporteRequestDTO(TipoReporte.ACOSO, "x")))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(UsuarioNoEncontradoPorIdException.class);
         verify(reporteRepository, never()).guardar(any());
     }
 
@@ -121,7 +124,7 @@ class ReporteServiceImplTest {
     @Test
     void elTipoOtroExigeDescripcion() {
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.OTRO, "  ")))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("OTRO");
+                .isInstanceOf(ReporteOtroSinDescripcionException.class).hasMessageContaining("OTRO");
         verify(reporteRepository, never()).guardar(any());
     }
 
@@ -130,7 +133,7 @@ class ReporteServiceImplTest {
         when(reporteRepository.existeActivo(1L, 2L, TipoReporte.SPAM)).thenReturn(true);
 
         assertThatThrownBy(() -> service.reportar("ana@mail.com", 2L, new ReporteRequestDTO(TipoReporte.SPAM, null)))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(ReporteActivoYaExisteException.class);
         verify(reporteRepository, never()).guardar(any());
     }
 
@@ -171,9 +174,9 @@ class ReporteServiceImplTest {
         service.eliminar(5L);
         verify(reporteRepository).eliminar(5L);
 
-        assertThatThrownBy(() -> service.eliminar(6L)).isInstanceOf(ResourceNotFoundException.class);
-        assertThatThrownBy(() -> service.obtener(6L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.eliminar(6L)).isInstanceOf(ReporteNoEncontradoException.class);
+        assertThatThrownBy(() -> service.obtener(6L)).isInstanceOf(ReporteNoEncontradoException.class);
         assertThatThrownBy(() -> service.actualizarEstado(6L, EstadoReporte.RESUELTO))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ReporteNoEncontradoException.class);
     }
 }

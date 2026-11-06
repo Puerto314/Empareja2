@@ -21,19 +21,29 @@ import org.mockito.quality.Strictness;
 import co.edu.unbosque.empareja2.TestData;
 import co.edu.unbosque.empareja2.dto.ActualizarOfertaRequestDTO;
 import co.edu.unbosque.empareja2.dto.CarreraRequestDTO;
-import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
-import co.edu.unbosque.empareja2.dto.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.dto.CiudadDTO;
+import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.OfreceDTO;
+import co.edu.unbosque.empareja2.dto.OfreceRequestDTO;
 import co.edu.unbosque.empareja2.dto.UniversidadDTO;
+import co.edu.unbosque.empareja2.dto.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Ciudad;
 import co.edu.unbosque.empareja2.entity.Ofrece;
 import co.edu.unbosque.empareja2.entity.Universidad;
-import co.edu.unbosque.empareja2.exception.DuplicateResourceException;
-import co.edu.unbosque.empareja2.exception.OperationNotAllowedException;
-import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
+import co.edu.unbosque.empareja2.exception.CarreraConEstudiantesException;
+import co.edu.unbosque.empareja2.exception.CarreraNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.CarreraYaExisteException;
+import co.edu.unbosque.empareja2.exception.CiudadConUniversidadesException;
+import co.edu.unbosque.empareja2.exception.CiudadNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.CiudadYaExisteException;
+import co.edu.unbosque.empareja2.exception.OfertaConEstudiantesException;
+import co.edu.unbosque.empareja2.exception.OfertaNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.OfertaYaExisteException;
+import co.edu.unbosque.empareja2.exception.UniversidadConEstudiantesException;
+import co.edu.unbosque.empareja2.exception.UniversidadNoEncontradaException;
+import co.edu.unbosque.empareja2.exception.UniversidadNombreYaExisteException;
+import co.edu.unbosque.empareja2.exception.UniversidadSiglaYaExisteException;
 import co.edu.unbosque.empareja2.mapper.CatalogoMapper;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.CiudadRepository;
@@ -100,15 +110,15 @@ class CatalogoServiceImplTest {
         UniversidadRequestDTO req = new UniversidadRequestDTO("Uni", "UN", "Calle 1", "Centro", 1L);
 
         when(universidadRepository.existePorNombre("Uni")).thenReturn(true);
-        assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(DuplicateResourceException.class);
+        assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(UniversidadNombreYaExisteException.class);
 
         when(universidadRepository.existePorNombre("Uni")).thenReturn(false);
         when(universidadRepository.existePorSigla("UN")).thenReturn(true);
-        assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(DuplicateResourceException.class);
+        assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(UniversidadSiglaYaExisteException.class);
 
         when(universidadRepository.existePorSigla("UN")).thenReturn(false);
         when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.crearUniversidad(req)).isInstanceOf(CiudadNoEncontradaException.class);
         verify(universidadRepository, never()).guardar(any());
     }
 
@@ -117,7 +127,7 @@ class CatalogoServiceImplTest {
         when(carreraRepository.existePorNombre("Medicina")).thenReturn(true);
 
         assertThatThrownBy(() -> service.crearCarrera(new CarreraRequestDTO("Medicina", "Facultad de Medicina")))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(CarreraYaExisteException.class);
     }
 
     @Test
@@ -154,12 +164,12 @@ class CatalogoServiceImplTest {
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "U")));
         when(ofreceRepository.existePorCarreraYUniversidad(1L, 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 10L)))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(OfertaYaExisteException.class);
 
         assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(9L, 10L)))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(CarreraNoEncontradaException.class);
         assertThatThrownBy(() -> service.crearOferta(new OfreceRequestDTO(1L, 9L)))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(UniversidadNoEncontradaException.class);
     }
 
     // ---- edicion ----
@@ -180,9 +190,9 @@ class CatalogoServiceImplTest {
         when(ciudadRepository.existePorNombreYDepartamentoExceptoId("Cali", "Valle", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.actualizarCiudad(1L, new CiudadRequestDTO("Cali", "Valle")))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(CiudadYaExisteException.class);
         assertThatThrownBy(() -> service.actualizarCiudad(9L, new CiudadRequestDTO("Cali", "Valle")))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(CiudadNoEncontradaException.class);
         verify(ciudadRepository, never()).actualizar(any());
     }
 
@@ -209,12 +219,12 @@ class CatalogoServiceImplTest {
 
         when(universidadRepository.existePorNombreExceptoId("Otra", 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.actualizarUniversidad(10L, req))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(UniversidadNombreYaExisteException.class);
 
         when(universidadRepository.existePorNombreExceptoId("Otra", 10L)).thenReturn(false);
         when(universidadRepository.existePorSiglaExceptoId("OT", 10L)).thenReturn(true);
         assertThatThrownBy(() -> service.actualizarUniversidad(10L, req))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(UniversidadSiglaYaExisteException.class);
         verify(universidadRepository, never()).actualizar(any());
     }
 
@@ -249,7 +259,7 @@ class CatalogoServiceImplTest {
         when(ciudadRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.ciudad(1L, "Bogota")));
         when(universidadRepository.contarPorCiudad(1L)).thenReturn(2L);
 
-        assertThatThrownBy(() -> service.eliminarCiudad(1L)).isInstanceOf(OperationNotAllowedException.class);
+        assertThatThrownBy(() -> service.eliminarCiudad(1L)).isInstanceOf(CiudadConUniversidadesException.class);
         verify(ciudadRepository, never()).eliminar(any());
     }
 
@@ -268,7 +278,7 @@ class CatalogoServiceImplTest {
                 .thenReturn(Optional.of(TestData.universidad(10L, "Uni", "UN")));
         when(universidadRepository.contarEstudiantes(10L)).thenReturn(3L);
 
-        assertThatThrownBy(() -> service.eliminarUniversidad(10L)).isInstanceOf(OperationNotAllowedException.class);
+        assertThatThrownBy(() -> service.eliminarUniversidad(10L)).isInstanceOf(UniversidadConEstudiantesException.class);
         verify(ofreceRepository, never()).eliminarPorUniversidad(any());
         verify(universidadRepository, never()).eliminar(any());
     }
@@ -288,7 +298,7 @@ class CatalogoServiceImplTest {
     void eliminarCarreraConEstudiantesDa409YLibreBorraSuOferta() {
         when(carreraRepository.buscarPorId(1L)).thenReturn(Optional.of(TestData.carrera(1L, "Medicina")));
         when(carreraRepository.contarEstudiantes(1L)).thenReturn(1L);
-        assertThatThrownBy(() -> service.eliminarCarrera(1L)).isInstanceOf(OperationNotAllowedException.class);
+        assertThatThrownBy(() -> service.eliminarCarrera(1L)).isInstanceOf(CarreraConEstudiantesException.class);
 
         when(carreraRepository.contarEstudiantes(1L)).thenReturn(0L);
         service.eliminarCarrera(1L);
@@ -302,19 +312,19 @@ class CatalogoServiceImplTest {
                 TestData.universidad(10L, "Uni", "UN"), "F");
         when(ofreceRepository.buscarPorIds(1L, 10L)).thenReturn(Optional.of(oferta));
         when(ofreceRepository.contarEstudiantes(1L, 10L)).thenReturn(2L);
-        assertThatThrownBy(() -> service.eliminarOferta(1L, 10L)).isInstanceOf(OperationNotAllowedException.class);
+        assertThatThrownBy(() -> service.eliminarOferta(1L, 10L)).isInstanceOf(OfertaConEstudiantesException.class);
 
         when(ofreceRepository.contarEstudiantes(1L, 10L)).thenReturn(0L);
         service.eliminarOferta(1L, 10L);
         verify(ofreceRepository).eliminar(1L, 10L);
 
-        assertThatThrownBy(() -> service.eliminarOferta(9L, 9L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.eliminarOferta(9L, 9L)).isInstanceOf(OfertaNoEncontradaException.class);
     }
 
     @Test
     void obtenerPorIdInexistenteDa404() {
-        assertThatThrownBy(() -> service.obtenerCiudad(9L)).isInstanceOf(ResourceNotFoundException.class);
-        assertThatThrownBy(() -> service.obtenerUniversidad(9L)).isInstanceOf(ResourceNotFoundException.class);
-        assertThatThrownBy(() -> service.obtenerCarrera(9L)).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.obtenerCiudad(9L)).isInstanceOf(CiudadNoEncontradaException.class);
+        assertThatThrownBy(() -> service.obtenerUniversidad(9L)).isInstanceOf(UniversidadNoEncontradaException.class);
+        assertThatThrownBy(() -> service.obtenerCarrera(9L)).isInstanceOf(CarreraNoEncontradaException.class);
     }
 }
