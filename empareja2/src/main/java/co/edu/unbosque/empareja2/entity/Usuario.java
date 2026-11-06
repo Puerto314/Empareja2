@@ -57,8 +57,8 @@ public class Usuario {
     /** Los estudios del usuario (carrera, universidad y semestre). */
     private List<Estudio> estudios = new ArrayList<>();
 
-    /** Las redes sociales del usuario con su nombre de usuario en cada una. */
-    private List<Tiene> redes = new ArrayList<>();
+    /** Las redes sociales del usuario (tipo de red y url de su perfil en cada una). */
+    private List<RedSocial> redes = new ArrayList<>();
 
     /**
      * Crea un usuario vacio con rol ESTUDIANTE; los datos se asignan con los metodos set.
@@ -299,20 +299,20 @@ public class Usuario {
     }
 
     /**
-     * Obtiene las redes sociales del usuario con su nombre de usuario en cada una.
+     * Obtiene las redes sociales del usuario (tipo de red y url de su perfil en cada una).
      *
-     * @return las redes sociales del usuario con su nombre de usuario en cada una
+     * @return las redes sociales del usuario
      */
-    public List<Tiene> getRedes() {
+    public List<RedSocial> getRedes() {
         return redes;
     }
 
     /**
-     * Establece las redes sociales del usuario con su nombre de usuario en cada una.
+     * Establece las redes sociales del usuario (tipo de red y url de su perfil en cada una).
      *
-     * @param redes las redes sociales del usuario con su nombre de usuario en cada una
+     * @param redes las redes sociales del usuario
      */
-    public void setRedes(List<Tiene> redes) {
+    public void setRedes(List<RedSocial> redes) {
         this.redes = redes;
     }
 

@@ -25,13 +25,14 @@ public class ReporteRepository {
 
     /** Consulta base: el reporte con el nombre de quien reporta y de quien es reportado. */
     private static final String SELECT = "SELECT r.id_reporte, r.id_realizador, r.id_reportado, "
-            + "r.tipo AS tipo_reporte, r.estado, r.descripcion, r.fecha_hora, a.nombre AS realizador_nombre, "
-            + "a.apellido AS realizador_apellido, b.nombre AS reportado_nombre, b.apellido AS reportado_apellido "
+            + "r.tipo_reporte, r.estado_reporte, r.descripcion_reporte, r.fecha_hora_reporte, "
+            + "a.nombre_usuario AS realizador_nombre, "
+            + "a.apellido AS realizador_apellido, b.nombre_usuario AS reportado_nombre, b.apellido AS reportado_apellido "
             + "FROM reporte r JOIN usuario a ON a.id_usuario = r.id_realizador "
             + "JOIN usuario b ON b.id_usuario = r.id_reportado ";
 
     /** Orden de los listados: del reporte mas reciente al mas antiguo. */
-    private static final String ORDEN = "ORDER BY r.fecha_hora DESC, r.id_reporte DESC";
+    private static final String ORDEN = "ORDER BY r.fecha_hora_reporte DESC, r.id_reporte DESC";
 
     /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
@@ -69,10 +70,10 @@ public class ReporteRepository {
         reportado.setApellido(rs.getString("reportado_apellido"));
 
         Reporte reporte = new Reporte(realizador, reportado, TipoReporte.valueOf(rs.getString("tipo_reporte")),
-                rs.getString("descripcion"));
+                rs.getString("descripcion_reporte"));
         reporte.setIdReporte(rs.getLong("id_reporte"));
-        reporte.setEstado(EstadoReporte.valueOf(rs.getString("estado")));
-        reporte.setFechaHora(rs.getObject("fecha_hora", LocalDateTime.class));
+        reporte.setEstado(EstadoReporte.valueOf(rs.getString("estado_reporte")));
+        reporte.setFechaHora(rs.getObject("fecha_hora_reporte", LocalDateTime.class));
         return reporte;
     }
 
@@ -92,7 +93,7 @@ public class ReporteRepository {
      * @return los reportes en ese estado
      */
     public List<Reporte> listarPorEstado(EstadoReporte estado) {
-        return jdbc.query(SELECT + "WHERE r.estado = ? " + ORDEN, this::mapear, estado.name());
+        return jdbc.query(SELECT + "WHERE r.estado_reporte = ? " + ORDEN, this::mapear, estado.name());
     }
 
     /**
@@ -116,7 +117,7 @@ public class ReporteRepository {
      */
     public boolean existeActivo(Long idRealizador, Long idReportado, TipoReporte tipo) {
         return Sql.contar(jdbc, "SELECT COUNT(*) FROM reporte WHERE id_realizador = ? AND id_reportado = ? "
-                + "AND tipo = ? AND estado IN ('PENDIENTE', 'EN_REVISION')", idRealizador, idReportado,
+                + "AND tipo_reporte = ? AND estado_reporte IN ('PENDIENTE', 'EN_REVISION')", idRealizador, idReportado,
                 tipo.name()) > 0;
     }
 
@@ -130,10 +131,10 @@ public class ReporteRepository {
         Map<String, Object> valores = new HashMap<>();
         valores.put("id_realizador", reporte.getRealizador().getId());
         valores.put("id_reportado", reporte.getReportado().getId());
-        valores.put("tipo", reporte.getTipoReporte().name());
-        valores.put("estado", reporte.getEstado().name());
-        valores.put("descripcion", reporte.getDescripcion());
-        valores.put("fecha_hora", reporte.getFechaHora());
+        valores.put("tipo_reporte", reporte.getTipoReporte().name());
+        valores.put("estado_reporte", reporte.getEstado().name());
+        valores.put("descripcion_reporte", reporte.getDescripcion());
+        valores.put("fecha_hora_reporte", reporte.getFechaHora());
         reporte.setIdReporte(insertar.executeAndReturnKey(valores).longValue());
         return reporte;
     }
@@ -145,7 +146,7 @@ public class ReporteRepository {
      * @param estado el estado nuevo
      */
     public void actualizarEstado(Long id, EstadoReporte estado) {
-        jdbc.update("UPDATE reporte SET estado = ? WHERE id_reporte = ?", estado.name(), id);
+        jdbc.update("UPDATE reporte SET estado_reporte = ? WHERE id_reporte = ?", estado.name(), id);
     }
 
     /**

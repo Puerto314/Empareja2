@@ -13,8 +13,8 @@ import co.edu.unbosque.empareja2.dto.RegistroRequestDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPerfilDTO;
 import co.edu.unbosque.empareja2.dto.UsuarioPublicoDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
+import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Rol;
-import co.edu.unbosque.empareja2.entity.Tiene;
 import co.edu.unbosque.empareja2.entity.Usuario;
 
 /**
@@ -137,12 +137,11 @@ public class UsuarioMapper {
     /**
      * Convierte el perfil de una red social en su DTO.
      *
-     * @param tiene el perfil en la red social
+     * @param red el perfil en la red social
      * @return el DTO del perfil en la red
      */
-    public RedPerfilDTO toRedPerfilDTO(Tiene tiene) {
-        return new RedPerfilDTO(tiene.getRedSocial().getIdRedSocial(), tiene.getRedSocial().getNombreRedSocial(),
-                tiene.getNombreUsuario());
+    public RedPerfilDTO toRedPerfilDTO(RedSocial red) {
+        return new RedPerfilDTO(red.getTipoRedSocial(), red.getUrlPerfil());
     }
 
     /**
@@ -169,13 +168,13 @@ public class UsuarioMapper {
     }
 
     /**
-     * Las redes del usuario como DTOs ordenados por nombre de red.
+     * Las redes del usuario como DTOs ordenados por tipo de red.
      *
      * @param usuario el usuario
      * @return las redes ordenadas
      */
     private List<RedPerfilDTO> redesDTO(Usuario usuario) {
         return usuario.getRedes().stream().map(this::toRedPerfilDTO)
-                .sorted(Comparator.comparing(RedPerfilDTO::getRedSocial, String.CASE_INSENSITIVE_ORDER)).toList();
+                .sorted(Comparator.comparing(RedPerfilDTO::getTipoRedSocial, String.CASE_INSENSITIVE_ORDER)).toList();
     }
 }

@@ -1,22 +1,24 @@
 package co.edu.unbosque.empareja2.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Red social + nombre de usuario del estudiante en ella (tabla estudiante_red_social del modelo).
+ * Tipo de red social + url del perfil del estudiante en ella (tabla red_social).
  */
 public class RedPerfilRequestDTO {
 
-    /** El identificador de la red social. */
-    @NotNull(message = "La red social es obligatoria")
-    private Long idRedSocial;
+    /** El tipo de red social (por ejemplo Instagram o LinkedIn). */
+    @NotBlank(message = "El tipo de red social es obligatorio")
+    @Size(max = 50, message = "El tipo de red social es demasiado largo")
+    private String tipoRedSocial;
 
-    /** El nombre de usuario del estudiante en esa red. */
-    @NotBlank(message = "El nombre de usuario en la red social es obligatorio")
-    @Size(max = 50, message = "El nombre de usuario en la red social es demasiado largo")
-    private String nombreUsuario;
+    /** La url del perfil del estudiante en esa red (debe empezar por http:// o https://). */
+    @NotBlank(message = "La url del perfil en la red social es obligatoria")
+    @Size(max = 255, message = "La url del perfil en la red social es demasiado larga")
+    @Pattern(regexp = "(?i)^https?://\\S+$", message = "La url del perfil debe empezar por http:// o https://")
+    private String urlPerfil;
 
     /**
      * Crea un objeto RedPerfilRequestDTO vacio; los datos se asignan con los metodos set.
@@ -27,59 +29,54 @@ public class RedPerfilRequestDTO {
     /**
      * Crea un objeto RedPerfilRequestDTO con todos sus datos.
      *
-     * @param idRedSocial el identificador de la red social
-     * @param nombreUsuario el nombre de usuario del estudiante en esa red
+     * @param tipoRedSocial el tipo de red social
+     * @param urlPerfil     la url del perfil del estudiante en esa red
      */
-    public RedPerfilRequestDTO(Long idRedSocial, String nombreUsuario) {
-        this.idRedSocial = idRedSocial;
-        this.nombreUsuario = nombreUsuario;
+    public RedPerfilRequestDTO(String tipoRedSocial, String urlPerfil) {
+        this.tipoRedSocial = tipoRedSocial;
+        this.urlPerfil = urlPerfil;
     }
 
     /**
-     * Obtiene el identificador de la red social.
+     * Obtiene el tipo de red social.
      *
-     * @return el identificador de la red social
+     * @return el tipo de red social
      */
-    public Long getIdRedSocial() {
-        return idRedSocial;
+    public String getTipoRedSocial() {
+        return tipoRedSocial;
     }
 
     /**
-     * Establece el identificador de la red social.
+     * Establece el tipo de red social.
      *
-     * @param idRedSocial el identificador de la red social
+     * @param tipoRedSocial el tipo de red social
      */
-    public void setIdRedSocial(Long idRedSocial) {
-        this.idRedSocial = idRedSocial;
+    public void setTipoRedSocial(String tipoRedSocial) {
+        this.tipoRedSocial = tipoRedSocial;
     }
 
     /**
-     * Obtiene el nombre de usuario del estudiante en esa red.
+     * Obtiene la url del perfil del estudiante en esa red.
      *
-     * @return el nombre de usuario del estudiante en esa red
+     * @return la url del perfil
      */
-    public String getNombreUsuario() {
-        return nombreUsuario;
+    public String getUrlPerfil() {
+        return urlPerfil;
     }
 
     /**
-     * Establece el nombre de usuario del estudiante en esa red.
+     * Establece la url del perfil del estudiante en esa red.
      *
-     * @param nombreUsuario el nombre de usuario del estudiante en esa red
+     * @param urlPerfil la url del perfil
      */
-    public void setNombreUsuario(String nombreUsuario) {
-        this.nombreUsuario = nombreUsuario;
+    public void setUrlPerfil(String urlPerfil) {
+        this.urlPerfil = urlPerfil;
     }
 
-    /**
-     * Devuelve una representacion en texto de este objeto para depuracion.
-     *
-     * @return el objeto como texto
-     */
     @Override
     public String toString() {
-        return "RedPerfilRequestDTO [idRedSocial=" + idRedSocial
-                + ", nombreUsuario=" + nombreUsuario
+        return "RedPerfilRequestDTO [tipoRedSocial=" + tipoRedSocial
+                + ", urlPerfil=" + urlPerfil
                 + "]";
     }
 }

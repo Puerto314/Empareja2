@@ -24,12 +24,11 @@ import co.edu.unbosque.empareja2.TestData;
 import co.edu.unbosque.empareja2.dto.EstudioRequestDTO;
 import co.edu.unbosque.empareja2.dto.RedPerfilRequestDTO;
 import co.edu.unbosque.empareja2.entity.Estudio;
-import co.edu.unbosque.empareja2.entity.Tiene;
+import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Usuario;
 import co.edu.unbosque.empareja2.exception.ResourceNotFoundException;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.OfreceRepository;
-import co.edu.unbosque.empareja2.repository.RedSocialRepository;
 import co.edu.unbosque.empareja2.repository.UniversidadRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,8 +41,6 @@ class PerfilAssemblerTest {
     private UniversidadRepository universidadRepository;
     @Mock
     private OfreceRepository ofreceRepository;
-    @Mock
-    private RedSocialRepository redSocialRepository;
 
     @InjectMocks
     private PerfilAssembler assembler;
@@ -61,9 +58,6 @@ class PerfilAssemblerTest {
         when(universidadRepository.buscarPorId(20L))
                 .thenReturn(Optional.of(TestData.universidad(20L, "Universidad Nacional", "UNAL")));
         when(ofreceRepository.existePorCarreraYUniversidad(anyLong(), anyLong())).thenReturn(true);
-
-        when(redSocialRepository.buscarPorId(5L)).thenReturn(Optional.of(TestData.redSocial(5L, "Instagram")));
-        when(redSocialRepository.buscarPorId(6L)).thenReturn(Optional.of(TestData.redSocial(6L, "Facebook")));
     }
 
     // ---- edad minima ----
@@ -177,39 +171,38 @@ class PerfilAssemblerTest {
     // ---- redes sociales ----
 
     @Test
-    void agregaYActualizaRedes() {
-        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(5L, "ana")));
+    void reemplazaLasRedesDelUsuario() {
+        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO("Instagram", "https://instagram.com/ana")));
         assertThat(usuario.getRedes()).hasSize(1);
-        Tiene original = usuario.getRedes().get(0);
-        assertThat(original.getNombreUsuario()).isEqualTo("ana");
+        assertThat(usuario.getRedes().get(0).getTipoRedSocial()).isEqualTo("Instagram");
+        assertThat(usuario.getRedes().get(0).getUrlPerfil()).isEqualTo("https://instagram.com/ana");
 
-        assembler.sincronizarRedes(usuario,
-                List.of(new RedPerfilRequestDTO(5L, " ana2 "), new RedPerfilRequestDTO(6L, "ana.fb")));
+        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(" Instagram ", " https://instagram.com/ana2 "),
+                new RedPerfilRequestDTO("Facebook", "https://facebook.com/ana.fb")));
 
-        assertThat(usuario.getRedes()).hasSize(2);
-        assertThat(original.getNombreUsuario()).isEqualTo("ana2");
+        assertThat(usuario.getRedes()).extracting(RedSocial::getTipoRedSocial).containsExactly("Instagram", "Facebook");
+        assertThat(usuario.getRedes().get(0).getUrlPerfil()).isEqualTo("https://instagram.com/ana2");
     }
 
     @Test
     void eliminaRedesQueYaNoVienen() {
-        assembler.sincronizarRedes(usuario,
-                List.of(new RedPerfilRequestDTO(5L, "a"), new RedPerfilRequestDTO(6L, "b")));
+        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO("Instagram", "https://instagram.com/a"),
+                new RedPerfilRequestDTO("Facebook", "https://facebook.com/b")));
 
-        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO(6L, "b")));
+        assembler.sincronizarRedes(usuario, List.of(new RedPerfilRequestDTO("Facebook", "https://facebook.com/b")));
 
-        assertThat(usuario.getRedes()).extracting(t -> t.getRedSocial().getIdRedSocial()).containsExactly(6L);
+        assertThat(usuario.getRedes()).extracting(RedSocial::getTipoRedSocial).containsExactly("Facebook");
+
+        assembler.sincronizarRedes(usuario, null);
+        assertThat(usuario.getRedes()).isEmpty();
     }
 
     @Test
-    void rechazaRedRepetidaEInexistente() {
-        List<RedPerfilRequestDTO> repetidas = List.of(new RedPerfilRequestDTO(5L, "a"),
-                new RedPerfilRequestDTO(5L, "b"));
+    void rechazaTipoDeRedRepetidoSinDistinguirMayusculas() {
+        List<RedPerfilRequestDTO> repetidas = List.of(new RedPerfilRequestDTO("Instagram", "https://instagram.com/a"),
+                new RedPerfilRequestDTO("instagram", "https://instagram.com/b"));
         assertThatThrownBy(() -> assembler.sincronizarRedes(usuario, repetidas))
                 .isInstanceOf(IllegalArgumentException.class);
-
-        List<RedPerfilRequestDTO> inexistente = List.of(new RedPerfilRequestDTO(99L, "a"));
-        assertThatThrownBy(() -> assembler.sincronizarRedes(usuario, inexistente))
-                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

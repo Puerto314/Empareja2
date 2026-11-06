@@ -1,38 +1,29 @@
 package co.edu.unbosque.empareja2.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import co.edu.unbosque.empareja2.exception.LanzadorException;
 
 /**
- * Aplica al arrancar los cambios de esquema que exige esta version si la base
- * todavia no los tiene (el proyecto no usa Flyway ni Liquibase). Hoy: la columna
- * reporte.estado. El mismo cambio esta en resources/db/migracion_reporte_estado.sql
- * por si el usuario de la base no tiene permiso ALTER.
- *
- * Ademas verifica que ya se corrio resources/db/migracion_3fn.sql (tabla de union
- * estudiante_red_social + catalogo red_social) y, si no, detiene el arranque con un
- * mensaje claro en lugar de fallar mas tarde con errores SQL.
+ * Verifica al arrancar que la base de datos ya tiene el esquema que usa esta
+ * version (el proyecto no usa Flyway ni Liquibase). Si todavia tiene los nombres
+ * de atributos anteriores, detiene el arranque con un mensaje claro en lugar de
+ * fallar mas tarde con errores SQL. El cambio se aplica una sola vez con
+ * resources/db/migracion_nombres_atributos.sql.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class EsquemaMigrador implements CommandLineRunner {
 
-    /** Registro de eventos de la clase. */
-    private static final Logger log = LoggerFactory.getLogger(EsquemaMigrador.class);
-
     /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
 
     /**
-     * Crea el migrador.
+     * Crea el verificador.
      *
      * @param jdbc el JdbcTemplate conectado a la base de datos
      */
@@ -41,32 +32,15 @@ public class EsquemaMigrador implements CommandLineRunner {
     }
 
     /**
-     * Verifica la migracion a 3FN y crea la columna reporte.estado si falta.
+     * Detiene el arranque si falta alguna de las columnas del esquema nuevo.
      *
      * @param args los argumentos de arranque (no se usan)
      */
     @Override
     public void run(String... args) {
-        exigirMigracion3fn();
-        if (existeColumna("reporte", "estado")) {
-            return;
-        }
-        try {
-            jdbc.execute("ALTER TABLE reporte ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE'");
-            log.info("Migracion aplicada: columna reporte.estado creada");
-        } catch (DataAccessException ex) {
-            LanzadorException.columnaEstadoReporteFaltante(ex);
-        }
-    }
-
-    /**
-     * Detiene el arranque si la tabla estudiante_red_social no existe.
-     */
-    private void exigirMigracion3fn() {
-        Long cantidad = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables "
-                + "WHERE table_schema = DATABASE() AND table_name = 'estudiante_red_social'", Long.class);
-        if (cantidad == null || cantidad == 0) {
-            LanzadorException.migracion3fnFaltante();
+        if (!existeColumna("usuario", "nombre_usuario") || !existeColumna("red_social", "id_usuario")
+                || existeColumna("reaccion", "tipo")) {
+            LanzadorException.esquemaDesactualizado();
         }
     }
 

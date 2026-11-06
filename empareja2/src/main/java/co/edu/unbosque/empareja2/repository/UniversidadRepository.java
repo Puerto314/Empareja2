@@ -23,8 +23,8 @@ import co.edu.unbosque.empareja2.entity.Universidad;
 public class UniversidadRepository {
 
     /** Consulta base: la universidad con los datos de su ciudad. */
-    private static final String SELECT = "SELECT u.id_universidad, u.nombre AS nombre_universidad, u.sigla, "
-            + "u.calle, u.barrio, c.id_ciudad, c.nombre AS nombre_ciudad, c.departamento "
+    private static final String SELECT = "SELECT u.id_universidad, u.nombre_universidad, u.sigla, "
+            + "u.calle, u.barrio, c.id_ciudad, c.nombre_ciudad, c.departamento "
             + "FROM universidad u JOIN ciudad c ON c.id_ciudad = u.id_ciudad ";
 
     /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
@@ -79,7 +79,7 @@ public class UniversidadRepository {
      * @return las universidades
      */
     public List<Universidad> listarTodas() {
-        return jdbc.query(SELECT + "ORDER BY u.nombre", this::mapear);
+        return jdbc.query(SELECT + "ORDER BY u.nombre_universidad", this::mapear);
     }
 
     /**
@@ -90,7 +90,8 @@ public class UniversidadRepository {
      */
     public List<Universidad> listarPorTexto(String texto) {
         String patron = "%" + texto.toLowerCase() + "%";
-        return jdbc.query(SELECT + "WHERE LOWER(u.nombre) LIKE ? OR LOWER(u.sigla) LIKE ? ORDER BY u.nombre",
+        return jdbc.query(SELECT + "WHERE LOWER(u.nombre_universidad) LIKE ? OR LOWER(u.sigla) LIKE ? "
+                + "ORDER BY u.nombre_universidad",
                 this::mapear, patron, patron);
     }
 
@@ -111,7 +112,7 @@ public class UniversidadRepository {
      * @return true si ya existe
      */
     public boolean existePorNombre(String nombre) {
-        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre) = LOWER(?)", nombre) > 0;
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre_universidad) = LOWER(?)", nombre) > 0;
     }
 
     /**
@@ -134,7 +135,7 @@ public class UniversidadRepository {
      */
     public boolean existePorNombreExceptoId(String nombre, Long id) {
         return Sql.contar(jdbc,
-                "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre) = LOWER(?) AND id_universidad <> ?", nombre,
+                "SELECT COUNT(*) FROM universidad WHERE LOWER(nombre_universidad) = LOWER(?) AND id_universidad <> ?", nombre,
                 id) > 0;
     }
 
@@ -190,7 +191,7 @@ public class UniversidadRepository {
     public Universidad guardar(Universidad universidad) {
         Direccion direccion = universidad.getDireccion() != null ? universidad.getDireccion() : new Direccion();
         Map<String, Object> valores = new HashMap<>();
-        valores.put("nombre", universidad.getNombre());
+        valores.put("nombre_universidad", universidad.getNombre());
         valores.put("sigla", universidad.getSigla());
         valores.put("calle", direccion.getCalle());
         valores.put("barrio", direccion.getBarrio());
@@ -221,7 +222,7 @@ public class UniversidadRepository {
      */
     public void actualizar(Universidad universidad) {
         Direccion direccion = universidad.getDireccion() != null ? universidad.getDireccion() : new Direccion();
-        jdbc.update("UPDATE universidad SET nombre = ?, sigla = ?, calle = ?, barrio = ?, "
+        jdbc.update("UPDATE universidad SET nombre_universidad = ?, sigla = ?, calle = ?, barrio = ?, "
                 + "id_ciudad = ? WHERE id_universidad = ?", universidad.getNombre(), universidad.getSigla(),
                 direccion.getCalle(), direccion.getBarrio(), universidad.getCiudad().getIdCiudad(),
                 universidad.getIdUniversidad());

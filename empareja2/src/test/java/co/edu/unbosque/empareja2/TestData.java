@@ -51,9 +51,7 @@ public final class TestData {
         return c;
     }
 
-    public static RedSocial redSocial(Long id, String nombre) {
-        RedSocial r = new RedSocial(nombre, "https://" + nombre.toLowerCase() + ".com");
-        r.setIdRedSocial(id);
-        return r;
+    public static RedSocial redSocial(String tipo, String usuario) {
+        return new RedSocial(tipo, "https://" + tipo.toLowerCase() + ".com/" + usuario);
     }
 }

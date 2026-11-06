@@ -12,14 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import co.edu.unbosque.empareja2.dto.CarreraDTO;
 import co.edu.unbosque.empareja2.dto.CiudadDTO;
 import co.edu.unbosque.empareja2.dto.OfreceDTO;
-import co.edu.unbosque.empareja2.dto.RedSocialDTO;
 import co.edu.unbosque.empareja2.dto.UniversidadDTO;
 import co.edu.unbosque.empareja2.service.CatalogoService;
 
 /**
  * Datos de referencia de consulta PUBLICA (el formulario de registro los
  * necesita antes de que exista una sesion): ciudades, universidades, carreras,
- * redes sociales y oferta academica.
+ * y oferta academica.
  */
 @RestController
 @RequestMapping("/api/catalogos")
@@ -69,16 +68,6 @@ public class CatalogoController {
     }
 
     /**
-     * Lista las redes sociales disponibles.
-     *
-     * @return las redes sociales
-     */
-    @GetMapping("/redes-sociales")
-    public ResponseEntity<List<RedSocialDTO>> redesSociales() {
-        return ResponseEntity.ok(catalogoService.listarRedesSociales());
-    }
-
-    /**
      * Lista que carreras ofrece cada universidad; con ?universidadId=N filtra por
      * universidad.
      *
@@ -121,16 +110,5 @@ public class CatalogoController {
     @GetMapping("/carreras/{id}")
     public ResponseEntity<CarreraDTO> carrera(@PathVariable Long id) {
         return ResponseEntity.ok(catalogoService.obtenerCarrera(id));
-    }
-
-    /**
-     * Obtiene una red social por id.
-     *
-     * @param id el identificador de la red social
-     * @return la red social
-     */
-    @GetMapping("/redes-sociales/{id}")
-    public ResponseEntity<RedSocialDTO> redSocial(@PathVariable Long id) {
-        return ResponseEntity.ok(catalogoService.obtenerRedSocial(id));
     }
 }

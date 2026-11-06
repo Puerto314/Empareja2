@@ -2,8 +2,6 @@ package co.edu.unbosque.empareja2.dto;
 
 import java.time.LocalDateTime;
 
-import co.edu.unbosque.empareja2.entity.TipoReaccion;
-
 /**
  * Una reaccion vista por un administrador: incluye su llave (idAutor +
  * numeroReaccion) y a quien va dirigida, para poder moderarla.
@@ -25,9 +23,6 @@ public class ReaccionAdminDTO {
     /** El nombre completo del destinatario. */
     private String nombreDestinatario;
 
-    /** El tipo de reaccion. */
-    private TipoReaccion tipoReaccion;
-
     /** La fecha y hora de la reaccion. */
     private LocalDateTime fechaHora;
 
@@ -45,17 +40,15 @@ public class ReaccionAdminDTO {
      * @param nombreAutor el nombre completo del autor
      * @param idDestinatario el identificador del destinatario
      * @param nombreDestinatario el nombre completo del destinatario
-     * @param tipoReaccion el tipo de reaccion
      * @param fechaHora la fecha y hora de la reaccion
      */
     public ReaccionAdminDTO(Integer numeroReaccion, Long idAutor, String nombreAutor, Long idDestinatario,
-            String nombreDestinatario, TipoReaccion tipoReaccion, LocalDateTime fechaHora) {
+            String nombreDestinatario, LocalDateTime fechaHora) {
         this.numeroReaccion = numeroReaccion;
         this.idAutor = idAutor;
         this.nombreAutor = nombreAutor;
         this.idDestinatario = idDestinatario;
         this.nombreDestinatario = nombreDestinatario;
-        this.tipoReaccion = tipoReaccion;
         this.fechaHora = fechaHora;
     }
 
@@ -150,24 +143,6 @@ public class ReaccionAdminDTO {
     }
 
     /**
-     * Obtiene el tipo de reaccion.
-     *
-     * @return el tipo de reaccion
-     */
-    public TipoReaccion getTipoReaccion() {
-        return tipoReaccion;
-    }
-
-    /**
-     * Establece el tipo de reaccion.
-     *
-     * @param tipoReaccion el tipo de reaccion
-     */
-    public void setTipoReaccion(TipoReaccion tipoReaccion) {
-        this.tipoReaccion = tipoReaccion;
-    }
-
-    /**
      * Obtiene la fecha y hora de la reaccion.
      *
      * @return la fecha y hora de la reaccion
@@ -197,7 +172,6 @@ public class ReaccionAdminDTO {
                 + ", nombreAutor=" + nombreAutor
                 + ", idDestinatario=" + idDestinatario
                 + ", nombreDestinatario=" + nombreDestinatario
-                + ", tipoReaccion=" + tipoReaccion
                 + ", fechaHora=" + fechaHora
                 + "]";
     }

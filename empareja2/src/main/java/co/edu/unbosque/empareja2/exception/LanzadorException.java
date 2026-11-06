@@ -86,16 +86,6 @@ public final class LanzadorException {
     }
 
     /**
-     * Lanza el error de una red social que no existe.
-     *
-     * @param id el identificador que se busco
-     * @throws ResourceNotFoundException siempre
-     */
-    public static void redSocialNoEncontrada(Long id) {
-        throw new ResourceNotFoundException("No existe la red social con id " + id);
-    }
-
-    /**
      * Lanza el error de una oferta academica que no existe.
      *
      * @param idCarrera     el identificador de la carrera
@@ -417,11 +407,11 @@ public final class LanzadorException {
     /**
      * Lanza el error de repetir una red social en la lista de redes.
      *
-     * @param idRedSocial el identificador de la red social repetida
+     * @param tipoRedSocial el tipo de red social repetido
      * @throws IllegalArgumentException siempre
      */
-    public static void redSocialRepetida(Long idRedSocial) {
-        throw new IllegalArgumentException("La red social con id " + idRedSocial + " esta repetida");
+    public static void redSocialRepetida(String tipoRedSocial) {
+        throw new IllegalArgumentException("El tipo de red social \"" + tipoRedSocial + "\" esta repetido");
     }
 
     /**
@@ -468,25 +458,15 @@ public final class LanzadorException {
     }
 
     /**
-     * Lanza el error de arrancar sin haber corrido la migracion a 3FN.
+     * Lanza el error de arrancar con una base de datos que todavia no tiene los
+     * nombres de atributos nuevos.
      *
      * @throws IllegalStateException siempre
      */
-    public static void migracion3fnFaltante() {
-        throw new IllegalStateException("Falta la migracion a 3FN (tabla estudiante_red_social). "
-                + "Ejecuta src/main/resources/db/migracion_3fn.sql una sola vez y vuelve a arrancar.");
-    }
-
-    /**
-     * Lanza el error de no poder crear la columna reporte.estado automaticamente.
-     *
-     * @param causa el error original de la base de datos
-     * @throws IllegalStateException siempre
-     */
-    public static void columnaEstadoReporteFaltante(Throwable causa) {
-        throw new IllegalStateException("Falta la columna reporte.estado y no se pudo crear automaticamente. "
-                + "Ejecuta src/main/resources/db/migracion_reporte_estado.sql con un usuario con permiso ALTER.",
-                causa);
+    public static void esquemaDesactualizado() {
+        throw new IllegalStateException("La base de datos todavia tiene el esquema anterior "
+                + "(faltan usuario.nombre_usuario y/o red_social.id_usuario). "
+                + "Ejecuta src/main/resources/db/migracion_nombres_atributos.sql una sola vez y vuelve a arrancar.");
     }
 
     // ------------------------------------------------------------------

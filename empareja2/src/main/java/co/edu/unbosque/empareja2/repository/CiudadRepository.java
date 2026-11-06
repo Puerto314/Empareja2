@@ -19,7 +19,7 @@ import co.edu.unbosque.empareja2.entity.Ciudad;
 public class CiudadRepository {
 
     /** Consulta base: las columnas de la tabla ciudad. */
-    private static final String SELECT = "SELECT id_ciudad, nombre, departamento FROM ciudad ";
+    private static final String SELECT = "SELECT id_ciudad, nombre_ciudad, departamento FROM ciudad ";
 
     /** Herramienta de Spring para ejecutar sentencias SQL con JDBC. */
     private final JdbcTemplate jdbc;
@@ -46,7 +46,7 @@ public class CiudadRepository {
      * @throws SQLException si falla la lectura de una columna
      */
     private Ciudad mapear(ResultSet rs, int fila) throws SQLException {
-        Ciudad ciudad = new Ciudad(rs.getString("nombre"), rs.getString("departamento"));
+        Ciudad ciudad = new Ciudad(rs.getString("nombre_ciudad"), rs.getString("departamento"));
         ciudad.setIdCiudad(rs.getLong("id_ciudad"));
         return ciudad;
     }
@@ -67,7 +67,7 @@ public class CiudadRepository {
      * @return las ciudades
      */
     public List<Ciudad> listarTodas() {
-        return jdbc.query(SELECT + "ORDER BY nombre", this::mapear);
+        return jdbc.query(SELECT + "ORDER BY nombre_ciudad", this::mapear);
     }
 
     /**
@@ -80,7 +80,7 @@ public class CiudadRepository {
      */
     public boolean existePorNombreYDepartamento(String nombre, String departamento) {
         return Sql.contar(jdbc,
-                "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) AND LOWER(departamento) = LOWER(?)",
+                "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre_ciudad) = LOWER(?) AND LOWER(departamento) = LOWER(?)",
                 nombre, departamento) > 0;
     }
 
@@ -94,7 +94,7 @@ public class CiudadRepository {
      * @return true si existe otra ciudad igual
      */
     public boolean existePorNombreYDepartamentoExceptoId(String nombre, String departamento, Long id) {
-        return Sql.contar(jdbc, "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre) = LOWER(?) "
+        return Sql.contar(jdbc, "SELECT COUNT(*) FROM ciudad WHERE LOWER(nombre_ciudad) = LOWER(?) "
                 + "AND LOWER(departamento) = LOWER(?) AND id_ciudad <> ?", nombre, departamento, id) > 0;
     }
 
@@ -106,7 +106,7 @@ public class CiudadRepository {
      */
     public Ciudad guardar(Ciudad ciudad) {
         Number id = insertar
-                .executeAndReturnKey(Map.of("nombre", ciudad.getNombre(), "departamento", ciudad.getDepartamento()));
+                .executeAndReturnKey(Map.of("nombre_ciudad", ciudad.getNombre(), "departamento", ciudad.getDepartamento()));
         ciudad.setIdCiudad(id.longValue());
         return ciudad;
     }
@@ -117,7 +117,7 @@ public class CiudadRepository {
      * @param ciudad la ciudad con los datos nuevos
      */
     public void actualizar(Ciudad ciudad) {
-        jdbc.update("UPDATE ciudad SET nombre = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
+        jdbc.update("UPDATE ciudad SET nombre_ciudad = ?, departamento = ? WHERE id_ciudad = ?", ciudad.getNombre(),
                 ciudad.getDepartamento(), ciudad.getIdCiudad());
     }
 

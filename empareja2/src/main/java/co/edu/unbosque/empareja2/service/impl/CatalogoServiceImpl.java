@@ -12,27 +12,24 @@ import co.edu.unbosque.empareja2.dto.CiudadDTO;
 import co.edu.unbosque.empareja2.dto.CiudadRequestDTO;
 import co.edu.unbosque.empareja2.dto.OfreceDTO;
 import co.edu.unbosque.empareja2.dto.OfreceRequestDTO;
-import co.edu.unbosque.empareja2.dto.RedSocialDTO;
 import co.edu.unbosque.empareja2.dto.UniversidadDTO;
 import co.edu.unbosque.empareja2.dto.UniversidadRequestDTO;
 import co.edu.unbosque.empareja2.entity.Carrera;
 import co.edu.unbosque.empareja2.entity.Ciudad;
 import co.edu.unbosque.empareja2.entity.Direccion;
 import co.edu.unbosque.empareja2.entity.Ofrece;
-import co.edu.unbosque.empareja2.entity.RedSocial;
 import co.edu.unbosque.empareja2.entity.Universidad;
 import co.edu.unbosque.empareja2.exception.LanzadorException;
 import co.edu.unbosque.empareja2.mapper.CatalogoMapper;
 import co.edu.unbosque.empareja2.repository.CarreraRepository;
 import co.edu.unbosque.empareja2.repository.CiudadRepository;
 import co.edu.unbosque.empareja2.repository.OfreceRepository;
-import co.edu.unbosque.empareja2.repository.RedSocialRepository;
 import co.edu.unbosque.empareja2.repository.UniversidadRepository;
 import co.edu.unbosque.empareja2.service.CatalogoService;
 
 /**
- * Datos de referencia del sistema (ciudades, universidades, carreras, redes
- * sociales y oferta academica).
+ * Datos de referencia del sistema (ciudades, universidades, carreras y
+ * oferta academica).
  */
 @Service
 @Transactional(readOnly = true)
@@ -47,9 +44,6 @@ public class CatalogoServiceImpl implements CatalogoService {
     /** Acceso a los datos de las carreras. */
     private final CarreraRepository carreraRepository;
 
-    /** Acceso a los datos de las redes sociales. */
-    private final RedSocialRepository redSocialRepository;
-
     /** Acceso a los datos de la oferta academica. */
     private final OfreceRepository ofreceRepository;
 
@@ -62,17 +56,15 @@ public class CatalogoServiceImpl implements CatalogoService {
      * @param ciudadRepository      el repositorio de ciudades
      * @param universidadRepository el repositorio de universidades
      * @param carreraRepository     el repositorio de carreras
-     * @param redSocialRepository   el repositorio de redes sociales
      * @param ofreceRepository      el repositorio de la oferta academica
      * @param mapper                el convertidor de datos de referencia
      */
     public CatalogoServiceImpl(CiudadRepository ciudadRepository, UniversidadRepository universidadRepository,
-            CarreraRepository carreraRepository, RedSocialRepository redSocialRepository,
-            OfreceRepository ofreceRepository, CatalogoMapper mapper) {
+            CarreraRepository carreraRepository, OfreceRepository ofreceRepository,
+            CatalogoMapper mapper) {
         this.ciudadRepository = ciudadRepository;
         this.universidadRepository = universidadRepository;
         this.carreraRepository = carreraRepository;
-        this.redSocialRepository = redSocialRepository;
         this.ofreceRepository = ofreceRepository;
         this.mapper = mapper;
     }
@@ -116,16 +108,6 @@ public class CatalogoServiceImpl implements CatalogoService {
     @Override
     public List<CarreraDTO> listarCarreras() {
         return carreraRepository.listarTodas().stream().map(mapper::toDTO).toList();
-    }
-
-    /**
-     * Lista las redes sociales ordenadas por nombre.
-     *
-     * @return las redes sociales
-     */
-    @Override
-    public List<RedSocialDTO> listarRedesSociales() {
-        return redSocialRepository.listarTodas().stream().map(mapper::toDTO).toList();
     }
 
     /**
@@ -257,17 +239,6 @@ public class CatalogoServiceImpl implements CatalogoService {
     @Override
     public CarreraDTO obtenerCarrera(Long id) {
         return mapper.toDTO(buscarCarrera(id));
-    }
-
-    /**
-     * Obtiene una red social por id.
-     *
-     * @param id el identificador de la red social
-     * @return la red social
-     */
-    @Override
-    public RedSocialDTO obtenerRedSocial(Long id) {
-        return mapper.toDTO(buscarRedSocial(id));
     }
 
     // ------------------------------------------------------------------
@@ -478,20 +449,6 @@ public class CatalogoServiceImpl implements CatalogoService {
             LanzadorException.carreraNoEncontrada(id);
         }
         return carrera;
-    }
-
-    /**
-     * Busca una red social y lanza 404 si no existe.
-     *
-     * @param id el identificador de la red social
-     * @return la red social
-     */
-    private RedSocial buscarRedSocial(Long id) {
-        RedSocial red = redSocialRepository.buscarPorId(id).orElse(null);
-        if (red == null) {
-            LanzadorException.redSocialNoEncontrada(id);
-        }
-        return red;
     }
 
     /**

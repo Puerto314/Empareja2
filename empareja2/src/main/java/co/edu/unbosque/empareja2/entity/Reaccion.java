@@ -3,7 +3,7 @@ package co.edu.unbosque.empareja2.entity;
 import java.time.LocalDateTime;
 
 /**
- * Entidad DEBIL REACCION(numero_reaccion, tipo_reaccion, fecha_hora). Su llave
+ * Entidad DEBIL REACCION(numero_reaccion, fecha_hora_reaccion). Su llave
  * es (autor, numero_reaccion); depende del usuario que la da (relacion Dar,
  * rombo doble, 1:N). Los "me gusta" son publicos.
  *
@@ -21,9 +21,6 @@ public class Reaccion {
     /** El usuario que recibe la reaccion. */
     private Usuario destinatario;
 
-    /** El tipo de reaccion (hoy solo ME_GUSTA). */
-    private TipoReaccion tipoReaccion = TipoReaccion.ME_GUSTA;
-
     /** La fecha y hora en que se dio la reaccion. */
     private LocalDateTime fechaHora;
 
@@ -39,13 +36,11 @@ public class Reaccion {
      * @param autor          el usuario que da la reaccion
      * @param destinatario   el usuario que recibe la reaccion
      * @param numeroReaccion el numero de la reaccion dentro de las de su autor
-     * @param tipoReaccion   el tipo de reaccion
      */
-    public Reaccion(Usuario autor, Usuario destinatario, Integer numeroReaccion, TipoReaccion tipoReaccion) {
+    public Reaccion(Usuario autor, Usuario destinatario, Integer numeroReaccion) {
         this.autor = autor;
         this.destinatario = destinatario;
         this.numeroReaccion = numeroReaccion;
-        this.tipoReaccion = tipoReaccion;
         this.fechaHora = LocalDateTime.now();
     }
 
@@ -104,24 +99,6 @@ public class Reaccion {
     }
 
     /**
-     * Obtiene el tipo de reaccion (hoy solo ME_GUSTA).
-     *
-     * @return el tipo de reaccion (hoy solo ME_GUSTA)
-     */
-    public TipoReaccion getTipoReaccion() {
-        return tipoReaccion;
-    }
-
-    /**
-     * Establece el tipo de reaccion (hoy solo ME_GUSTA).
-     *
-     * @param tipoReaccion el tipo de reaccion (hoy solo ME_GUSTA)
-     */
-    public void setTipoReaccion(TipoReaccion tipoReaccion) {
-        this.tipoReaccion = tipoReaccion;
-    }
-
-    /**
      * Obtiene la fecha y hora en que se dio la reaccion.
      *
      * @return la fecha y hora en que se dio la reaccion
@@ -149,7 +126,6 @@ public class Reaccion {
         return "Reaccion [idAutor=" + (autor == null ? null : autor.getId())
                 + ", numeroReaccion=" + numeroReaccion
                 + ", idDestinatario=" + (destinatario == null ? null : destinatario.getId())
-                + ", tipoReaccion=" + tipoReaccion
                 + ", fechaHora=" + fechaHora
                 + "]";
     }

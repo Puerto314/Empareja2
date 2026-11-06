@@ -37,7 +37,7 @@ public class InteraccionMapper {
      */
     public ReaccionDTO toReaccionDTO(Reaccion reaccion) {
         return new ReaccionDTO(reaccion.getAutor().getId(), reaccion.getAutor().getNombreCompleto(),
-                reaccion.getAutor().getFotoPerfil(), reaccion.getTipoReaccion(), reaccion.getFechaHora());
+                reaccion.getAutor().getFotoPerfil(), reaccion.getFechaHora());
     }
 
     /**
@@ -50,7 +50,7 @@ public class InteraccionMapper {
     public ReaccionAdminDTO toReaccionAdminDTO(Reaccion reaccion) {
         return new ReaccionAdminDTO(reaccion.getNumeroReaccion(), reaccion.getAutor().getId(),
                 reaccion.getAutor().getNombreCompleto(), reaccion.getDestinatario().getId(),
-                reaccion.getDestinatario().getNombreCompleto(), reaccion.getTipoReaccion(), reaccion.getFechaHora());
+                reaccion.getDestinatario().getNombreCompleto(), reaccion.getFechaHora());
     }
 
     /**
