@@ -66,31 +66,31 @@ public class AdminSeeder implements CommandLineRunner {
 	 */
 	@Override
 	public void run(String... args) {
-		if (usuarioRepository.existePorCorreo(adminCorreo)) {
-			return;
-		}
-
-		String contrasena = adminContrasena;
-		boolean generada = contrasena == null || contrasena.isBlank();
-		if (generada) {
-			contrasena = generarContrasena();
-		}
-
-		Usuario admin = new Usuario();
-		admin.setCorreo(adminCorreo);
-		admin.setContrasenaHash(passwordEncoder.encode(contrasena));
-		admin.setRol(Rol.ADMIN);
-		admin.setGenero(Genero.NO_ESPECIFICA);
-		admin.setFechaNacimiento(LocalDate.of(2000, 1, 1));
-		admin.setNombre("Administrador");
-		admin.setApellido("Sistema");
-
-		usuarioRepository.guardar(admin);
-		log.info("Usuario administrador semilla creado: {}", adminCorreo);
-		if (generada) {
-			log.warn("Contrasena generada para '{}': {}  (cambiala o define ADMIN_CONTRASENA)", adminCorreo,
-					contrasena);
-		}
+//		if (usuarioRepository.existePorCorreo(adminCorreo)) {
+//			return;
+//		}
+//
+//		String contrasena = adminContrasena;
+//		boolean generada = contrasena == null || contrasena.isBlank();
+//		if (generada) {
+//			contrasena = generarContrasena();
+//		}
+//
+//		Usuario admin = new Usuario();
+//		admin.setCorreo(adminCorreo);
+//		admin.setContrasenaHash(passwordEncoder.encode(contrasena));
+//		admin.setRol(Rol.ADMIN);
+//		admin.setGenero(Genero.NO_ESPECIFICA);
+//		admin.setFechaNacimiento(LocalDate.of(2000, 1, 1));
+//		admin.setNombre("Administrador");
+//		admin.setApellido("Sistema");
+//
+//		usuarioRepository.guardar(admin);
+//		log.info("Usuario administrador semilla creado: {}", adminCorreo);
+//		if (generada) {
+//			log.warn("Contrasena generada para '{}': {}  (cambiala o define ADMIN_CONTRASENA)", adminCorreo,
+//					contrasena);
+//		}
 	}
 
 	/**
