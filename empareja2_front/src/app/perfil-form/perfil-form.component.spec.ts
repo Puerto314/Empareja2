@@ -125,7 +125,7 @@ describe('PerfilFormComponent', () => {
     comp.redes = [{ tipoRedSocial: 'Instagram', urlPerfil: 'https://instagram.com/ana' }];
     comp.guardar();
     expect(emitido).toEqual({
-      nombre: 'Ana', apellido: 'Pérez', genero: 'FEMENINO', fechaNacimiento: '2000-05-10', fotoPerfil: '',
+      nombre: 'Ana', apellido: 'Pérez', genero: 'FEMENINO', fechaNacimiento: '2000-05-10',
       intereses: ['Cine', 'rock'], estudios: [{ idCarrera: 10, idUniversidad: 1, semestre: 4 }],
       redes: [{ tipoRedSocial: 'Instagram', urlPerfil: 'https://instagram.com/ana' }],
       correo: 'ana@unbosque.edu.co', contrasena: '12345678'
@@ -175,5 +175,56 @@ describe('PerfilFormComponent', () => {
     comp.guardar();
     expect((emitido as any).rol).toBe('ADMIN');
     expect((emitido as any).estudios).toEqual([]);
+  });
+
+  it('en admin, al crear un usuario nuevo (estudiante) aparece la fila de universidad y carrera', async () => {
+    await crear('admin');
+    expect(comp.rol).toBe('ESTUDIANTE' as any);
+    expect(comp.estudios.length).toBe(1);
+    const selects = fixture.nativeElement.querySelectorAll('select');
+    expect(selects.length).toBeGreaterThanOrEqual(4); // rol, género, universidad, carrera
+    comp.correo = 'luis@unbosque.edu.co'; comp.contrasena = '12345678';
+    comp.nombre = 'Luis'; comp.apellido = 'Paz'; comp.fechaNacimiento = '2000-05-10';
+    expect(comp.validar()).toContain('Completa');
+    comp.estudios = [{ idUniversidad: 1, idCarrera: 10, semestre: 3 }];
+    expect(comp.validar()).toBe('');
+  });
+
+  it('en admin, al pasar de ADMIN a ESTUDIANTE se crea la fila de estudio', async () => {
+    await crear('admin');
+    comp.rol = 'ADMIN' as any;
+    comp.estudios = [];
+    comp.rol = 'ESTUDIANTE' as any;
+    comp.cambiarRol();
+    expect(comp.estudios.length).toBe(1);
+  });
+
+  it('en admin, una cuenta ADMIN no muestra gustos, foto ni redes y no los envía', async () => {
+    await crear('admin');
+    comp.rol = 'ADMIN' as any;
+    fixture.detectChanges();
+    const html = fixture.nativeElement as HTMLElement;
+    expect(html.querySelector('input[name="fotoPerfil"]')).toBeNull();
+    expect(html.querySelector('input[name="intereses"]')).toBeNull();
+    expect(html.textContent).not.toContain('Redes sociales');
+    comp.correo = 'root'; comp.contrasena = 'claveSegura1';
+    comp.nombre = 'Admin'; comp.apellido = 'Sistema';
+    comp.fotoPerfil = 'https://x.co/a.png'; comp.interesesTexto = 'cine';
+    comp.redes = [{ tipoRedSocial: 'X', urlPerfil: 'sin-url' }];
+    expect(comp.validar()).toBe('');
+    comp.guardar();
+    const v = emitido as any;
+    expect(v.fotoPerfil).toBeUndefined();
+    expect(v.intereses).toEqual([]);
+    expect(v.redes).toEqual([]);
+    expect(v.estudios).toEqual([]);
+  });
+
+  it('sin foto no se envía el campo fotoPerfil (el back guarda NULL)', async () => {
+    await crear('registro');
+    llenarValido();
+    comp.fotoPerfil = '   ';
+    comp.guardar();
+    expect('fotoPerfil' in (emitido as any)).toBe(false);
   });
 });

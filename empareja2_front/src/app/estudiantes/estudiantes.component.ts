@@ -8,8 +8,11 @@ import { UniversidadModel } from '../models/universidad.model';
 import { EstudianteService } from '../services/estudiante.service';
 import { UniversidadService } from '../services/universidad.service';
 import { gradient, hueOf, initials, siglaCorta } from '../utils/avatar.util';
+import { mensajeDeError } from '../utils/error.util';
 
-interface Datos { universidad?: UniversidadModel; alumnos: EstudianteModel[]; fallo?: boolean }
+const MENSAJE_FALLO = 'No pudimos cargar los estudiantes. Revisa que el servidor esté encendido e intenta de nuevo.';
+
+interface Datos { universidad?: UniversidadModel; alumnos: EstudianteModel[]; fallo?: string }
 
 @Component({
   standalone: false,
@@ -60,12 +63,12 @@ export class EstudiantesComponent {
         switchMap(universidad => universidad
           ? this.estudianteService.listarPorUniversidad(id).pipe(map((alumnos): Datos => ({ universidad, alumnos })))
           : of<Datos>({ alumnos: [] })),
-        catchError(() => of<Datos>({ alumnos: [], fallo: true })))),
+        catchError((err: unknown) => of<Datos>({ alumnos: [], fallo: mensajeDeError(err, MENSAJE_FALLO) })))),
       takeUntilDestroyed()
     ).subscribe(datos => {
       this.universidad.set(datos.universidad);
       this.todos.set(datos.alumnos);
-      this.error.set(datos.fallo ? 'No pudimos cargar los estudiantes. Revisa que el servidor esté encendido e intenta de nuevo.' : '');
+      this.error.set(datos.fallo ?? '');
       this.cargando.set(false);
     });
   }

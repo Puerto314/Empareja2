@@ -227,6 +227,18 @@ class UsuarioServiceImplTest {
 	}
 
 	@Test
+	void adminQueCreaUnAdministradorLoGuardaSinFoto() {
+		AdminUsuarioRequestDTO request = new AdminUsuarioRequestDTO("root2", "secreto123", Rol.ADMIN, null, "Root",
+				"Dos", null, "https://img/root.png", null, null, null);
+
+		service.crearPorAdmin(request);
+
+		ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+		verify(usuarioRepository).guardar(captor.capture());
+		assertThat(captor.getValue().getFotoPerfil()).isNull();
+	}
+
+	@Test
 	void adminNoPuedeCrearConCorreoRepetido() {
 		when(usuarioRepository.existePorCorreo("repetido@mail.com")).thenReturn(true);
 		assertThatThrownBy(() -> service.crearPorAdmin(adminRequest("repetido@mail.com", "secreto123", null)))

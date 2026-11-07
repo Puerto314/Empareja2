@@ -13,7 +13,7 @@
         </label>
         @if (modo === 'admin') {
           <label class="field">Rol
-            <select name="rol" [(ngModel)]="rol">
+            <select name="rol" [(ngModel)]="rol" (ngModelChange)="cambiarRol()">
               @for (r of rolesDisponibles; track r) { <option [ngValue]="r">{{ r }}</option> }
             </select>
           </label>
@@ -40,12 +40,14 @@
         </select>
       </label>
     </div>
-    <label class="field">Foto de perfil <small>(enlace http:// o https://, opcional)</small>
-      <input type="text" name="fotoPerfil" [(ngModel)]="fotoPerfil" placeholder="https://...">
-    </label>
-    <label class="field">Gustos <small>(separados por coma)</small>
-      <input type="text" name="intereses" [(ngModel)]="interesesTexto" placeholder="Cine, rock, senderismo">
-    </label>
+    @if (esEstudiante) {
+      <label class="field">Foto de perfil <small>(enlace http:// o https://, opcional)</small>
+        <input type="text" name="fotoPerfil" [(ngModel)]="fotoPerfil" placeholder="https://...">
+      </label>
+      <label class="field">Gustos <small>(separados por coma)</small>
+        <input type="text" name="intereses" [(ngModel)]="interesesTexto" placeholder="Cine, rock, senderismo">
+      </label>
+    }
   </fieldset>
 
   @if (esEstudiante) {
@@ -73,6 +75,7 @@
     </fieldset>
   }
 
+  @if (esEstudiante) {
   <fieldset class="grupo">
     <legend>Redes sociales</legend>
     @for (r of redes; track $index; let i = $index) {
@@ -91,6 +94,7 @@
     </datalist>
     <div class="btn-row"><button type="button" class="btn sec sm" (click)="agregarRed()">+ Agregar red social</button></div>
   </fieldset>
+  }
 
   @if (errorLocal() || error) { <p class="msg-err" role="alert">{{ errorLocal() || error }}</p> }
   <div class="btn-row">
