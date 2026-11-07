@@ -25,6 +25,7 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ComentarioDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ComentarioRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ConteoReaccionesDTO.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/ErrorRespuestaDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/EstudioDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/EstudioRequestDTO.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/dto/LoginRequestDTO.java
@@ -103,6 +104,7 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/UsuarioNoEncontradoPorCorreoException.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/UsuarioNoEncontradoPorIdException.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/exception/UsuarioNoRecargadoException.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/handler/GlobalExceptionHandler.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/mapper/CatalogoMapper.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/mapper/InteraccionMapper.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/mapper/UsuarioMapper.java
@@ -116,8 +118,11 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/UniversidadRepository.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/repository/UsuarioRepository.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/security/CustomUserDetailsService.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/security/JsonAccessDeniedHandler.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/security/JsonAuthenticationEntryPoint.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/security/JwtAuthenticationFilter.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/security/JwtService.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/security/RespuestaErrorSeguridad.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/service/AuthService.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/service/CatalogoService.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/main/java/co/edu/unbosque/empareja2/service/ComentarioService.java

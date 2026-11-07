@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UniversidadResumenModel } from '../models/universidad.model';
 import { UniversidadService } from '../services/universidad.service';
 import { gradient, hueOf, initials, siglaCorta } from '../utils/avatar.util';
+import { mensajeDeError } from '../utils/error.util';
 
 @Component({
   standalone: false,
@@ -22,8 +23,8 @@ export class UniversidadesComponent {
   constructor() {
     this.universidadService.listarResumen().pipe(takeUntilDestroyed()).subscribe({
       next: r => { this.unis.set(r.universidades); this.total.set(r.totalEstudiantes); this.cargando.set(false); },
-      error: () => {
-        this.error.set('No pudimos cargar las universidades. Revisa que el servidor esté encendido e intenta de nuevo.');
+      error: (err: unknown) => {
+        this.error.set(mensajeDeError(err, 'No pudimos cargar las universidades. Revisa que el servidor esté encendido e intenta de nuevo.'));
         this.cargando.set(false);
       }
     });

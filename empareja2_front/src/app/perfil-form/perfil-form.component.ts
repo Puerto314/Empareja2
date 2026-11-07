@@ -9,6 +9,7 @@ import { RolEnum } from '../models/rol.enum';
 import { UniversidadModel } from '../models/universidad.model';
 import { CatalogoService } from '../services/catalogo.service';
 import { UniversidadService } from '../services/universidad.service';
+import { mensajeDeError } from '../utils/error.util';
 
 export type ModoPerfilForm = 'registro' | 'edicion' | 'admin';
 export type PerfilFormValor = RegistroRequestModel | ActualizarPerfilRequestModel | AdminUsuarioRequestModel;
@@ -73,9 +74,10 @@ export class PerfilFormComponent implements OnInit, OnChanges {
         this.universidades.set(r.universidades);
         this.oferta.set(r.oferta);
       },
-      error: () => this.errorCatalogo.set('No pudimos cargar universidades y carreras. Recarga la página.')
+      error: (err: unknown) => this.errorCatalogo.set(
+        mensajeDeError(err, 'No pudimos cargar universidades y carreras. Recarga la página.'))
     });
-    if (this.modo === 'registro' && this.estudios.length === 0) { this.agregarEstudio(); }
+    this.asegurarFilaEstudio();
   }
 
   ngOnChanges(cambios: SimpleChanges): void {
@@ -96,7 +98,16 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     this.interesesTexto = p.intereses.join(', ');
     this.estudios = p.estudios.map(e => ({ idUniversidad: e.idUniversidad, idCarrera: e.idCarrera, semestre: e.semestre }));
     this.redes = p.redes.map(r => ({ tipoRedSocial: r.tipoRedSocial, urlPerfil: r.urlPerfil }));
+    this.asegurarFilaEstudio();
   }
+
+  /** Un estudiante siempre necesita su fila de universidad, carrera y semestre. */
+  private asegurarFilaEstudio(): void {
+    if (this.esEstudiante && this.estudios.length === 0) { this.agregarEstudio(); }
+  }
+
+  /** Al cambiar el rol en el modo admin se muestran u ocultan los campos de estudiante. */
+  cambiarRol(): void { this.asegurarFilaEstudio(); }
 
   carrerasDe(idUniversidad: number | null): OfertaModel[] {
     return idUniversidad === null ? [] : this.oferta().filter(o => o.idUniversidad === idUniversidad);
@@ -135,18 +146,22 @@ export class PerfilFormComponent implements OnInit, OnChanges {
         return 'La contraseña debe tener entre 8 y 72 caracteres.';
       }
     }
-    if (!this.nombre.trim()) { return 'Escribe tu nombre.'; }
-    if (!this.apellido.trim()) { return 'Escribe tu apellido.'; }
-    if (this.esEstudiante && !this.fechaNacimiento) { return 'Indica tu fecha de nacimiento.'; }
+    if (!this.nombre.trim()) { return this.modo === 'admin' ? 'Escribe el nombre.' : 'Escribe tu nombre.'; }
+    if (!this.apellido.trim()) { return this.modo === 'admin' ? 'Escribe el apellido.' : 'Escribe tu apellido.'; }
+    if (this.esEstudiante && !this.fechaNacimiento) {
+      return this.modo === 'admin' ? 'Indica la fecha de nacimiento.' : 'Indica tu fecha de nacimiento.';
+    }
     if (this.fechaNacimiento) {
       if (this.edadDe(this.fechaNacimiento) < 0) { return 'La fecha de nacimiento debe ser en el pasado.'; }
       if (this.edadDe(this.fechaNacimiento) < EDAD_MINIMA) { return `Debes tener al menos ${EDAD_MINIMA} años.`; }
     }
-    if (this.fotoPerfil.trim() && !/^https?:\/\/\S+$/.test(this.fotoPerfil.trim())) {
+    if (this.esEstudiante && this.fotoPerfil.trim() && !/^https?:\/\/\S+$/.test(this.fotoPerfil.trim())) {
       return 'La foto de perfil debe ser un enlace que empiece por http:// o https://.';
     }
     if (this.esEstudiante) {
-      if (this.estudios.length !== 1) { return 'Indica tu universidad, carrera y semestre.'; }
+      if (this.estudios.length !== 1) {
+        return this.modo === 'admin' ? 'Indica la universidad, carrera y semestre.' : 'Indica tu universidad, carrera y semestre.';
+      }
       const e = this.estudios[0];
       if (e.idUniversidad === null || e.idCarrera === null || e.semestre === null) {
         return 'Completa universidad, carrera y semestre.';
@@ -154,7 +169,7 @@ export class PerfilFormComponent implements OnInit, OnChanges {
       if (e.semestre < 1 || e.semestre > 20) { return 'El semestre debe estar entre 1 y 20.'; }
     }
     const tipos = new Set<string>();
-    for (const r of this.redes) {
+    for (const r of (this.esEstudiante ? this.redes : [])) {
       const tipo = r.tipoRedSocial.trim();
       const url = r.urlPerfil.trim();
       if (!tipo || !url) { return 'Cada red social necesita el tipo de red y el enlace a tu perfil.'; }
@@ -171,17 +186,21 @@ export class PerfilFormComponent implements OnInit, OnChanges {
     const problema = this.validar();
     this.errorLocal.set(problema);
     if (problema) { return; }
+    const esEst = this.esEstudiante;
     const estudios = this.estudios.map(e => ({ idCarrera: e.idCarrera as number, idUniversidad: e.idUniversidad as number, semestre: e.semestre as number }));
     const redes = this.redes.map(r => ({ tipoRedSocial: r.tipoRedSocial.trim(), urlPerfil: r.urlPerfil.trim() }));
+    const foto = this.fotoPerfil.trim();
+    // Sin foto no se envía el campo: el back guarda NULL en usuario.foto_perfil.
+    // Un administrador nunca envía gustos, foto ni redes sociales.
     const comun = {
       nombre: this.nombre.trim(),
       apellido: this.apellido.trim(),
       genero: (this.genero || GeneroEnum.NO_ESPECIFICA) as GeneroEnum,
       fechaNacimiento: this.fechaNacimiento || undefined,
-      fotoPerfil: this.fotoPerfil.trim(),
-      intereses: this.intereses(),
-      estudios: this.esEstudiante ? estudios : [],
-      redes
+      ...(esEst && foto ? { fotoPerfil: foto } : {}),
+      intereses: esEst ? this.intereses() : [],
+      estudios: esEst ? estudios : [],
+      redes: esEst ? redes : []
     };
     if (this.modo === 'edicion') {
       this.enviar.emit({ ...comun, fechaNacimiento: this.fechaNacimiento } as ActualizarPerfilRequestModel);

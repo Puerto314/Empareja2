@@ -7,8 +7,11 @@ import { UniversidadModel } from '../models/universidad.model';
 import { EstudianteService } from '../services/estudiante.service';
 import { UniversidadService } from '../services/universidad.service';
 import { gradient, hueOf, initials } from '../utils/avatar.util';
+import { mensajeDeError } from '../utils/error.util';
 
-interface Datos { lista: EstudianteModel[]; fallo?: boolean }
+const MENSAJE_FALLO = 'No pudimos cargar el ranking. Revisa que el servidor esté encendido e intenta de nuevo.';
+
+interface Datos { lista: EstudianteModel[]; fallo?: string }
 
 @Component({
   standalone: false,
@@ -40,11 +43,11 @@ export class RankingComponent {
       tap(id => { this.idUniversidad.set(id); this.cargando.set(true); this.error.set(''); }),
       switchMap(id => this.estudianteService.ranking(id ?? undefined, this.limite).pipe(
         map((lista): Datos => ({ lista })),
-        catchError(() => of<Datos>({ lista: [], fallo: true })))),
+        catchError((err: unknown) => of<Datos>({ lista: [], fallo: mensajeDeError(err, MENSAJE_FALLO) })))),
       takeUntilDestroyed()
     ).subscribe(d => {
       this.ranking.set(d.lista);
-      this.error.set(d.fallo ? 'No pudimos cargar el ranking. Revisa que el servidor esté encendido e intenta de nuevo.' : '');
+      this.error.set(d.fallo ?? '');
       this.cargando.set(false);
     });
   }

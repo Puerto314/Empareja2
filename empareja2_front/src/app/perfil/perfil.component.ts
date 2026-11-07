@@ -12,7 +12,9 @@ import { InteraccionService } from '../services/interaccion.service';
 import { gradient, hueOf, initials } from '../utils/avatar.util';
 import { mensajeDeError } from '../utils/error.util';
 
-interface Datos { est?: EstudianteModel; otros: EstudianteModel[]; fallo?: boolean }
+const MENSAJE_FALLO = 'No pudimos cargar este perfil. Revisa que el servidor esté encendido e intenta de nuevo.';
+
+interface Datos { est?: EstudianteModel; otros: EstudianteModel[]; fallo?: string }
 
 @Component({
   standalone: false,
@@ -81,14 +83,14 @@ export class PerfilComponent {
         switchMap(est => est
           ? this.estudianteService.listarCompaneros(est).pipe(map((otros): Datos => ({ est, otros })))
           : of<Datos>({ otros: [] })),
-        catchError(() => of<Datos>({ otros: [], fallo: true })))),
+        catchError((err: unknown) => of<Datos>({ otros: [], fallo: mensajeDeError(err, MENSAJE_FALLO) })))),
       takeUntilDestroyed()
     ).subscribe(datos => {
       this.s.set(datos.est);
       this.otros.set(datos.otros);
       this.meGusta.set(datos.est?.meGustaDelUsuarioActual ?? false);
       this.totalMeGusta.set(datos.est?.totalMeGusta ?? 0);
-      this.error.set(datos.fallo ? 'No pudimos cargar este perfil. Revisa que el servidor esté encendido e intenta de nuevo.' : '');
+      this.error.set(datos.fallo ?? '');
       this.cargando.set(false);
       if (datos.est) { this.cargarQuienes(datos.est.id); }
     });

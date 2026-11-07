@@ -256,6 +256,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioMapper.toEntity(request, passwordEncoder.encode(request.getContrasena()));
         if (rol == Rol.ESTUDIANTE) {
             aplicarColecciones(usuario, request);
+        } else {
+            // Un administrador no tiene foto, gustos ni redes: su foto_perfil queda en NULL.
+            usuario.setFotoPerfil(null);
         }
         return usuarioMapper.toPerfilDTO(usuarioRepository.guardar(usuario));
     }
@@ -291,6 +294,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (rolFinal == Rol.ESTUDIANTE) {
             aplicarColecciones(usuario, request);
         } else {
+            usuario.setFotoPerfil(null);
             usuario.getIntereses().clear();
             usuario.getEstudios().clear();
             usuario.getRedes().clear();

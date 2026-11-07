@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { RolEnum } from '../models/rol.enum';
 import { AuthService } from '../services/auth.service';
+import { mensajeDeError as mensajeDeErrorHttp } from '../utils/error.util';
 
 @Component({
   standalone: false,
@@ -41,10 +42,9 @@ export class LoginComponent {
   }
 
   private mensajeDeError(err: unknown): string {
-    if (err instanceof HttpErrorResponse) {
-      if (err.status === 401) { return 'Correo o contraseña incorrectos.'; }
-      if (err.status === 0) { return 'No se pudo conectar con el servidor. Intenta de nuevo en un momento.'; }
-    }
-    return 'No pudimos iniciar sesión. Intenta de nuevo.';
+    const porDefecto = err instanceof HttpErrorResponse && err.status === 401
+      ? 'Correo o contraseña incorrectos.'
+      : 'No pudimos iniciar sesión. Intenta de nuevo.';
+    return mensajeDeErrorHttp(err, porDefecto);
   }
 }

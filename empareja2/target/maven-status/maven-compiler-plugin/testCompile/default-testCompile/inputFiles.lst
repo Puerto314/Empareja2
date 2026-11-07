@@ -5,8 +5,10 @@
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/ControllerTestSupport.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/InteraccionControllersTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/controller/UsuarioControllerTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/entity/UsuarioFotoPerfilTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/entity/UsuarioTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/exception/LanzadorExceptionTest.java
+/home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/handler/GlobalExceptionHandlerTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/mapper/UsuarioMapperTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/security/CustomUserDetailsServiceTest.java
 /home/puerto314/Documentos/Empareja2/empareja2/src/test/java/co/edu/unbosque/empareja2/security/JwtAuthenticationFilterTest.java

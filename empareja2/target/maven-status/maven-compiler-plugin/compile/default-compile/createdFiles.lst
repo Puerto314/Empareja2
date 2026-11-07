@@ -1,1 +1,6 @@
+co/edu/unbosque/empareja2/handler/GlobalExceptionHandler.class
+co/edu/unbosque/empareja2/security/JsonAccessDeniedHandler.class
 co/edu/unbosque/empareja2/repository/Sql.class
+co/edu/unbosque/empareja2/dto/ErrorRespuestaDTO.class
+co/edu/unbosque/empareja2/security/JsonAuthenticationEntryPoint.class
+co/edu/unbosque/empareja2/security/RespuestaErrorSeguridad.class

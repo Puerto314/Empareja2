@@ -146,7 +146,7 @@ describe('Admin · comentarios y me gusta', () => {
       eliminarMeGusta: (u: number, n: number) => { borrado = `${u}/${n}`; return of(undefined); }
     };
     const f = await montar(AdminMeGustaComponent, a);
-    expect(f.nativeElement.textContent).toContain('ME_GUSTA');
+    expect(f.nativeElement.textContent).toContain('Me gusta');
     f.componentInstance.eliminar(f.componentInstance.reacciones()[0]);
     expect(borrado).toBe('7/2');
   });

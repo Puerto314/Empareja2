@@ -236,12 +236,13 @@ public class Usuario {
     }
 
     /**
-     * Establece la direccion de la foto de perfil.
+     * Establece la direccion de la foto de perfil. Una foto vacia o en blanco se
+     * guarda como null (NULL en la columna foto_perfil de la tabla usuario).
      *
      * @param fotoPerfil la direccion de la foto de perfil
      */
     public void setFotoPerfil(String fotoPerfil) {
-        this.fotoPerfil = fotoPerfil;
+        this.fotoPerfil = (fotoPerfil == null || fotoPerfil.isBlank()) ? null : fotoPerfil.trim();
     }
 
     /**
